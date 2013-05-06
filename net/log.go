@@ -2,7 +2,6 @@ package net
 
 import (
     "fmt"
-    "bytes"
 )
 
 //Log

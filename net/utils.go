@@ -1,8 +1,8 @@
 package net
 
 import (
-    "fmt"
-    "bytes"
+    //"fmt"
+    //"bytes"
     "encoding/binary"
 )
 
@@ -35,8 +35,8 @@ func BytesGrow(buff []byte,addlen int) int {
 // value n is the length of p; err is always nil.
 // If the buffer becomes too large, Write will panic with
 // ErrTooLarge.
-func BytesAppend(buff []byte,p []byte) (n int, err error) {
-    m := Grow(buff,len(p))
+func BytesAppend(buff []byte,p []byte) (n int) {
+    m := BytesGrow(buff,len(p))
     return copy(buff[m:], p)
 }
 

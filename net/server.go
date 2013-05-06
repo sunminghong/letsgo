@@ -11,12 +11,8 @@
 package net
 
 import (
-    "bytes"
-    "container/list"
-    "fmt"
     "net"
 )
-
 
 type Server struct {
     boardcast_chan_num int
@@ -25,43 +21,37 @@ type Server struct {
     newclient newClientFunc
     datagram  IDatagram
 
+    host    string
+    port    int
+
     //define client dict/map set
-    ClientMap map[int]Client
+    ClientMap map[int]*Client
 
     ClientNum int
 
-    boardcastChan chan dataPacket
+    boardcastChan chan *DataPacket
 }
 
-func newServer(newclient newClientFunc, datagram IDatagram, config map[string]interface{}) {
+func NewServer(newclient newClientFunc, datagram IDatagram, config map[string]interface{}) {
     s := &Server{}
 
-    if newclient == nil {
-        s.newclient = newClient
-    } else {
-        s.newclient = newclient
-    }
-
-    if s.datagram == nil {
-        s.datagram = &Datagram{}
-    } else {
-        s.datagram = datagram
-    }
-
-    boardcast_chan_num = 10
-    read_buffer_size = 1024
-}
-
-func (s *Server) start(host string, port int) {
-    Log("Hello Server!")
-
-    addr = host + ":" + string(port)
-    s.ClientMap = make(map[int]Client)
     s.newclient = newclient
 
+    s.datagram = datagram
+
+    s.boardcast_chan_num = 10
+    s.read_buffer_size = 1024
+}
+
+func (s *Server) Start(host string, port int) {
+    Log("Hello Server!")
+
+    addr := host + ":" + string(port)
+    s.ClientMap = make(map[int]*Client)
+
     //创建一个管道 chan map 需要make creates slices, maps, and channels only
-    s.BoardcastChan = make(chan dataPacket, s.boardcast_chan_num)
-    go s.boardcastHandler(s.BoardcastChan)
+    s.boardcastChan = make(chan *DataPacket, s.boardcast_chan_num)
+    go s.boardcastHandler(s.boardcastChan)
 
     netListen, error := net.Listen("tcp", addr)
     if error != nil {
@@ -75,19 +65,27 @@ func (s *Server) start(host string, port int) {
             if error != nil {
                 Log("Client error: ", error)
             } else {
-                newclientdi := s.allocClientid()
-                go ClientHandler(newclientid, connection)
+                newclientid := s.allocClientid()
+                go s.clientHandler(newclientid, connection)
             }
         }
     }
 }
-func (s *Server) allocClientid() {
+
+func (s *Server) removeClient(cid int) {
+
+    _, ok := s.ClientMap[cid]
+    if ok {
+        delete(s.ClientMap, cid)
+    }
+}
+func (s *Server) allocClientid() int {
     s.ClientNum += 1
     return s.ClientNum
 }
 
 //该函数主要是接受新的连接和注册用户在client list
-func (s *Server) ClientHandler(newclientid int, connection *net.Conn) {
+func (s *Server) clientHandler(newclientid int, connection net.Conn) {
     Log("one new player connectting ! ")
 
     newClient := s.newclient(newclientid, connection, s)
@@ -108,41 +106,46 @@ func (s *Server) clientReader(client *Client) {
 
         if err != nil {
             client.Close()
-            s.RemoveClient(client.CID)
+            s.removeClient(client.cid)
             Log(err)
             break
         }
-        ByteApend(client.Buff, buffer)
+        BytesAppend(client.Buff, buffer[0:bytesRead])
 
         s.datagram.Fetch(client)
     }
-    Log("ClientReader stopped for ", c.Clientid)
+    Log("ClientReader stopped for ", client.cid)
 }
+
 
 func (s *Server) clientSender(client *Client) {
     for {
         select {
         case dp := <-client.Outgoing:
             Log(dp.Type, dp.Data)
-            buf := s.datagram.pack(dp)
+            buf := s.datagram.Pack(dp)
             client.Conn.Write(buf)
-        case <-c.Quit:
-            Log("Client ", client.Name, " quitting")
+        case <-client.Quit:
+            Log("Client ", client.cid, " quitting")
             client.Conn.Close()
             break
         }
     }
 }
 
-func (s *Server) boardcastHandler(boardcastChan <-chan dataPacket) {
+func (s *Server) boardcastHandler(boardcastChan <-chan *DataPacket) {
     for {
         //在go里面没有while do ，for可以无限循环
         Log("boardcastHandler: chan Waiting for input")
         dp := <-boardcastChan
         //buf := s.datagram.pack(dp)
 
-        sendcid = int(dp.Other)
-        for cid, c = range s.ClientMap {
+        sendcid,ok := dp.Other.(int)
+        if !ok {
+            sendcid = 0
+        }
+
+        for cid, c := range s.ClientMap {
             if sendcid == cid {
                 continue
             }
@@ -152,21 +155,16 @@ func (s *Server) boardcastHandler(boardcastChan <-chan dataPacket) {
     }
 }
 
-func (s *Server) SendBoardcast(client Client, data []byte) {
-    dp = &DataPacket{Type: DATAPACKET_TYPE_BOARDCAST, Data: data, Other: client.CID}
+//send boardcast message data for other object
+func (s *Server) SendBoardcast(client *Client, data []byte) {
+    dp := &DataPacket{Type: DATAPACKET_TYPE_BOARDCAST, Data: data, Other: client.cid}
     s.boardcastChan <- dp
 }
 
-func (s *Server) Write(client Client, dataType int, data []byte) {
-    dp = &DataPacket{Type: dataType, Data: data}
-    c.Outgoing <- dp
+//send message data for other object
+func (s *Server) SendMsg(client *Client, dataType int, data []byte) {
+    dp := &DataPacket{Type: dataType, Data: data}
+    client.Outgoing <- dp
 
 }
 
-func (s *Server) removeClient(cid int) {
-
-    a,ok := s.ClientMap[c.CID]
-    if ok {
-        delete(s.ClientMap,c.CID)
-    }
-}
