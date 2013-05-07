@@ -12,6 +12,7 @@ package net
 
 import (
     "net"
+    "strconv"
 )
 
 type Server struct {
@@ -32,7 +33,7 @@ type Server struct {
     boardcastChan chan *DataPacket
 }
 
-func NewServer(newclient newClientFunc, datagram IDatagram, config map[string]interface{}) {
+func NewServer(newclient newClientFunc, datagram IDatagram, config map[string]interface{}) *Server {
     s := &Server{}
 
     s.newclient = newclient
@@ -41,18 +42,21 @@ func NewServer(newclient newClientFunc, datagram IDatagram, config map[string]in
 
     s.boardcast_chan_num = 10
     s.read_buffer_size = 1024
+
+    return s
 }
 
 func (s *Server) Start(host string, port int) {
     Log("Hello Server!")
 
-    addr := host + ":" + string(port)
+    addr := host + ":" + strconv.Itoa(port)
     s.ClientMap = make(map[int]*Client)
 
     //创建一个管道 chan map 需要make creates slices, maps, and channels only
     s.boardcastChan = make(chan *DataPacket, s.boardcast_chan_num)
     go s.boardcastHandler(s.boardcastChan)
 
+    Log("listen with :",addr)
     netListen, error := net.Listen("tcp", addr)
     if error != nil {
         Log(error)
@@ -72,11 +76,11 @@ func (s *Server) Start(host string, port int) {
     }
 }
 
-func (s *Server) removeClient(cid int) {
+func (s *Server) removeClient(Cid int) {
 
-    _, ok := s.ClientMap[cid]
+    _, ok := s.ClientMap[Cid]
     if ok {
-        delete(s.ClientMap, cid)
+        delete(s.ClientMap, Cid)
     }
 }
 func (s *Server) allocClientid() int {
@@ -106,17 +110,18 @@ func (s *Server) clientReader(client *Client) {
 
         if err != nil {
             client.Close()
-            s.removeClient(client.cid)
+            s.removeClient(client.Cid)
             Log(err)
             break
         }
-        BytesAppend(client.Buff, buffer[0:bytesRead])
+        Log("read to buff:",bytesRead,buffer)
+        client.BuffAppend(buffer[0:bytesRead])
 
+        Log("client.Buff",client.Buff)
         s.datagram.Fetch(client)
     }
-    Log("ClientReader stopped for ", client.cid)
+    Log("ClientReader stopped for ", client.Cid)
 }
-
 
 func (s *Server) clientSender(client *Client) {
     for {
@@ -126,7 +131,7 @@ func (s *Server) clientSender(client *Client) {
             buf := s.datagram.Pack(dp)
             client.Conn.Write(buf)
         case <-client.Quit:
-            Log("Client ", client.cid, " quitting")
+            Log("Client ", client.Cid, " quitting")
             client.Conn.Close()
             break
         }
@@ -140,13 +145,13 @@ func (s *Server) boardcastHandler(boardcastChan <-chan *DataPacket) {
         dp := <-boardcastChan
         //buf := s.datagram.pack(dp)
 
-        sendcid,ok := dp.Other.(int)
+        sendCid,ok := dp.Other.(int)
         if !ok {
-            sendcid = 0
+            sendCid = 0
         }
 
-        for cid, c := range s.ClientMap {
-            if sendcid == cid {
+        for Cid, c := range s.ClientMap {
+            if sendCid == Cid {
                 continue
             }
             c.Outgoing <- dp
@@ -157,7 +162,7 @@ func (s *Server) boardcastHandler(boardcastChan <-chan *DataPacket) {
 
 //send boardcast message data for other object
 func (s *Server) SendBoardcast(client *Client, data []byte) {
-    dp := &DataPacket{Type: DATAPACKET_TYPE_BOARDCAST, Data: data, Other: client.cid}
+    dp := &DataPacket{Type: DATAPACKET_TYPE_BOARDCAST, Data: data, Other: client.Cid}
     s.boardcastChan <- dp
 }
 
