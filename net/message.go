@@ -1,11 +1,11 @@
 /*=============================================================================
-#     FileName: datagram.go
-#         Desc: Datagram pack/unpack
+#     FileName: message.go
+#         Desc: Message pack/unpack
 #       Author: sunminghong
 #        Email: allen.fantasy@gmail.com
 #     HomePage: http://weibo.com/5d13
 #      Version: 0.0.1
-#   LastChange: 2013-05-06 14:35:37
+#   LastChange: 2013-05-09 17:02:13
 #      History:
 =============================================================================*/
 package net
@@ -14,25 +14,17 @@ import (
     "encoding/binary"
 )
 
-//type DatagramInterface interface {
-//    Fetch(data []byte) int,[]byte
-//    Pack(int,[]byte) []byte
-//}
-
-const (
-    mask1 = 0x59
-    mask2 = 0x7a
-
-    DATAPACKET_TYPE_GENERAL = 0
-    DATAPACKET_TYPE_DELAY = 1
-    DATAPACKET_TYPE_BOARDCAST = 3
-)
-
-type Datagram struct { }
+type Message struct {
+    Code int
+    Ver byte
+    Body []byte
+}
 
 //对数据进行拆包
-func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
-    dps = []*DataPacket{}
+func (msg *Message) Init(data []byte){
+    msg.code = int(data[0:4])
+
+    msgs = []*DataPacket{}
 
     ilen := len(c.Buff)
     if ilen == 0 {
@@ -41,12 +33,12 @@ func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
 
     pos := 0
     dataType := 0
-    dpSize := 0
+    msgSize := 0
 
     for {
         //拆包
-        if c.DPSize > 0 {
-            if ilen-pos < c.DPSize {
+        if c.MsgSize > 0 {
+            if ilen-pos < c.MsgSize {
                 //如果缓存去数据长度不够就退出接着等后续数据
                 return
             }
@@ -58,13 +50,13 @@ func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
             if c.Buff[pos] == mask1 && c.Buff[pos+1] == mask2 {
                 dataType = int(c.Buff[pos+2])
 
-                dpSize = int(binary.BigEndian.Uint32(c.Buff[pos+3 : pos+7]))
+                msgSize = int(binary.BigEndian.Uint32(c.Buff[pos+3 : pos+7]))
 
-                if ilen < dpSize+7 {
+                if ilen < msgSize+7 {
                     //如果缓存去数据长度不够就退出接着等后续数据
                     c.Buff = c.Buff[7:]
 
-                    c.DPSize = dpSize
+                    c.MsgSize = msgSize
                     c.DataType = dataType
 
                     return
@@ -79,19 +71,19 @@ func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
             }
         }
 
-        dp := &DataPacket{Type: dataType, Data: c.Buff[pos : pos+dpSize]}
-        dps = append(dps,dp)
+        msg := &DataPacket{Type: dataType, Data: c.Buff[pos : pos+msgSize]}
+        msgs = append(msgs,msg)
         n += 1
 
-        c.DPSize = 0
+        c.MsgSize = 0
         c.DataType = 0
 
         //send to channel for consume
-        //c.ProcessDP(dp)
+        //c.ProcessMsg(msg)
 
-        if ilen > dpSize+7 {
-            //c.Buff = c.Buff[5+dpSize:]
-            pos += dpSize
+        if ilen > msgSize+7 {
+            //c.Buff = c.Buff[5+msgSize:]
+            pos += msgSize
             continue
 
         } else {
@@ -103,7 +95,7 @@ func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
 }
 
 //对数据进行封包
-func (d *Datagram) Pack(dp *DataPacket) []byte {
+func (d *Message) Pack(dp *DataPacket) []byte {
     ilen := len(dp.Data)
     buf := make([]byte, ilen+7)
 

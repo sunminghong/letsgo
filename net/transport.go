@@ -4,8 +4,8 @@ import (
     "net"
 )
 
-type Client struct {
-    //client connection 唯一 id
+type Transport struct {
+    //transport connection 唯一 id
     Cid  int
 
     //需要输出的数据(protocolcode+body) 的channel
@@ -15,41 +15,35 @@ type Client struct {
 
     Buff     []byte
     DataType int
-    MsgSize  int
+    DPSize  int
 
     Server *Server
     Conn   net.Conn
 }
 
-type newClientFunc func(newclientid int, conn net.Conn, server *Server) *Client
+type newTransportFunc func(newcid int, conn net.Conn, server *Server) *Transport
 
-//define method what Close client's connection for struct Client
-func (c *Client) Close() {
+//define method what Close transport's connection for struct Transport
+func (c *Transport) Close() {
     c.Quit <- true
     c.Conn.Close()
-    c.RemoveMe()
-
 }
 
-//define method what Remove self for struct Client
-func (c *Client) RemoveMe() {
-}
-
-func (c *Client) Equal(other *Client) bool {
+func (c *Transport) Equal(other *Transport) bool {
     if c.Cid == other.Cid {
         return true
     }
     return false
 }
 
-func (c *Client) InitBuff() {
+func (c *Transport) InitBuff() {
     //c.Buff = make([]byte,0)
     c.Buff = []byte{}
 }
 
 
 //add buff cap
-func (c *Client)buffGrow(addlen int) int{
+func (c *Transport)buffGrow(addlen int) int{
     m := len(c.Buff)
     if m + addlen > cap(c.Buff) {
         var b_ []byte
@@ -66,7 +60,7 @@ func (c *Client)buffGrow(addlen int) int{
 // value n is the length of p; err is always nil.
 // If the buffer becomes too large, Write will panic with
 // ErrTooLarge.
-func (c *Client) BuffAppend(p []byte) (n int) {
+func (c *Transport) BuffAppend(p []byte) (n int) {
     Log("len(buff)=",len(c.Buff),"len(p)=",len(p))
     m:= c.buffGrow(len(p))
     Log("buff",c.Buff)
@@ -76,29 +70,18 @@ func (c *Client) BuffAppend(p []byte) (n int) {
     return a
 }
 
-
-func (c *Client) SendMsg(dataType int, data []byte) {
-    c.Server.SendMsg(c, dataType, data)
+func (c *Transport) SendDP(dataType int, data []byte) {
+    c.Server.SendDP(c, dataType, data)
 }
 
-func (c *Client) SendBoardcast(data []byte) {
+func (c *Transport) SendBoardcast(data []byte) {
     c.Server.SendBoardcast(c, data)
 }
 
-////////////////////////////////////////////////////////////////
-//process fetch message
-// default to echo return,impent
-func (c *Client) ProcessMsg(msg *DataPacket) {
-    //echo
-    c.Outgoing <- msg
-}
-
-
-
-// new Client object
-func NewClient(newclientid int, conn net.Conn, server *Server) *Client {
-    c := &Client{
-        Cid:      newclientid,
+// new Transport object
+func NewTransport(newcid int, conn net.Conn, server *Server) *Transport {
+    c := &Transport{
+        Cid:      newcid,
         Conn:     conn,
         Server:   server,
         Outgoing: make(chan *DataPacket, 10),
