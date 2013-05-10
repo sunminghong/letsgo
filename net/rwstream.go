@@ -15,7 +15,12 @@ import (
     "errors"
 )
 
-//switch bigendian or littleendian
+const (
+    BigEndian    = 0
+    LittleEndian = 1
+)
+
+//switch bigendianer or littleendianer
 type ItoB interface {
     Uint16(b []byte) uint16
     PutUint16(b []byte, v uint16)
@@ -32,8 +37,8 @@ type ItoB interface {
 type RWStream struct {
     buffSize int
 
-    BigEndian bool //default to false, means that is littleEdian
-    endian    ItoB
+    Endian   int //default to false, means that is littleEdian
+    endianer ItoB
 
     buf []byte // contents are the bytes buf[off:len(buf)]
 
@@ -42,18 +47,16 @@ type RWStream struct {
     last int // last read operation, so that Unread* can work correctly.
 }
 
-
-func NewRWStream(buf []byte, isBigEndian bool) *RWStream {
-    b := &RWStream{buf: buf, BigEndian: isBigEndian}
+func NewRWStream(buf []byte, isBigEndian int) *RWStream {
+    b := &RWStream{buf: buf, Endian: isBigEndian}
     b.buffSize = len(buf)
     b.end = len(buf)
 
-    if isBigEndian {
-        b.endian = binary.BigEndian
+    if isBigEndian == BigEndian {
+        b.endianer = binary.BigEndian
     } else {
-        b.endian = binary.LittleEndian
+        b.endianer = binary.LittleEndian
     }
-
 
     return b
 }
@@ -173,19 +176,19 @@ func (b *RWStream) WriteByte(c byte) int {
 
 func (b *RWStream) WriteUint16(x uint16) int {
     var buf = make([]byte, 2)
-    b.endian.PutUint16(buf, x)
+    b.endianer.PutUint16(buf, x)
     return b.Write(buf)
 }
 
 func (b *RWStream) WriteUint32(x uint32) int {
     var buf = make([]byte, 4)
-    b.endian.PutUint32(buf, x)
+    b.endianer.PutUint32(buf, x)
     return b.Write(buf)
 }
 
 func (b *RWStream) WriteUint64(x uint64) int {
     var buf = make([]byte, 8)
-    b.endian.PutUint64(buf, x)
+    b.endianer.PutUint64(buf, x)
     return b.Write(buf)
 }
 
@@ -202,7 +205,7 @@ func (b *RWStream) ReadUint16() (uint16, error) {
     if n < 2 {
         return 0, ErrIndex
     }
-    x := b.endian.Uint16(buf)
+    x := b.endianer.Uint16(buf)
     return x, nil
 }
 
@@ -211,7 +214,7 @@ func (b *RWStream) ReadUint32() (uint32, error) {
     if n < 4 {
         return 0, ErrIndex
     }
-    x := b.endian.Uint32(buf)
+    x := b.endianer.Uint32(buf)
     return x, nil
 }
 
@@ -220,7 +223,7 @@ func (b *RWStream) ReadUint64() (uint64, error) {
     if n < 8 {
         return 0, ErrIndex
     }
-    x := b.endian.Uint64(buf)
+    x := b.endianer.Uint64(buf)
     return x, nil
 }
 
