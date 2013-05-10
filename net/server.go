@@ -24,7 +24,7 @@ type IDatagram interface {
 
 //define a struct or class of rec transport connection
 type DataPacket struct {
-    Type  int
+    Type  byte
     Data  []byte
     Other interface{}
 }
@@ -172,7 +172,7 @@ func (s *Server) transportReader(transport *Transport, client IClient) {
         Log("read to buff:", bytesRead)
         transport.BuffAppend(buffer[0:bytesRead])
 
-        Log("transport.Buff", transport.Buff)
+        Log("transport.Buff", transport.Stream.Bytes())
         n, dps := s.datagram.Fetch(transport)
         Log("fetch message number", n)
         if n > 0 {
@@ -226,7 +226,7 @@ func (s *Server) SendBoardcast(transport *Transport, data []byte) {
 }
 
 //send message data for other object
-func (s *Server) SendDP(transport *Transport, dataType int, data []byte) {
+func (s *Server) SendDP(transport *Transport, dataType byte, data []byte) {
     dp := &DataPacket{Type: dataType, Data: data}
     transport.Outgoing <- dp
 

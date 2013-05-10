@@ -19,12 +19,12 @@ type EchoDatagram struct {
 func (d *EchoDatagram) Fetch(c *Transport) (n int,msgs []*DataPacket) {
     msgs = []*DataPacket{}
 
-    ilen := len(c.Buff)
+    ilen := c.Stream.Len()
     if ilen == 0 {
         return
     }
-    Log("Fetch",c.Buff)
-    msg := &DataPacket{Data: c.Buff}
+    Log("Fetch",c.Stream.Bytes())
+    msg := &DataPacket{Data: c.Stream.Bytes()}
     msgs = append(msgs,msg)
     n += 1
 

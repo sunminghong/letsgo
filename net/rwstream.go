@@ -20,7 +20,7 @@ const (
     LittleEndian = 1
 )
 
-//switch bigendianer or littleendianer
+//switch bigEndianer or littleEndianer
 type ItoB interface {
     Uint16(b []byte) uint16
     PutUint16(b []byte, v uint16)
@@ -38,7 +38,7 @@ type RWStream struct {
     buffSize int
 
     Endian   int //default to false, means that is littleEdian
-    endianer ItoB
+    Endianer ItoB
 
     buf []byte // contents are the bytes buf[off:len(buf)]
 
@@ -53,9 +53,9 @@ func NewRWStream(buf []byte, isBigEndian int) *RWStream {
     b.end = len(buf)
 
     if isBigEndian == BigEndian {
-        b.endianer = binary.BigEndian
+        b.Endianer = binary.BigEndian
     } else {
-        b.endianer = binary.LittleEndian
+        b.Endianer = binary.LittleEndian
     }
 
     return b
@@ -176,19 +176,19 @@ func (b *RWStream) WriteByte(c byte) int {
 
 func (b *RWStream) WriteUint16(x uint16) int {
     var buf = make([]byte, 2)
-    b.endianer.PutUint16(buf, x)
+    b.Endianer.PutUint16(buf, x)
     return b.Write(buf)
 }
 
 func (b *RWStream) WriteUint32(x uint32) int {
     var buf = make([]byte, 4)
-    b.endianer.PutUint32(buf, x)
+    b.Endianer.PutUint32(buf, x)
     return b.Write(buf)
 }
 
 func (b *RWStream) WriteUint64(x uint64) int {
     var buf = make([]byte, 8)
-    b.endianer.PutUint64(buf, x)
+    b.Endianer.PutUint64(buf, x)
     return b.Write(buf)
 }
 
@@ -205,7 +205,7 @@ func (b *RWStream) ReadUint16() (uint16, error) {
     if n < 2 {
         return 0, ErrIndex
     }
-    x := b.endianer.Uint16(buf)
+    x := b.Endianer.Uint16(buf)
     return x, nil
 }
 
@@ -214,7 +214,7 @@ func (b *RWStream) ReadUint32() (uint32, error) {
     if n < 4 {
         return 0, ErrIndex
     }
-    x := b.endianer.Uint32(buf)
+    x := b.Endianer.Uint32(buf)
     return x, nil
 }
 
@@ -223,7 +223,7 @@ func (b *RWStream) ReadUint64() (uint64, error) {
     if n < 8 {
         return 0, ErrIndex
     }
-    x := b.endianer.Uint64(buf)
+    x := b.Endianer.Uint64(buf)
     return x, nil
 }
 

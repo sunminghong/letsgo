@@ -14,7 +14,7 @@ type Transport struct {
     Quit chan bool
 
     Stream *RWStream
-    DataType int
+    DataType byte
     DPSize  int
 
     Server *Server
@@ -48,7 +48,7 @@ func (c *Transport) BuffAppend(p []byte) (n int) {
     return c.Stream.Write(p)
 }
 
-func (c *Transport) SendDP(dataType int, data []byte) {
+func (c *Transport) SendDP(dataType byte, data []byte) {
     c.Server.SendDP(c, dataType, data)
 }
 
@@ -64,7 +64,7 @@ func NewTransport(newcid int, conn net.Conn, server *Server) *Transport {
         Server:   server,
         Outgoing: make(chan *DataPacket, 10),
         Quit:     make(chan bool),
-        Stream:       NewRWStream(make([]byte,1024),true)
+        Stream:   NewRWStream(make([]byte,1024),BigEndian),
     }
 
     c.InitBuff()
