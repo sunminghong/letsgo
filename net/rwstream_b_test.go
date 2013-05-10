@@ -17,10 +17,10 @@ import (
     "testing"
 )
 
-func Benchmark_NewRWStream(b *testing.B) {
+func Benchmark_NewRWStream(t *testing.B) {
     bys := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
-    for i := 0; i < b.N; i++ {
+    for i := 0; i < t.N; i++ {
         b := NewRWStream(bys, true)
         if b.BigEndian == false {
             t.Error("NewRWStream error:BigEndian is error", b.BigEndian)
@@ -37,7 +37,7 @@ func Benchmark_NewRWStream(b *testing.B) {
 func Benchmark_RW(t *testing.B) {
     bytes := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
-    for i := 0; i < b.N; i++ {
+    for i := 0; i < t.N; i++ {
         b := NewRWStream(bytes, false)
         //Log("b.buf Len(),off,end,last=",b.Len(),b.off,b.end,b.last)
         b.Init()
