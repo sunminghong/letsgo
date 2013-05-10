@@ -34,7 +34,7 @@ func Test_Pack(t *testing.T) {
 
     _data := [17]byte{0x59,0x7a,1,0,0,0,10}
     copy(_data[7:],data)
-    
+
     if !bytes.Equal(_data[:],data2) {
         t.Error("pack return is equal:",data2)
     }

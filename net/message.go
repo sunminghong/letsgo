@@ -11,7 +11,7 @@
 package net
 
 import (
-    "encoding/binary"
+    //"encoding/binary"
 )
 
 type Message struct {
@@ -19,7 +19,7 @@ type Message struct {
     Ver byte
     Body []byte
 }
-
+/*
 //对数据进行拆包
 func (msg *Message) Init(data []byte){
     msg.code = int(data[0:4])
@@ -107,3 +107,4 @@ func (d *Message) Pack(dp *DataPacket) []byte {
     copy(buf[7:], dp.Data)
     return buf
 }
+*/
