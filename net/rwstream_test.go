@@ -27,8 +27,8 @@ func Test_NewRWStream(t *testing.T){
     }
 
     _bs := b.Bytes()
-    if bytes.Equal(bys,_bs) {
-        t.Error("func Bytes is error:",_bs)
+    if !bytes.Equal(bys,_bs) {
+        t.Error("func Bytes is error:",_bs,bys)
     }
 
     return
