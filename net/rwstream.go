@@ -47,17 +47,17 @@ type RWStream struct {
     last int // last read operation, so that Unread* can work correctly.
 }
 
-func NewRWStream(buf []byte, isBigEndian int) *RWStream {
-    b := &RWStream{buf: buf, Endian: isBigEndian}
-    b.buffSize = len(buf)
-    b.end = len(buf)
+func NewRWStream(buf interface{}, endian int) *RWStream {
+    b := &RWStream{Endian: endian}
 
-    if isBigEndian == BigEndian {
+    b.Endian = endian
+    if endian == BigEndian {
         b.Endianer = binary.BigEndian
     } else {
         b.Endianer = binary.LittleEndian
     }
 
+    b.Init(buf)
     return b
 }
 
@@ -69,14 +69,35 @@ func (b *RWStream) Bytes() []byte { return b.buf[b.off:b.end] }
 
 func (b *RWStream) Len() int { return b.end - b.off }
 
-func (b *RWStream) Init() {
-    //b.buffSize = buffsize
-    //b.BigEndian = isBigEndian
-    b.buf = make([]byte, b.buffSize)
+func (b *RWStream) Init(params ...interface{}) {
+    if len(params) > 0 {
+        buf := params[0]
 
-    b.off = 0
-    b.end = 0
-    b.last = 0
+        switch tmp := buf.(type) {
+        case int:
+            b.buffSize = tmp
+            b.buf = make([]byte, b.buffSize)
+            b.last = 0
+            b.off = 0
+            b.end = tmp
+        case []byte:
+            b.buf = tmp[:]
+            b.buffSize = len(tmp)
+            b.last = 0
+            b.off = 0
+            b.end = len(tmp)
+        default:
+            b.buffSize = 1024
+            b.buf = make([]byte, b.buffSize)
+            b.last = 0
+            b.end = 0
+            b.off = 0
+        }
+    } else {
+        b.last = 0
+        b.end = 0
+        b.off = 0
+    }
 }
 
 //call Reset before each use this Buffer
@@ -102,11 +123,13 @@ func (b *RWStream) grow(n int) int {
         } else {
             copy(b.buf[0:], b.buf[b.off:b.off+m])
         }
+        b.last -= b.off
         b.off = 0
         b.end = m
     } else {
         if x > b.buffSize {
             b.buf = b.buf[b.off : b.off+m]
+            b.last -= b.off
             b.off = 0
             b.end = m
         }

@@ -21,9 +21,9 @@ import (
 func Test_NewRWStream(t *testing.T){
     bys :=[]byte{1,2,3,4,5,6,7,8,9,10}
 
-    b := NewRWStream(bys,true)
-    if b.BigEndian == false {
-        t.Error("NewRWStream error:BigEndian is error",b.BigEndian)
+    b := NewRWStream(bys,BigEndian)
+    if b.Endian != BigEndian{
+        t.Error("NewRWStream error:BigEndian is error",b.Endian)
     }
 
     _bs := b.Bytes()
@@ -37,7 +37,7 @@ func Test_NewRWStream(t *testing.T){
 func Test_Init(t *testing.T) {
     bytes :=[]byte{1,2,3,4,5,6,7,8,9,10}
 
-    b := NewRWStream(bytes,true)
+    b := NewRWStream(bytes,BigEndian)
     b.Init()
 
     if (b.last !=0) || (b.end != 0) || (b.off !=0) {
@@ -48,12 +48,17 @@ func Test_Init(t *testing.T) {
 func Test_RW(t *testing.T) {
     bytes :=[]byte{1,2,3,4,5,6,7,8,9,10}
 
-    b := NewRWStream(bytes,false)
+    b := NewRWStream(bytes,BigEndian)
     Log("b.buf Len(),off,end,last=",b.Len(),b.off,b.end,b.last)
     b.Init()
     Log("b.buf Len(),off,end,last=",b.Len(),b.off,b.end,b.last)
 
-    h,i,j,k,l,m := 1,16,3232,64646464,7777777,-77777777
+    h,i,j,k,l,m := 1,16,3232,646426464,7777777,-77777777
+
+    for ii:=0;ii<3;ii++ {
+        if ii ==2 {
+            b.Reset()
+        }
     b.WriteByte(byte(h))
     Log("b.buf Len(),off,end,last=",b.Len(),b.off,b.end,b.last)
     b.WriteUint16(uint16(i))
@@ -113,6 +118,8 @@ func Test_RW(t *testing.T) {
     if err != nil || s1 !=s {
         t.Error("ReadByte() error k1=",s1,s)
     }
+
+}
 
 }
 

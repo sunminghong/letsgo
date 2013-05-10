@@ -64,7 +64,7 @@ func NewTransport(newcid int, conn net.Conn, server *Server) *Transport {
         Server:   server,
         Outgoing: make(chan *DataPacket, 10),
         Quit:     make(chan bool),
-        Stream:   NewRWStream(make([]byte,1024),BigEndian),
+        Stream:   NewRWStream(1024,BigEndian),
     }
 
     c.InitBuff()

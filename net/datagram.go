@@ -28,9 +28,11 @@ type Datagram struct {
     Stream RWStream     //can use enddian
 }
 
-func NewDatagram(endian int) {
+func NewDatagram(endian int) *Datagram{
     dg := &Datagram{}
     dg.Stream = *NewRWStream([]byte{1},endian)
+
+    return dg
 }
 
 //对数据进行拆包
@@ -48,6 +50,7 @@ func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
     var dataType,m1,m2 byte
     for {
         pos := cs.GetPos()
+        Log("pos:",pos)
 
         //拆包
         if c.DPSize > 0 {
@@ -56,6 +59,7 @@ func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
                 return
             }
         } else {
+            Log("ilen,pos:",ilen,pos)
             if ilen-pos < 7 {
                 return
             }

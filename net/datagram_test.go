@@ -26,7 +26,7 @@ type IDatagram interface {
 */
 
 func Test_Pack(t *testing.T) {
-    datagram := &Datagram{}
+    datagram := NewDatagram(BigEndian)
 
     data := []byte("1234567890")
     dp := &DataPacket{Type:1,Data:data}
@@ -49,20 +49,31 @@ func Test_Fetch(t *testing.T) {
     }
     */
 
-    datagram := &Datagram{}
+    datagram := NewDatagram(BigEndian)
     trans := NewTransport(1,nil,nil)
 
-    trans.Buff = []byte{0x59,0x7a,1,0,0,0,10}
+    for ii:=0;ii<3;ii++ {
+        if ii ==2 {
+            trans.InitBuff()
+        }
 
+    Log("buff1:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
+    buff := []byte{0x59,0x7a,1,0,0,0,10}
+    trans.BuffAppend(buff)
+
+    Log("buff1:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
     data0 := []byte("1234567890")
     trans.BuffAppend(data0)
-    data := trans.Buff
-    trans.BuffAppend(data)
-    trans.BuffAppend(data)
-    trans.BuffAppend(data)
-    trans.BuffAppend(data)
 
-    Log("buff:",trans.Buff)
+    Log("buff2:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
+    data := trans.Stream.Bytes()
+    trans.BuffAppend(data)
+    trans.BuffAppend(data)
+    Log("buff3:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
+    trans.BuffAppend(data)
+    trans.BuffAppend(data)
+    
+    Log("buff0:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
 
     n,dps := datagram.Fetch(trans)
     if n != 5 || len(dps)!= 5 {
@@ -86,5 +97,6 @@ func Test_Fetch(t *testing.T) {
     if !bytes.Equal(dp.Data,data0) {
         t.Error("fetch dps data is error" ,4, string(dp.Data))
     }
+}
 }
 
