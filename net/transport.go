@@ -13,7 +13,7 @@ type Transport struct {
 
     Quit chan bool
 
-    Buff     []byte
+    Stream *RWStream
     DataType int
     DPSize  int
 
@@ -37,23 +37,7 @@ func (c *Transport) Equal(other *Transport) bool {
 }
 
 func (c *Transport) InitBuff() {
-    //c.Buff = make([]byte,0)
-    c.Buff = []byte{}
-}
-
-
-//add buff cap
-func (c *Transport)buffGrow(addlen int) int{
-    m := len(c.Buff)
-    if m + addlen > cap(c.Buff) {
-        var b_ []byte
-        // not enough space anywhere
-        b_ = make([]byte,m+addlen)
-        copy(b_, c.Buff)
-        Log("b_",b_)
-        c.Buff = b_
-    }
-    return m
+    c.Stream.Reset()
 }
 
 // Write appends the contents of p to the []byte.  The return
@@ -61,13 +45,7 @@ func (c *Transport)buffGrow(addlen int) int{
 // If the buffer becomes too large, Write will panic with
 // ErrTooLarge.
 func (c *Transport) BuffAppend(p []byte) (n int) {
-    Log("len(buff)=",len(c.Buff),"len(p)=",len(p))
-    m:= c.buffGrow(len(p))
-    Log("buff",c.Buff)
-    a := copy((c.Buff)[m:], p)
-
-    Log("buff2",a,c.Buff)
-    return a
+    return c.Stream.Write(p)
 }
 
 func (c *Transport) SendDP(dataType int, data []byte) {
@@ -86,6 +64,7 @@ func NewTransport(newcid int, conn net.Conn, server *Server) *Transport {
         Server:   server,
         Outgoing: make(chan *DataPacket, 10),
         Quit:     make(chan bool),
+        Stream:       NewRWStream(make([]byte,1024),true)
     }
 
     c.InitBuff()
