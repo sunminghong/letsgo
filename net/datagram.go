@@ -35,6 +35,18 @@ func NewDatagram(endian int) *Datagram{
     return dg
 }
 
+func (d *Datagram) encrypt(plan []byte){
+    for i,_ := range plan {
+        plan[i] ^= 0x37
+    }
+}
+
+func (d *Datagram) decrypt(plan []byte){
+    for i,_ := range plan {
+        plan[i] ^= 0x37
+    }
+}
+
 //对数据进行拆包
 func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
     dps = []*DataPacket{}
@@ -64,6 +76,10 @@ func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
                 return
             }
 
+            _,heads := cs.Read(7)
+            d.decrypt(heads)
+
+            cs.SetPos(-7)
             m1,_ = cs.ReadByte()
             m2,_ = cs.ReadByte()
             if m1==mask1 && m2==mask2 {
@@ -125,6 +141,8 @@ func (d *Datagram) Pack(dp *DataPacket) []byte {
     buf[2] = byte(dp.Type)
 
     d.Stream.Endianer.PutUint32(buf[3:], uint32(ilen))
+
+    d.encrypt(buf)
 
     copy(buf[7:], dp.Data)
     return buf

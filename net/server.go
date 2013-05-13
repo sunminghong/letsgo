@@ -18,6 +18,9 @@ import (
 
 //datagram and datapacket define
 type IDatagram interface {
+    //Encrypt([]byte)
+    //Decrypt([]byte)
+
     Fetch(c *Transport) (n int, dps []*DataPacket)
     Pack(dp *DataPacket) []byte
 }

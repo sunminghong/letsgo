@@ -32,7 +32,7 @@ func Test_Pack(t *testing.T) {
     dp := &DataPacket{Type:1,Data:data}
     data2 := datagram.Pack(dp)
 
-    _data := [17]byte{0x59,0x7a,1,0,0,0,10}
+    _data := [17]byte{0x59 ^ 0x37,0x7a ^ 0x37,1 ^ 0x37,0 ^ 0x37,0 ^ 0x37,0 ^ 0x37,10 ^ 0x37}
     copy(_data[7:],data)
 
     if !bytes.Equal(_data[:],data2) {
@@ -58,7 +58,7 @@ func Test_Fetch(t *testing.T) {
         }
 
     Log("buff1:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
-    buff := []byte{0x59,0x7a,1,0,0,0,10}
+    buff := []byte{0x59 ^ 0x37,0x7a ^ 0x37,1 ^ 0x37,0 ^ 0x37,0 ^ 0x37,0 ^ 0x37,10 ^ 0x37}
     trans.BuffAppend(buff)
 
     Log("buff1:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
