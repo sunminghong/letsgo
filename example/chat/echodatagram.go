@@ -10,21 +10,25 @@
 =============================================================================*/
 package main
 
+import (
+    lnet "github.com/sunminghong/letsgo/net"
+)
+
 type EchoDatagram struct {
 
 }
 
 
 //对数据进行拆包
-func (d *EchoDatagram) Fetch(c *Transport) (n int,msgs []*DataPacket) {
-    msgs = []*DataPacket{}
+func (d *EchoDatagram) Fetch(c *lnet.Transport) (n int,msgs []*lnet.DataPacket) {
+    msgs = []*lnet.DataPacket{}
 
-    ilen := len(c.Buff)
+    ilen := c.Stream.Len()
     if ilen == 0 {
         return
     }
-    Log("Fetch",c.Buff)
-    msg := &DataPacket{Data: c.Buff}
+    lnet.Log("Fetch",c.Stream.Bytes())
+    msg := &lnet.DataPacket{Data: c.Stream.Bytes()}
     msgs = append(msgs,msg)
     n += 1
 
@@ -35,6 +39,6 @@ func (d *EchoDatagram) Fetch(c *Transport) (n int,msgs []*DataPacket) {
 }
 
 //对数据进行封包
-func (d *EchoDatagram) Pack(dp *DataPacket) []byte {
+func (d *EchoDatagram) Pack(dp *lnet.DataPacket) []byte {
     return dp.Data
 }

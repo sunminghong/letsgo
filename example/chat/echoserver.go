@@ -16,11 +16,11 @@ import (
 
 
 func main() {
-    datagram := EchoDatagram{ }
+    datagram := &EchoDatagram{ }
 
     config := make(map[string]interface{})
 
-    serv := lnet.NewServer(NewEchoClient,datagram,config)
+    serv := lnet.NewServer(MakeEchoClient,datagram,config)
 
     serv.Start("",4444)
 }
