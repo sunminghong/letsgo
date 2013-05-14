@@ -15,15 +15,16 @@ import (
     "./lib"
 )
 
-// IProtocol  
+// IClient  
 type Client struct {
     Transport *lnet.Transport
-    Name *string
+    Name string
+    Username *string
 }
 
-func MakeClient (name string,transport *lnet.Transport) lnet.IProtocol {
-    name_ := "someone"
-    return &Client{transport,&name_}
+func MakeClient (name string,transport *lnet.Transport) lnet.IClient {
+    username := "someone"
+    return &Client{transport,name,&username}
 }
 
 //对数据进行拆包
@@ -37,12 +38,12 @@ func (c *Client) ProcessDPs(dps []*lnet.DataPacket) {
         }
 
         var msg string
-        if *c.Name == "someone" {
-            c.Name = &md
+        if *c.Username == "someone" {
+            c.Username = &md
 
             msg = "system: welcome to " + md + "!"
         } else {
-            msg = (*c.Name) + "> "+ md
+            msg = (*c.Username) + "> "+ md
         }
         c.Transport.SendBoardcast([]byte(msg))
     }
@@ -53,12 +54,16 @@ func (c *Client) GetTransport() *lnet.Transport {
     return c.Transport
 }
 
+func (c *Client) GetName() string {
+    return c.Name
+}
+
 func (c *Client) Close() {
     c.Transport.Close()
 }
 
 func (c *Client) Closed() {
-    msg := "system: " + (*c.Name) + " is leave!"
+    msg := "system: " + (*c.Username) + " is leave!"
     c.Transport.SendBoardcast([]byte(msg))
 }
 

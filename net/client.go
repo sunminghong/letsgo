@@ -1,5 +1,5 @@
 /*=============================================================================
-#     FileName: proto.go
+#     FileName: client.go
 #         Desc: server base 
 #       Author: sunminghong
 #        Email: allen.fantasy@gmail.com
@@ -16,19 +16,18 @@ import (
     "time"
 )
 
-type Client struct {
+type ClientPool struct {
     read_buffer_size int
 
-    newproto NewProtocolFunc
+    newclient NewClientFunc
     datagram IDatagram
     /*runloop IRunLoop*/
 
     host string
     port int
 
-    Protos       *ProtocolMap
+    Clients       *ClientMap
     TransportNum int
-    LastCid int
 
     localhost string
     localport int
@@ -38,9 +37,9 @@ type Client struct {
     connaddr chan string
 }
 
-func NewClient(newproto NewProtocolFunc, datagram IDatagram /*,runloop IRunLoop*/) *Client {
-    c := &Client{Protos: NewProtocolMap()}
-    c.newproto = newproto
+func NewClientPool(newclient NewClientFunc, datagram IDatagram /*,runloop IRunLoop*/) *ClientPool {
+    c := &ClientPool{Clients: NewClientMap()}
+    c.newclient = newclient
     c.datagram = datagram
     /*
        if runloop != nil {
@@ -50,39 +49,14 @@ func NewClient(newproto NewProtocolFunc, datagram IDatagram /*,runloop IRunLoop*
        }
     */
 
-    c.running = make(map[int]bool)
     c.Quit = make(chan bool)
     c.read_buffer_size = 1024
     return c
 }
 
-func (c *Client) Init() {
-
-    <-c.Quit
-    return
-
-    for {
-        addr := <-c.connaddr
-        if addr != "exit" {
-            c.Close(0)
-            time.Sleep(3)
-            return
-        }
-        c.Start(addr, 0)
-
-        /*
-           c.running[0] = true
-           // wait for quiting (/quit). run until running ic true
-           for c.running[0] {
-                   time.Sleep(1 * 1e9)
-           }
-        */
-    }
-}
-
-func (c *Client) Start(name string,host string, port int) {
+func (c *ClientPool) Start(name string,host string, port int) {
     go func() {
-        Log("Hello Client!")
+        ////Log("Hello Client!")
 
         var addr string
         if port == 0 {
@@ -93,111 +67,102 @@ func (c *Client) Start(name string,host string, port int) {
 
         connection, err := net.Dial("tcp", addr)
 
-        // test(err, "dialing")
-
-        mesg := "dialing"
+        //mesg := "dialing"
         if err != nil {
-            Log("CLIENT: ERROR: ", mesg)
+            //Log("CLIENT: ERROR: ", mesg)
             return
         } else {
-            Log("Ok: ", mesg)
+            //Log("Ok: ", mesg)
         }
         defer connection.Close()
-        Log("main(): connected ")
+        //Log("main(): connected ")
 
         newcid := c.allocTransportid()
 
         transport := NewTransport(newcid, connection, c)
-        proto := c.newproto(name,transport)
-        c.Protos.Add(newcid, proto)
-        c.running[newcid] = true
+        client := c.newclient(name,transport)
+        c.Clients.Add(newcid,name, client)
 
         //创建go的线程 使用Goroutine
         go c.transportSender(transport)
-        go c.transportReader(transport, proto)
+        go c.transportReader(transport, client)
 
 
-        time.Sleep(3)
+        time.Sleep(2)
 
         <-transport.Quit
-        /*
-           // wait for quiting (/quit). run until running ic true
-           for c.running[newcid] {
-                   time.Sleep(1 * 1e9)
-           }*/
     }()
     <-c.Quit
 }
 
-func (c *Client) Close(cid int) {
+func (c *ClientPool) Close(cid int) {
     if cid == 0 {
-        for cid_, _ := range c.running {
+        for _, client := range c.Clients.All(){
             //c.running[cid] = false
-            c.Protos.Get(cid_).GetTransport().Quit <- true
+            client.GetTransport().Quit <- true
         }
         return
     }
 
     //c.running[cid] = false
-    c.Protos.Get(cid).GetTransport().Quit <- true
+    c.Clients.Get(cid).GetTransport().Quit <- true
 }
 
-func (c *Client) removeClient(cid int) {
-    c.Protos.Remove(cid)
+func (c *ClientPool) removeClient(cid int) {
+    c.Clients.Remove(cid)
 }
 
-func (c *Client) allocTransportid() int {
+func (c *ClientPool) allocTransportid() int {
     c.TransportNum += 1
-    c.LastCid = c.TransportNum
     return c.TransportNum
 }
 
-func (c *Client) transportReader(transport *Transport, proto IProtocol) {
+func (c *ClientPool) transportReader(transport *Transport, client IClient) {
     buffer := make([]byte, c.read_buffer_size)
     for {
 
         bytesRead, err := transport.Conn.Read(buffer)
 
         if err != nil {
-            proto.Closed()
+            client.Closed()
             transport.Closed()
             c.removeClient(transport.Cid)
-            Log(err)
+            //Log(err)
             break
         }
 
-        Log("read to buff:", bytesRead)
+        //Log("read to buff:", bytesRead)
         transport.BuffAppend(buffer[0:bytesRead])
 
-        Log("transport.Buff", transport.Stream.Bytes())
+        //Log("transport.Buff", transport.Stream.Bytes())
         n, dps := c.datagram.Fetch(transport)
-        Log("fetch message number", n)
+        //Log("fetch message number", n)
         if n > 0 {
-            proto.ProcessDPs(dps)
+            client.ProcessDPs(dps)
         }
     }
-    Log("TransportReader stopped for ", transport.Cid)
+    //Log("TransportReader stopped for ", transport.Cid)
 }
 
-func (c *Client) transportSender(transport *Transport) {
+func (c *ClientPool) transportSender(transport *Transport) {
     for {
         select {
         case dp := <-transport.Outgoing:
-            Log(dp.Type, dp.Data)
+            //Log(dp.Type, dp.Data)
             buf := c.datagram.Pack(dp)
             transport.Conn.Write(buf)
         case <-transport.Quit:
-            Log("Transport ", transport.Cid, " quitting")
+            //Log("Transport ", transport.Cid, " quitting")
             transport.Conn.Close()
             break
         }
     }
 }
 
-func (c *Client) boardcastHandler(boardcastChan <-chan *DataPacket) {
+func (c *ClientPool) boardcastHandler(boardcastChan <-chan *DataPacket) {
     for {
         //在go里面没有while do ，for可以无限循环
-        Log("boardcastHandler: chan Waiting for input")
+        //Log("boardcastHandler: chan Waiting for input")
         dp := <-boardcastChan
         //buf := c.datagram.pack(dp)
 
@@ -206,24 +171,24 @@ func (c *Client) boardcastHandler(boardcastChan <-chan *DataPacket) {
             sendCid = 0
         }
 
-        for Cid, c := range c.Protos.All() {
+        for Cid, c := range c.Clients.All() {
             if sendCid == Cid {
                 continue
             }
             c.GetTransport().Outgoing <- dp
         }
-        Log("boardcastHandler: Handle end!")
+        //Log("boardcastHandler: Handle end!")
     }
 }
 
 //send boardcast message data for other object
-func (c *Client) SendBoardcast(transport *Transport, data []byte) {
+func (c *ClientPool) SendBoardcast(transport *Transport, data []byte) {
     //dp := &DataPacket{Type: DATAPACKET_TYPE_BOARDCAST, Data: data, Other: transport.Cid}
     //c.boardcastChan <- dp
 }
 
 //send message data for other object
-func (c *Client) SendDP(transport *Transport, dataType byte, data []byte) {
+func (c *ClientPool) SendDP(transport *Transport, dataType byte, data []byte) {
     dp := &DataPacket{Type: dataType, Data: data}
     transport.Outgoing <- dp
 

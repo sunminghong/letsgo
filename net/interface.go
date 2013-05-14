@@ -23,10 +23,11 @@ type IDatagram interface {
     Pack(dp *DataPacket) []byte
 }
 
-//define proto
-type NewProtocolFunc func(name string,transport *Transport) IProtocol
+//define client
+type NewClientFunc func(name string, transport *Transport) IClient
 
-type IProtocol interface {
+type IClient interface {
+    GetName() string
     ProcessDPs(dps []*DataPacket)
     Close()
     Closed()
@@ -34,7 +35,7 @@ type IProtocol interface {
 
     /*
     SetStatus(status int)
-    // return this protocol status ,=0 connected =1 disconnect =2 pause
+    // return this client status ,=0 connected =1 disconnect =2 pause
     GetStatus() int
     */
 }

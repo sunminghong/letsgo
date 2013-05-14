@@ -23,64 +23,98 @@ type DataPacket struct {
     Other interface{}
 }
 
-type ProtocolMap struct {
+type ClientMap struct {
     maplock sync.RWMutex
 
-    maps map[int]IProtocol
+    maps map[int]IClient
+    mapsByName map[string]int
 }
 
-func (tm *ProtocolMap) Add(cid int, proto IProtocol) {
+func (tm *ClientMap) Add(cid int,name string, client IClient) {
     tm.maplock.Lock()
     defer tm.maplock.Unlock()
 
-    tm.maps[cid] = proto
+    tm.maps[cid] = client
+    if len(name) > 0 {
+        tm.mapsByName[name] = cid
+    }
 }
 
-func (tm *ProtocolMap) Remove(cid int) {
+func (tm *ClientMap) Remove(cid int) {
     tm.maplock.Lock()
     defer tm.maplock.Unlock()
 
     _, ok := tm.maps[cid]
     if ok {
+        name := tm.maps[cid].GetName()
+        if len(name)>0 {
+            _,ok :=tm.mapsByName[name]
+            if ok {
+                delete(tm.mapsByName,name)
+            }
+        }
         delete(tm.maps, cid)
     }
 }
 
-func (tm *ProtocolMap) Get(cid int) IProtocol {
-    t, ok := tm.maps[cid]
+func (tm *ClientMap) RemoveByName(name string) {
+    tm.maplock.Lock()
+    defer tm.maplock.Unlock()
+
+    cid,ok :=tm.mapsByName[name]
     if ok {
-        return t
+        _, ok := tm.maps[cid]
+        if ok {
+            delete(tm.maps, cid)
+        }
+        delete(tm.mapsByName,name)
+    }
+}
+
+func (tm *ClientMap) Get(cid int) IClient {
+    c, ok := tm.maps[cid]
+    if ok {
+        return c
     }
     return nil
 }
-func (tm *ProtocolMap) All() map[int]IProtocol {
+
+func (tm *ClientMap) GetByName(name string) IClient {
+    cid, ok := tm.mapsByName[name]
+    if ok {
+        return tm.maps[cid]
+    }
+    return nil
+}
+
+func (tm *ClientMap) All() map[int]IClient {
     return tm.maps
 }
 
-func NewProtocolMap() *ProtocolMap { return &ProtocolMap{maps: make(map[int]IProtocol)} }
+func NewClientMap() *ClientMap { return &ClientMap{maps: make(map[int]IClient),mapsByName: make(map[string]int)} }
 
 type Server struct {
     boardcast_chan_num int
     read_buffer_size   int
 
-    makeproto NewProtocolFunc
+    makeclient NewClientFunc
     datagram   IDatagram
 
     host string
     port int
 
     //define transport dict/map set
-    Protos *ProtocolMap
+    Clients *ClientMap
 
     TransportNum int
 
     boardcastChan chan *DataPacket
 }
 
-func NewServer(makeproto NewProtocolFunc, datagram IDatagram, config map[string]interface{}) *Server {
-    s := &Server{Protos: NewProtocolMap()}
+func NewServer(makeclient NewClientFunc, datagram IDatagram, config map[string]interface{}) *Server {
+    s := &Server{Clients: NewClientMap()}
 
-    s.makeproto = makeproto
+    s.makeclient = makeclient
 
     s.datagram = datagram
 
@@ -120,7 +154,7 @@ func (s *Server) Start(host string, port int) {
 }
 
 func (s *Server) removeClient(cid int) {
-    s.Protos.Remove(cid)
+    s.Clients.Remove(cid)
 }
 
 func (s *Server) allocTransportid() int {
@@ -131,23 +165,24 @@ func (s *Server) allocTransportid() int {
 //该函数主要是接受新的连接和注册用户在transport list
 func (s *Server) transportHandler(newcid int, connection net.Conn) {
     transport := NewTransport(newcid, connection, s)
-    proto := s.makeproto("c"+strconv.Itoa(newcid),transport)
-    s.Protos.Add(newcid, proto)
+    name := "c_"+strconv.Itoa(newcid)
+    client := s.makeclient(name,transport)
+    s.Clients.Add(newcid, name, client)
 
     //创建go的线程 使用Goroutine
     go s.transportSender(transport)
-    go s.transportReader(transport, proto)
+    go s.transportReader(transport, client)
 
 }
 
-func (s *Server) transportReader(transport *Transport, proto IProtocol) {
+func (s *Server) transportReader(transport *Transport, client IClient) {
     buffer := make([]byte, s.read_buffer_size)
     for {
 
         bytesRead, err := transport.Conn.Read(buffer)
 
         if err != nil {
-            proto.Closed()
+            client.Closed()
             transport.Closed()
             s.removeClient(transport.Cid)
             Log(err)
@@ -161,7 +196,7 @@ func (s *Server) transportReader(transport *Transport, proto IProtocol) {
         n, dps := s.datagram.Fetch(transport)
         Log("fetch message number", n)
         if n > 0 {
-            proto.ProcessDPs(dps)
+            client.ProcessDPs(dps)
         }
     }
     Log("TransportReader stopped for ", transport.Cid)
@@ -194,7 +229,7 @@ func (s *Server) boardcastHandler(boardcastChan <-chan *DataPacket) {
             sendCid = 0
         }
 
-        for Cid, c := range s.Protos.All() {
+        for Cid, c := range s.Clients.All() {
             if sendCid == Cid {
                 continue
             }

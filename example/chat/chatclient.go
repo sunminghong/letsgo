@@ -17,22 +17,26 @@ import (
     lnet "github.com/sunminghong/letsgo/net"
     "os"
     "strings"
-    "strconv"
     "time"
+    "strconv"
 )
 
-// IProtocol  
+// IClient  
 type Client struct {
     Transport *lnet.Transport
-    Name      *string
+    Name      string
+    Username    *string
 }
 
-func MakeClient(transport *lnet.Transport) lnet.IProtocol {
-    name := "someone"
-    c := &Client{transport, &name}
-
+func MakeClient(name string,transport *lnet.Transport) lnet.IClient {
+    username := "someone"
+    c := &Client{transport, name, &username}
 
     return c
+}
+
+func (c *Client) GetName() string {
+    return c.Name
 }
 
 func (c *Client) ProcessDPs(dps []*lnet.DataPacket) {
@@ -55,12 +59,12 @@ func (c *Client) Close() {
 }
 
 func (c *Client) Closed() {
-    msg := "system: " + (*c.Name) + " is leave!"
+    msg := "system: " + (*c.Username) + " is leave!"
     c.Transport.SendBoardcast([]byte(msg))
 }
 
 // clientsender(): read from stdin and send it via network
-func clientsender(cid *int,client *lnet.Client) {
+func clientsender(cid *int,client *lnet.ClientPool) {
     reader := bufio.NewReader(os.Stdin)
     for {
         if (*cid)==0 {
@@ -73,48 +77,67 @@ func clientsender(cid *int,client *lnet.Client) {
             cmds := strings.Split(cmd," ")
             switch cmds[0]{
             case "/conn":
-                addr := cmds[1]
-                oldnum := client.TransportNum
+                var name,addr string
+                if len(cmds)>2 {
+                    name = cmds[1]
+                    addr = cmds[2]
+                }else {
+                    name = "c_" + strconv.Itoa(*cid)
+                    addr = cmds[1]
+                }
 
-                go client.Start(addr,0)
+                p := client.Clients.GetByName(name)
+                if p != nil {
+                    fmt.Println(name," is exists !")
+                    continue
+                }
+
+                go client.Start(name,addr,0)
+
 
                 fmt.Print("please input your name:")
                 input, _ := reader.ReadBytes('\n')
                 input =input[0:len(input)-1]
-                name2 := string(input)
-                c.Name = &name2
 
                 for true {
-                    if client.TransportNum > oldnum  
-                    && client.Protos.Get(client.LastCid) !=nil{
-                        _cid = client.LastCid
-                        cid = &_cid
+                    b := client.Clients.GetByName(name)
+                    if b!=nil{
+                        change(cid,client,name)
                         break
                     }
                     time.Sleep(2*1e3)
                 }
-                c.GetTransport().SendDP(0,input)
+                client.Clients.Get(*cid).GetTransport().SendDP(0,input)
 
             case "/change":
-                fmt.Println(cmds[1])
-                _cid,err := strconv.Atoi(cmds[1])
-                if err !=nil {
-                    fmt.Println("command format is wrong!")
-                    continue
-                }
-                cid = &_cid
-
-                for c,_:=range client.Protos.All() {
-                    fmt.Println(c)
-                }
+                name := cmds[1]
+                change(cid,client,name)
 
             case "/quit\n":
-                client.Protos.Get(*cid).GetTransport().SendDP(0, []byte("/quit"))
+                client.Clients.Get(*cid).GetTransport().SendDP(0, []byte("/quit"))
+
             default:
-                client.Protos.Get(*cid).GetTransport().SendDP(0,input[0:len(input)-1])
+                client.Clients.Get(*cid).GetTransport().SendDP(0,input[0:len(input)-1])
             }
         } else {
-            client.Protos.Get(*cid).GetTransport().SendDP(0,input[0:len(input)-1])
+            client.Clients.Get(*cid).GetTransport().SendDP(0,input[0:len(input)-1])
+        }
+    }
+}
+
+func change(cid *int,client *lnet.ClientPool,name string,) {
+    b:= client.Clients.GetByName(name)
+    if b!=nil{
+        _cid := b.GetTransport().Cid
+        *cid = _cid
+        fmt.Println("current connection change:")
+    }
+
+    for c,p:=range client.Clients.All() {
+        if p.GetName() != name {
+            fmt.Println(" ",c,p.GetName())
+        } else {
+            fmt.Println("*",c,p.GetName())
         }
     }
 }
@@ -123,7 +146,7 @@ func main() {
     datagram := &lib.Datagram{}
 
     cid := 0
-    client := lnet.NewClient(MakeClient, datagram)
+    client := lnet.NewClientPool(MakeClient, datagram)
     go clientsender(&cid,client)
 
     //client.Start("", 4444)
