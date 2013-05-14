@@ -12,46 +12,18 @@ package main
 
 import (
     lnet "github.com/sunminghong/letsgo/net"
+    "./lib"
 )
-// Idatagram
-type Datagram struct {
 
-}
-
-
-//对数据进行拆包
-func (d *Datagram) Fetch(c *lnet.Transport) (n int,msgs []*lnet.DataPacket) {
-    msgs = []*lnet.DataPacket{}
-
-    ilen := c.Stream.Len()
-    if ilen == 0 {
-        return
-    }
-    lnet.Log("Fetch",c.Stream.Bytes())
-    msg := &lnet.DataPacket{Data: c.Stream.Bytes()}
-    msgs = append(msgs,msg)
-    n += 1
-
-    //send to channel for consume
-    c.InitBuff()
-
-    return
-}
-
-//对数据进行封包
-func (d *Datagram) Pack(dp *lnet.DataPacket) []byte {
-    return dp.Data
-}
-
-// IClient  
+// IProtocol  
 type Client struct {
     Transport *lnet.Transport
     Name *string
 }
 
-func MakeClient (transport *lnet.Transport) lnet.IClient {
-    name := "someone"
-    return &Client{transport,&name}
+func MakeClient (name string,transport *lnet.Transport) lnet.IProtocol {
+    name_ := "someone"
+    return &Client{transport,&name_}
 }
 
 //对数据进行拆包
@@ -59,7 +31,7 @@ func (c *Client) ProcessDPs(dps []*lnet.DataPacket) {
     for _,dp:=range dps {
         md := string(dp.Data)
 
-        if md == "quit" {
+        if md == "/quit" {
             c.Close()
             return
         }
@@ -91,7 +63,7 @@ func (c *Client) Closed() {
 }
 
 func main() {
-    datagram := &Datagram{ }
+    datagram := &lib.Datagram{ }
 
     config := make(map[string]interface{})
 
@@ -99,4 +71,3 @@ func main() {
 
     serv.Start("",4444)
 }
-

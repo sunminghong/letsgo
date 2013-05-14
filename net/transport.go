@@ -17,16 +17,20 @@ type Transport struct {
     DataType byte
     DPSize  int
 
-    Server *Server
+    Server IServer
     Conn   net.Conn
 }
 
-type newTransportFunc func(newcid int, conn net.Conn, server *Server) *Transport
 
 //define method what Close transport's connection for struct Transport
 func (c *Transport) Close() {
     c.Quit <- true
     c.Conn.Close()
+}
+
+//define method what Close transport's connection for struct Transport
+func (c *Transport) Closed() {
+    //
 }
 
 func (c *Transport) Equal(other *Transport) bool {
@@ -57,7 +61,7 @@ func (c *Transport) SendBoardcast(data []byte) {
 }
 
 // new Transport object
-func NewTransport(newcid int, conn net.Conn, server *Server) *Transport {
+func NewTransport(newcid int, conn net.Conn, server IServer) *Transport {
     c := &Transport{
         Cid:      newcid,
         Conn:     conn,
