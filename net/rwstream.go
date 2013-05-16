@@ -79,7 +79,7 @@ func (b *RWStream) Init(params ...interface{}) {
             b.buf = make([]byte, b.buffSize)
             b.last = 0
             b.off = 0
-            b.end = tmp
+            b.end = 0
         case []byte:
             b.buf = tmp[:]
             b.buffSize = len(tmp)
