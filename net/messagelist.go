@@ -18,63 +18,112 @@ type MessageListWriter struct {
     *MessageWriter
 
     length int
+    itemnum int
 
     meta []byte
+}
+func (list *MessageListWriter) Init() {
+    Log("messagelistwriter Init by called")
+    list.init(768)
+    //list.MessageWriter.init(768)
+}
+
+func (msg *MessageListWriter) WriteEndTag() {
+    if msg.itemnum ==0 {
+        msg.itemnum = msg.maxInd
+        msg.needWriteMeta = false
+    } else if msg.maxInd != msg.itemnum {
+        panic("write list item num is wrong")
+    }
+
+    msg.length ++
+
+    msg.wind = 0
+    msg.maxInd = 0
+}
+
+//对数据进行封包
+func (msg *MessageListWriter) ToBytes() []byte {
+    msg.metabuf.SetPos(0)
+    msg.buf.SetPos(0)
+    //write heads
+    _,heads := msg.metabuf.Read(4)
+
+    //write list bytes length
+    msg.metabuf.Endianer.PutUint16(heads,
+        uint16(msg.buf.Len()+msg.metabuf.Len() - 2))
+    heads[2] = byte(msg.length)
+
+    Log("wind:",msg.wind)
+    heads[3] = byte(msg.wind)
+    Log("metabuf",msg.metabuf.Bytes())
+
+    msg.metabuf.Write(msg.buf.Bytes())
+
+    Log("metabuf",msg.metabuf.Bytes())
+    return msg.metabuf.Bytes()
 }
 
 type MessageListReader struct {
     *MessageReader
 
-    length int
+    //list length
+    Length int
 
-    meta []byte
+    //list byte length
+    ByteLength int
 }
-/*
+
 //对数据进行拆包
-func (msg *MessageList) PreRead(data interface{}){
-    Log("messagelist is called")
-    if len(params) > 0 {
-        msg.buf := NewRWStream(data,BigEndian)
-        buf = msg.buf
+func (msg *MessageListReader) Init(data []byte) {
+    msg.buf = NewRWStream(data,BigEndian)
+    buf := msg.buf
 
-        length,_:= buf.ReadUint()
+    byteLength,_:= buf.ReadUint16()
+    length,_ := buf.ReadByte()
 
-        itemnum,_ = buf.ReadByte()
-        msg.meta = buf.Read(itemnum)
-        //meta[b>>3] = (b & 0x07)
-    } else {
-        msg.buf := NewRWStream(512,BigEndian)
-        msg.metabuf := NewRWStream(30,BigEndian)
-        msg.Code = 0
-        msg.Ver = 0
-        msg.wind = 0
+    msg.ByteLength = int(byteLength)
+    msg.Length = int(length)
 
-        //leave 4 bytes to head(code,ver,metaitemdata)
-        msg.metabuf.WriteBytes([]byte{0,0,0,0})
-    }
+    msg.init()
 }
 
-func (msg *Message) WriteHead() {
-    if msg.metabuf.Len() > 0 {
+
+func (msg *MessageListReader) ReadStartTag(data []byte) {
+    if msg.wind == 0 {
         return
     }
-    
-    msg.metabuf := NewRWStream(30,BigEndian)
-    msg.metabuf.WriteBytes([]byte{0})
+
+    //对齐列表项，如果列表数据项比读取的多，读下一个列表的数据是需要先将指针对齐
+    for i:=msg.wind;i<msg.maxInd;i++ {
+        ty,ok := msg.meta[i]
+        Log("checkread ty,ok",ty,ok)
+        if !ok {
+            continue
+        }
+
+        switch ty{
+        case TY_UINT:
+            msg.buf.ReadUint()
+        case TY_INT:
+            msg.buf.ReadInt()
+        case TY_UINT16:
+            msg.buf.ReadUint16()
+        case TY_UINT32:
+            msg.buf.ReadUint32()
+        case TY_STRING:
+            msg.buf.ReadString()
+        case TY_LIST:
+            ll,_ := msg.buf.ReadUint16()
+            msg.buf.Read(int(ll))
+        }
+    }
+    msg.wind = 0
 }
 
-//对数据进行封包
-func (msg *Message) ToBytes(code int,ver byte) []byte {
-    //write heads
-    heads := msg.metabuf.Read(4)
-    binary.BigEndian.PutUint16(heads, uint16(code))
-    heads[2] = ver
+func (msg *MessageListReader) ReadEndTag(data []byte) {
+    msg.wind = 0
 
-    heads[3] = byte(msg.wind)
-    msg.metabuf.Write(msg.buf.Bytes())
-
-    fmt.Pringln(msg.metabuf.Bytes())
-    return msg.metabuf.Bytes()
+    //对齐列表项，如果列表数据项比读取的多，读下一个列表的数据是需要先将指针对齐
 }
 
-*/

@@ -21,7 +21,6 @@ const (
     TY_LIST = 3
     TY_UINT16 = 4
     TY_UINT32 = 5
-    TY_INT32 = 6
 )
 
 type MessageWriter struct {
@@ -34,13 +33,15 @@ type MessageWriter struct {
     //meta data buff
     metabuf *RWStream
 
-    //meta data write item current index
-    wind int
-
     meta map[int]byte
     //items map[int]interface{}
 
-    maxItem int
+
+    //meta data write item current index
+    wind int
+    maxInd int
+
+    needWriteMeta bool
 }
 
 func NewMessageWriter() *MessageWriter {
@@ -51,16 +52,23 @@ func NewMessageWriter() *MessageWriter {
 
 //对数据进行拆包
 func (msg *MessageWriter) Init() {
+    msg.init(128)
+}
+
+
+func (msg *MessageWriter) init(bufsize int) {
     msg.meta = make(map[int]byte)
-    msg.buf = NewRWStream(128,BigEndian)
-    msg.maxItem = 0
+    msg.buf = NewRWStream(bufsize,BigEndian)
+    msg.maxInd = 0
     msg.Code = 0
     msg.Ver = 0
     msg.wind = 0
+    msg.needWriteMeta = true
 
     msg.metabuf = NewRWStream(30,BigEndian)
 
     //leave 4 bytes to head(code,ver,metaitemdata)
+    //leave 4 bytes to head(list length(uint16),list length(byte),metaitemdataLength(byte))
     msg.metabuf.Write([]byte{0,0,0,0})
 }
 
@@ -68,63 +76,71 @@ func (msg *MessageWriter) preWrite(wind int) {
     if wind == 0 {
         return
     }
-    if wind < msg.maxItem{
+    if wind < msg.maxInd{
         panic("item write order is wrong!")
     }
-    msg.maxItem = wind
+    msg.maxInd = wind
 }
+
+func (msg *MessageWriter) writeMeta(datatype int) {
+    if !msg.needWriteMeta {
+        return
+    }
+    msg.metabuf.WriteByte(byte((msg.maxInd << 3) | datatype))
+}
+
 func (msg *MessageWriter) WriteUint16(x uint16,wind int){
     msg.preWrite(wind)
 
     msg.buf.WriteUint16(uint16(x))
-    msg.metabuf.WriteByte(byte((msg.maxItem << 3) | TY_UINT16))
+    msg.writeMeta(TY_UINT16)
     msg.wind ++
-    msg.maxItem ++
+    msg.maxInd ++
 }
 
 func (msg *MessageWriter) WriteUint32(x uint32,wind int){
     msg.preWrite(wind)
 
     msg.buf.WriteUint32(uint32(x))
-    msg.metabuf.WriteByte(byte((msg.maxItem << 3) | TY_UINT32))
+    msg.writeMeta(TY_UINT32)
     msg.wind ++
-    msg.maxItem ++
+    msg.maxInd ++
 }
 
 func (msg *MessageWriter) WriteUint(x uint,wind int){
     msg.preWrite(wind)
 
     msg.buf.WriteUint(uint(x))
-    msg.metabuf.WriteByte(byte((msg.maxItem << 3) | TY_UINT))
+    msg.writeMeta(TY_UINT)
     msg.wind ++
-    msg.maxItem ++
+    msg.maxInd ++
 }
 
 func (msg *MessageWriter) WriteInt(x int,wind int){
     msg.preWrite(wind)
 
     msg.buf.WriteInt(int(x))
-    msg.metabuf.WriteByte(byte((msg.maxItem << 3) | TY_INT))
+    msg.writeMeta(TY_INT)
     msg.wind ++
-    msg.maxItem ++
+    msg.maxInd ++
 }
 
 func (msg *MessageWriter) WriteString(x string,wind int){
     msg.preWrite(wind)
 
     msg.buf.WriteString(x)
-    msg.metabuf.WriteByte(byte((msg.maxItem << 3) | TY_STRING))
+    msg.writeMeta(TY_STRING)
     msg.wind ++
-    msg.maxItem ++
+    msg.maxInd ++
 }
 
 func (msg *MessageWriter) WriteList(list *MessageListWriter,wind int) {
     msg.preWrite(wind)
 
-    msg.buf.Write(list.ToBytes(0,0))
-    msg.metabuf.WriteByte(byte((msg.maxItem << 3) | TY_LIST))
+    msg.buf.Write(list.ToBytes())
+    msg.writeMeta(TY_LIST)
     msg.wind ++
-    msg.maxItem ++
+    msg.maxInd ++
 }
 
 //write no sign interge
@@ -217,7 +233,8 @@ type MessageReader struct {
     meta map[int]byte
     //items map[int]interface{}
 
-    maxItem int
+    maxInd int
+    itemnum int
 }
 
 func NewMessageReader(data []byte) *MessageReader{
@@ -237,6 +254,12 @@ func (msg *MessageReader) Init(data []byte) {
     msg.Code = code
     msg.Ver = ver
 
+    msg.init()
+}
+
+func (msg *MessageReader) init() {
+
+    buf := msg.buf
     _itemnum,_ := buf.ReadByte()
     itemnum := int(_itemnum)
     n,meta := buf.Read(itemnum)
@@ -245,19 +268,20 @@ func (msg *MessageReader) Init(data []byte) {
     }
 
     Log("init meta:",meta)
-    maxitem := 0
+    maxind := 0
     msg.meta = make(map[int]byte)
 
     for i:=0;i<itemnum;i++ {
         m := meta[i]
         ind := int(m>>3)
-        if ind > maxitem {
-            maxitem = ind
+        if ind > maxind {
+            maxind = ind
         }
         //msg.meta[ind] = (i<<3) |(m & 0x07)
         msg.meta[ind] = (m & 0x07)
     }
-    msg.maxItem = maxitem
+    msg.maxInd = maxind
+    msg.itemnum = itemnum
     msg.wind = 0
     Log(msg.meta)
 }
@@ -367,8 +391,8 @@ func (msg *MessageReader) alignPos(wind int) {
 */
 
 func (msg *MessageReader) checkRead(datatype int) bool{
-    Log("checkread wind,maxItem",msg.wind,msg.maxItem)
-    if msg.wind > msg.maxItem {
+    Log("checkread wind,maxInd",msg.wind,msg.maxInd)
+    if msg.wind > msg.maxInd {
         return false
     }
 
