@@ -32,6 +32,7 @@ type IClient interface {
     Close()
     Closed()
     GetTransport() *Transport
+    SendMessage(msg *MessageWriter)
 
     /*
     SetStatus(status int)

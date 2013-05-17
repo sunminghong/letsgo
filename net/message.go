@@ -24,7 +24,7 @@ const (
 )
 
 type MessageWriter struct {
-    Code uint16
+    Code int
     Ver byte
 
     // data item buff
@@ -66,6 +66,11 @@ func (msg *MessageWriter) init(bufsize int) {
     //leave 4 bytes to head(code,ver,metaitemdata)
     //leave 4 bytes to head(list length(uint16),list length(byte),metaitemdataLength(byte))
     msg.metabuf.Write([]byte{0,0,0,0})
+}
+
+func (msg *MessageWriter) SetCode(code int,ver byte) {
+    msg.Code = code
+    msg.Ver = ver
 }
 
 func (msg *MessageWriter) preWrite(wind int) {
@@ -197,13 +202,17 @@ func (msg *MessageWriter) Write(x ...interface{}) {
 }
 
 //对数据进行封包
-func (msg *MessageWriter) ToBytes(code int,ver byte) []byte {
+func (msg *MessageWriter) ToBytes() []byte {
+    if msg.Code == 0 {
+        panic("msg.Code is 0")
+    }
+
     msg.metabuf.SetPos(0)
     msg.buf.SetPos(0)
     //write heads
     heads,_ := msg.metabuf.Read(4)
-    msg.metabuf.Endianer.PutUint16(heads, uint16(code))
-    heads[2] = ver
+    msg.metabuf.Endianer.PutUint16(heads, uint16(msg.Code))
+    heads[2] = msg.Ver
 
     Log("wind:",msg.wind)
     heads[3] = byte(msg.wind)
@@ -217,8 +226,8 @@ func (msg *MessageWriter) ToBytes(code int,ver byte) []byte {
 /////////////////////////////////////////////////////////////////////////////////
 
 type MessageReader struct {
-    Code uint16
-    Ver byte
+    Code int
+    Ver int
 
     // data item buff
     buf *RWStream
@@ -242,8 +251,8 @@ func NewMessageReader(data []byte) *MessageReader{
     code,_:= buf.ReadUint16()
     ver,_ := buf.ReadByte()
 
-    msg.Code = code
-    msg.Ver = ver
+    msg.Code = int(code)
+    msg.Ver = int(ver)
 
     msg.init()
 

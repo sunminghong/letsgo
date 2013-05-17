@@ -11,7 +11,6 @@
 package main
 
 import (
-    "./lib"
     "bufio"
     "fmt"
     lnet "github.com/sunminghong/letsgo/net"
@@ -19,49 +18,8 @@ import (
     "strings"
     "time"
     "strconv"
+    "./protos"
 )
-
-// IClient  
-type Client struct {
-    Transport *lnet.Transport
-    Name      string
-    Username    *string
-}
-
-func MakeClient(name string,transport *lnet.Transport) lnet.IClient {
-    username := "someone"
-    c := &Client{transport, name, &username}
-
-    return c
-}
-
-func (c *Client) GetName() string {
-    return c.Name
-}
-
-func (c *Client) ProcessDPs(dps []*lnet.DataPacket) {
-    for _, dp := range dps {
-        md := string(dp.Data)
-
-        fmt.Println()
-        fmt.Println(md)
-        fmt.Print("you> ")
-    }
-}
-
-//对数据进行拆包
-func (c *Client) GetTransport() *lnet.Transport {
-    return c.Transport
-}
-
-func (c *Client) Close() {
-    c.Transport.Close()
-}
-
-func (c *Client) Closed() {
-    msg := "system: " + (*c.Username) + " is leave!"
-    c.Transport.SendBoardcast([]byte(msg))
-}
 
 // clientsender(): read from stdin and send it via network
 func clientsender(cid *int,client *lnet.ClientPool) {
@@ -73,6 +31,9 @@ func clientsender(cid *int,client *lnet.ClientPool) {
         fmt.Print("you> ")
         input, _ := reader.ReadBytes('\n')
         cmd := string(input[:len(input)-1])
+        
+        var text string
+
         if cmd[0] == '/' {
             cmds := strings.Split(cmd," ")
             switch cmds[0]{
@@ -107,21 +68,29 @@ func clientsender(cid *int,client *lnet.ClientPool) {
                     }
                     time.Sleep(2*1e3)
                 }
-                client.Clients.Get(*cid).GetTransport().SendDP(0,input)
+
+                text = string(input)
 
             case "/change":
                 name := cmds[1]
                 change(cid,client,name)
 
             case "/quit\n":
-                client.Clients.Get(*cid).GetTransport().SendDP(0, []byte("/quit"))
+                text = "/quit"
 
             default:
-                client.Clients.Get(*cid).GetTransport().SendDP(0,input[0:len(input)-1])
+                text = string(input[:len(input)-1])
             }
         } else {
-            client.Clients.Get(*cid).GetTransport().SendDP(0,input[0:len(input)-1])
+            text = string(input[:len(input)-1])
         }
+
+        msg := lnet.NewMessageWriter()
+        msg.SetCode(1011,0)
+        msg.WriteString(text,0)
+
+        lnet.Log(client.Clients.All())
+        client.Clients.Get(*cid).SendMessage(msg)
     }
 }
 
@@ -143,10 +112,10 @@ func change(cid *int,client *lnet.ClientPool,name string,) {
 }
 
 func main() {
-    datagram := &lib.Datagram{}
+    datagram := &lnet.Datagram{}
 
     cid := 0
-    client := lnet.NewClientPool(MakeClient, datagram)
+    client := lnet.NewClientPool(protos.MakeClient, datagram)
     go clientsender(&cid,client)
 
     //client.Start("", 4444)
@@ -156,3 +125,4 @@ func main() {
         time.Sleep(3*1e3)
     }
 }
+

@@ -12,23 +12,18 @@ package main
 
 import (
     lnet "github.com/sunminghong/letsgo/net"
-    "./lib"
+    "./protos"
 )
-
-// IClient  
-type Client struct {
-    Transport *lnet.Transport
-    Name string
-    Username *string
-}
-
-func MakeClient (name string,transport *lnet.Transport) lnet.IClient {
-    username := "someone"
-    return &Client{transport,name,&username}
-}
-
+/*
 //对数据进行拆包
 func (c *Client) ProcessDPs(dps []*lnet.DataPacket) {
+    for _, dp := range dps {
+        msg := lnet.NewMessageReader(dp.Data)
+        lnet.Log("msg.code:",msg.Code,msg.Ver)
+
+        protos.Handlers[msg.Code](c,msg)
+    }
+
     for _,dp:=range dps {
         md := string(dp.Data)
 
@@ -36,43 +31,16 @@ func (c *Client) ProcessDPs(dps []*lnet.DataPacket) {
             c.Close()
             return
         }
-
-        var msg string
-        if *c.Username == "someone" {
-            c.Username = &md
-
-            msg = "system: welcome to " + md + "!"
-        } else {
-            msg = (*c.Username) + "> "+ md
-        }
-        c.Transport.SendBoardcast([]byte(msg))
     }
 }
-
-//对数据进行拆包
-func (c *Client) GetTransport() *lnet.Transport {
-    return c.Transport
-}
-
-func (c *Client) GetName() string {
-    return c.Name
-}
-
-func (c *Client) Close() {
-    c.Transport.Close()
-}
-
-func (c *Client) Closed() {
-    msg := "system: " + (*c.Username) + " is leave!"
-    c.Transport.SendBoardcast([]byte(msg))
-}
+*/
 
 func main() {
-    datagram := &lib.Datagram{ }
+    datagram := &lnet.Datagram{ }
 
     config := make(map[string]interface{})
 
-    serv := lnet.NewServer(MakeClient,datagram,config)
+    serv := lnet.NewServer(protos.MakeClient,datagram,config)
 
     serv.Start("",4444)
 }
