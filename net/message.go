@@ -45,14 +45,10 @@ type MessageWriter struct {
 }
 
 func NewMessageWriter() *MessageWriter {
-    m := &MessageWriter{}
-    m.Init()
-    return m
-}
+    msg := &MessageWriter{}
 
-//对数据进行拆包
-func (msg *MessageWriter) Init() {
     msg.init(128)
+    return msg
 }
 
 
@@ -89,7 +85,7 @@ func (msg *MessageWriter) writeMeta(datatype int) {
     msg.metabuf.WriteByte(byte((msg.maxInd << 3) | datatype))
 }
 
-func (msg *MessageWriter) WriteUint16(x uint16,wind int){
+func (msg *MessageWriter) WriteUint16(x int,wind int){
     msg.preWrite(wind)
 
     msg.buf.WriteUint16(uint16(x))
@@ -98,7 +94,7 @@ func (msg *MessageWriter) WriteUint16(x uint16,wind int){
     msg.maxInd ++
 }
 
-func (msg *MessageWriter) WriteUint32(x uint32,wind int){
+func (msg *MessageWriter) WriteUint32(x int,wind int){
     msg.preWrite(wind)
 
     msg.buf.WriteUint32(uint32(x))
@@ -107,7 +103,7 @@ func (msg *MessageWriter) WriteUint32(x uint32,wind int){
     msg.maxInd ++
 }
 
-func (msg *MessageWriter) WriteUint(x uint,wind int){
+func (msg *MessageWriter) WriteUint(x int,wind int){
     msg.preWrite(wind)
 
     msg.buf.WriteUint(uint(x))
@@ -149,19 +145,19 @@ func (msg *MessageWriter) WriteU(x ...interface{}) {
         switch v.(type) {
         case uint:
             vv,_:= v.(uint)
-            msg.WriteUint(uint(vv),0)
+            msg.WriteUint(int(vv),0)
         case int:
             vv,_:= v.(int)
             if vv <0 {
                 panic("WriteU only write > 0 integer")
             }
-            msg.WriteUint(uint(vv),0)
+            msg.WriteUint(int(vv),0)
         case uint32:
             vv,_:= v.(uint32)
-            msg.WriteUint32(vv,0)
+            msg.WriteUint32(int(vv),0)
         case uint16:
             vv,_:= v.(uint16)
-            msg.WriteUint16(vv,0)
+            msg.WriteUint16(int(vv),0)
         case string:
             vv,_:= v.(string)
             msg.WriteString(vv,0)
@@ -185,10 +181,10 @@ func (msg *MessageWriter) Write(x ...interface{}) {
             msg.WriteInt(vv,0)
         case uint32:
             vv,_:= v.(uint32)
-            msg.WriteUint32(vv,0)
+            msg.WriteUint32(int(vv),0)
         case uint16:
             vv,_:= v.(uint16)
-            msg.WriteUint16(vv,0)
+            msg.WriteUint16(int(vv),0)
         case string:
             vv,_:= v.(string)
             msg.WriteString(vv,0)
@@ -238,13 +234,8 @@ type MessageReader struct {
 }
 
 func NewMessageReader(data []byte) *MessageReader{
-    m := &MessageReader{}
-    m.Init(data)
-    return m
-}
+    msg := &MessageReader{}
 
-//对数据进行拆包
-func (msg *MessageReader) Init(data []byte) {
     msg.buf = NewRWStream(data,BigEndian)
     buf := msg.buf
 
@@ -255,6 +246,8 @@ func (msg *MessageReader) Init(data []byte) {
     msg.Ver = ver
 
     msg.init()
+
+    return msg
 }
 
 func (msg *MessageReader) init() {
@@ -397,7 +390,7 @@ func (msg *MessageReader) checkRead(datatype int) bool{
     }
 
     ty,ok := msg.meta[msg.wind]
-    Log("checkread ty,ok",ty,ok)
+    Log("checkread ty,ok",ty,ok,datatype)
     if !ok {
         msg.wind ++
         return false
@@ -410,7 +403,7 @@ func (msg *MessageReader) checkRead(datatype int) bool{
     return true
 }
 
-func (msg *MessageReader) ReadUint() uint {
+func (msg *MessageReader) ReadUint() int {
     if msg.checkRead(TY_UINT) != true{
         return 0
     }
@@ -418,7 +411,7 @@ func (msg *MessageReader) ReadUint() uint {
     v,err := msg.buf.ReadUint()
     checkConvert(err)
     msg.wind ++
-    return v
+    return int(v)
 }
 
 func (msg *MessageReader) ReadInt() int {
@@ -432,7 +425,7 @@ func (msg *MessageReader) ReadInt() int {
     return v
 }
 
-func (msg *MessageReader) ReadUint32() uint32 {
+func (msg *MessageReader) ReadUint32() int {
     if msg.checkRead(TY_UINT32) != true{
         return 0
     }
@@ -440,10 +433,10 @@ func (msg *MessageReader) ReadUint32() uint32 {
     v,err := msg.buf.ReadUint32()
     checkConvert(err)
     msg.wind ++
-    return uint32(v)
+    return int(v)
 }
 
-func (msg *MessageReader) ReadUint16() uint16 {
+func (msg *MessageReader) ReadUint16() int {
     if msg.checkRead(TY_UINT16) != true{
         return 0
     }
@@ -451,7 +444,7 @@ func (msg *MessageReader) ReadUint16() uint16 {
     v,err := msg.buf.ReadUint16()
     checkConvert(err)
     msg.wind ++
-    return uint16(v)
+    return int(v)
 }
 
 func (msg *MessageReader) ReadString() string{
@@ -470,6 +463,9 @@ func (msg *MessageReader) ReadList() *MessageListReader{
         return nil
     }
 
-    return &MessageListReader{}
+    list := NewMessageListReader(msg.buf)
+
+    msg.wind ++
+    return list
 }
 

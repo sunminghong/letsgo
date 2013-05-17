@@ -2,6 +2,8 @@
 *.o
 *.a
 *.so
+*.test
+*.prof
 
 # Folders
 _obj
