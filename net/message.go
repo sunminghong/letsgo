@@ -201,7 +201,7 @@ func (msg *MessageWriter) ToBytes(code int,ver byte) []byte {
     msg.metabuf.SetPos(0)
     msg.buf.SetPos(0)
     //write heads
-    _,heads := msg.metabuf.Read(4)
+    heads,_ := msg.metabuf.Read(4)
     msg.metabuf.Endianer.PutUint16(heads, uint16(code))
     heads[2] = ver
 
@@ -255,7 +255,7 @@ func (msg *MessageReader) init() {
     buf := msg.buf
     _itemnum,_ := buf.ReadByte()
     itemnum := int(_itemnum)
-    n,meta := buf.Read(itemnum)
+    meta,n := buf.Read(itemnum)
     if n < itemnum {
         panic("data init error")
     }

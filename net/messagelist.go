@@ -54,7 +54,7 @@ func (list *MessageListWriter) ToBytes() []byte {
     list.metabuf.SetPos(0)
     list.buf.SetPos(0)
     //write heads
-    _,heads := list.metabuf.Read(4)
+    heads,_ := list.metabuf.Read(4)
 
     //write list bytes length
     list.metabuf.Endianer.PutUint16(heads,

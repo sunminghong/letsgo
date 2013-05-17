@@ -168,9 +168,9 @@ func (b *RWStream) SetPos(pos int) {
     }
 }
 
-func (b *RWStream) Read(n int) (int, []byte) {
+func (b *RWStream) Read(n int) ([]byte,int) {
     if b.last+n > b.end {
-        return 0, nil
+        return nil,0
         //n = b.end - b.last
     }
     //if n<0 {
@@ -178,7 +178,7 @@ func (b *RWStream) Read(n int) (int, []byte) {
     //}
     p := b.buf[b.last : b.last+n]
     b.last += n
-    return n, p
+    return p, n
 }
 
 // WriteString appends the contents of s to the buffer.  The return
@@ -216,7 +216,7 @@ func (b *RWStream) WriteUint64(x uint64) int {
 }
 
 func (b *RWStream) ReadByte() (byte, error) {
-    n, buf := b.Read(1)
+    buf, n := b.Read(1)
     if n < 1 {
         return 0, ErrIndex
     }
@@ -224,7 +224,7 @@ func (b *RWStream) ReadByte() (byte, error) {
 }
 
 func (b *RWStream) ReadUint16() (uint16, error) {
-    n, buf := b.Read(2)
+    buf, n := b.Read(2)
     if n < 2 {
         return 0, ErrIndex
     }
@@ -233,7 +233,7 @@ func (b *RWStream) ReadUint16() (uint16, error) {
 }
 
 func (b *RWStream) ReadUint32() (uint32, error) {
-    n, buf := b.Read(4)
+    buf, n := b.Read(4)
     if n < 4 {
         return 0, ErrIndex
     }
@@ -242,7 +242,7 @@ func (b *RWStream) ReadUint32() (uint32, error) {
 }
 
 func (b *RWStream) ReadUint64() (uint64, error) {
-    n, buf := b.Read(8)
+    buf, n := b.Read(8)
     if n < 8 {
         return 0, ErrIndex
     }
@@ -331,7 +331,7 @@ func (b *RWStream) ReadString() (string, error) {
     }
 
     ll := int(l)
-    n, buf := b.Read(ll)
+    buf, n := b.Read(ll)
     if n < ll {
         return "", ErrIndex
     }

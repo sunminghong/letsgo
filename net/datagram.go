@@ -10,11 +10,6 @@
 =============================================================================*/
 package net
 
-//type DatagramInterface interface {
-//    Fetch(data []byte) int,[]byte
-//    Pack(int,[]byte) []byte
-//}
-
 const (
     mask1 = byte(0x59)
     mask2 = byte(0x7a)
@@ -76,7 +71,7 @@ func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
                 return
             }
 
-            _,heads := cs.Read(7)
+            heads,_ := cs.Read(7)
             d.decrypt(heads)
 
             cs.SetPos(-7)
@@ -108,7 +103,7 @@ func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
             }
         }
 
-        size,data := cs.Read(dpSize)
+        data,size := cs.Read(dpSize)
         if size > 0 {
             dp := &DataPacket{Type:dataType, Data:data}
             dps = append(dps,dp)
