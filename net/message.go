@@ -44,17 +44,18 @@ type MessageWriter struct {
     needWriteMeta bool
 }
 
-func NewMessageWriter() *MessageWriter {
+func NewMessageWriter(endian int) *MessageWriter {
     msg := &MessageWriter{}
 
-    msg.init(128)
+    msg.init(128,endian)
     return msg
 }
 
 
-func (msg *MessageWriter) init(bufsize int) {
+func (msg *MessageWriter) init(bufsize int,endian int) {
     msg.meta = make(map[int]byte)
-    msg.buf = NewRWStream(bufsize,BigEndian)
+    msg.endian = endian
+    msg.buf = NewRWStream(bufsize,endian)
     msg.maxInd = 0
     msg.Code = 0
     msg.Ver = 0
@@ -242,10 +243,10 @@ type MessageReader struct {
     itemnum int
 }
 
-func NewMessageReader(data []byte) *MessageReader{
+func NewMessageReader(data []byte,endian int) *MessageReader{
     msg := &MessageReader{}
 
-    msg.buf = NewRWStream(data,BigEndian)
+    msg.buf = NewRWStream(data,endian)
     buf := msg.buf
 
     code,_:= buf.ReadUint16()
@@ -472,7 +473,7 @@ func (msg *MessageReader) ReadList() *MessageListReader{
         return nil
     }
 
-    list := NewMessageListReader(msg.buf)
+    list := NewMessageListReader(msg.buf,msg.endian)
 
     msg.wind ++
     return list

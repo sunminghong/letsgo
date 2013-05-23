@@ -1,18 +1,18 @@
 /*=============================================================================
-#     FileName: client.go
+#     FileName: clientpool.go
 #         Desc: server base 
 #       Author: sunminghong
 #        Email: allen.fantasy@gmail.com
 #     HomePage: http://weibo.com/5d13
 #      Version: 0.0.1
-#   LastChange: 2013-05-14 08:04:40
+#   LastChange: 2013-05-22 14:19:12
 #      History:
 =============================================================================*/
 package net
 
 import (
     "net"
-    "strconv"
+    //"strconv"
     "time"
 )
 
@@ -31,7 +31,7 @@ type ClientPool struct {
 
     localhost string
     localport int
-   
+
     Quit    chan bool
 
     connaddr chan string
@@ -54,16 +54,11 @@ func NewClientPool(newclient NewClientFunc, datagram IDatagram /*,runloop IRunLo
     return c
 }
 
-func (c *ClientPool) Start(name string,host string, port int) {
-    go func() {
+func (c *ClientPool) Start(name string,addr string) {
+    //go func() {
         ////Log("Hello Client!")
 
-        var addr string
-        if port == 0 {
-            addr = host
-        } else {
-            addr = host + ":" + strconv.Itoa(port)
-        }
+        //addr = host + ":" + strconv.Itoa(port)
 
         connection, err := net.Dial("tcp", addr)
 
@@ -91,7 +86,7 @@ func (c *ClientPool) Start(name string,host string, port int) {
         time.Sleep(2)
 
         <-transport.Quit
-    }()
+    //}()
     <-c.Quit
 }
 

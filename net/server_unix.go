@@ -1,5 +1,5 @@
 package net
-
+/*
 import (
 	"os"
 	"os/signal"
@@ -12,3 +12,4 @@ func (self *Server) signalSetup() {
 	<-ch
 	//self.stop(nil, "SIGTERM")
 }
+*/

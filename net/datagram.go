@@ -105,7 +105,9 @@ func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
 
         data,size := cs.Read(dpSize)
         if size > 0 {
-            dp := &DataPacket{Type:dataType, Data:data}
+
+            code := cs.Endianer.Uint16(data[0:2])
+            dp := &DataPacket{Type:dataType, Data:data, Code:code}
             dps = append(dps,dp)
             n += 1
         }

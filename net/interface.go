@@ -13,6 +13,13 @@ package net
 import (
     "net"
 )
+//define a struct or class of rec transport connection
+type DataPacket struct {
+    Type  byte
+    Code uint16
+    Data  []byte
+    Other interface{}
+}
 
 //datagram and datapacket define
 type IDatagram interface {
@@ -48,5 +55,13 @@ type IServer interface {
 }
 
 
-type newTransportFunc func(newcid int, conn net.Conn, server IServer) *Transport
+type newTransportFunc func(
+    newcid int, conn net.Conn, server IServer) *Transport
 
+type IRouter interface {
+    Init()
+    //Add(client IClient,protocols []int)
+    Add(cid int,protocols string)
+    Handler(dp DataPacket) (cid int,ok bool)
+    ParseProtos(messageCode int) int
+}

@@ -16,12 +16,6 @@ import (
     "sync"
 )
 
-//define a struct or class of rec transport connection
-type DataPacket struct {
-    Type  byte
-    Data  []byte
-    Other interface{}
-}
 
 type ClientMap struct {
     maplock sync.RWMutex
@@ -124,10 +118,12 @@ func NewServer(makeclient NewClientFunc, datagram IDatagram, config map[string]i
     return s
 }
 
-func (s *Server) Start(host string, port int) {
+func (s *Server) Start(addr string, maxConnections int) {
     Log("Hello Server!")
 
-    addr := host + ":" + strconv.Itoa(port)
+    s.maxConnectios = maxConnections
+    //todo: maxConnections don't proccess
+    //addr := host + ":" + strconv.Itoa(port)
 
     //创建一个管道 chan map 需要make creates slices, maps, and channels only
     s.boardcastChan = make(chan *DataPacket, s.boardcast_chan_num)

@@ -23,11 +23,11 @@ type MessageListWriter struct {
     meta []byte
 }
 
-func NewMessageListWriter() *MessageListWriter {
+func NewMessageListWriter(endian int) *MessageListWriter {
     list := &MessageListWriter{}
 
     Log("messagelistwriter Init by called")
-    list.init(768)
+    list.init(768,endian)
     return list
 }
 
@@ -81,7 +81,7 @@ type MessageListReader struct {
     ByteLength int
 }
 
-func NewMessageListReader(buf *RWStream) *MessageListReader {
+func NewMessageListReader(buf *RWStream, endian int) *MessageListReader {
     list := &MessageListReader{}
 
     _=buf
@@ -101,7 +101,7 @@ func NewMessageListReader(buf *RWStream) *MessageListReader {
     list.ByteLength = int(byteLength)
     list.Length = int(length)
 
-    list.init()
+    list.init(endian)
 
     return list
 }
