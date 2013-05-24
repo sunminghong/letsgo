@@ -12,6 +12,7 @@ package net
 
 import (
     "github.com/sunminghong/letsgo/helper"
+    "github.com/sunminghong/letsgo/log"
 )
 
 type MessageListWriter struct {
@@ -81,7 +82,7 @@ type MessageListReader struct {
     ByteLength int
 }
 
-func NewMessageListReader(buf *RWStream) *MessageListReader {
+func NewMessageListReader(buf *helper.RWStream) *MessageListReader {
     list := &MessageListReader{}
 
     _=buf

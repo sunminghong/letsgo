@@ -12,6 +12,7 @@ package net
 
 import (
     "github.com/sunminghong/letsgo/helper"
+    "github.com/sunminghong/letsgo/log"
 )
 
 const (
@@ -28,10 +29,10 @@ type MessageWriter struct {
     Ver  byte
 
     // data item buff
-    buf *RWStream
+    buf *helper.RWStream
 
     //meta data buff
-    metabuf *RWStream
+    metabuf *helper.RWStream
 
     meta map[int]byte
     //items map[int]interface{}
@@ -52,14 +53,14 @@ func NewMessageWriter(endian int) *MessageWriter {
 
 func (msg *MessageWriter) init(bufsize int, endian int) {
     msg.meta = make(map[int]byte)
-    msg.buf = NewRWStream(bufsize, endian)
+    msg.buf = helper.NewRWStream(bufsize, endian)
     msg.maxInd = 0
     msg.Code = 0
     msg.Ver = 0
     msg.wind = 0
     msg.needWriteMeta = true
 
-    msg.metabuf = NewRWStream(30, BigEndian)
+    msg.metabuf = helper.NewRWStream(30, endian)
 
     //leave 4 bytes to head(code,ver,metaitemdata)
     //leave 4 bytes to head(list length(uint16),list length(byte),metaitemdataLength(byte))
@@ -230,7 +231,7 @@ type MessageReader struct {
 
     endian int
     // data item buff
-    buf *RWStream
+    buf *helper.RWStream
 
     //meta data write item current index
     wind int
@@ -246,7 +247,7 @@ func NewMessageReader(data []byte, endian int) *MessageReader {
     msg := &MessageReader{}
 
     msg.endian = endian
-    msg.buf = NewRWStream(data, endian)
+    msg.buf = helper.NewRWStream(data, endian)
     buf := msg.buf
 
     code, _ := buf.ReadUint16()

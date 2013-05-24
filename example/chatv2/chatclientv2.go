@@ -125,7 +125,7 @@ func main() {
 
     log.SetLevel(*loglevel)
 
-    datagram := lnet.NewDatagram(lnet.BigEndian)
+    datagram := lnet.NewDatagram(protos.Endian)
 
     cid := 0
     client := lnet.NewClientPool(protos.MakeClient, datagram)

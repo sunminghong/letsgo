@@ -14,7 +14,7 @@ import (
     "net"
     //"strconv"
     "time"
-    "github.com/sunminghong/letsgo/helper"
+    "github.com/sunminghong/letsgo/log"
 )
 
 type ClientPool struct {
@@ -75,7 +75,7 @@ func (c *ClientPool) Start(name string,addr string) {
 
         newcid := c.allocTransportid()
 
-        transport := NewTransport(newcid, connection, c)
+        transport := NewTransport(newcid, connection, c,c.datagram.GetEndian())
         client := c.newclient(name,transport)
         c.Clients.Add(newcid,name, client)
 

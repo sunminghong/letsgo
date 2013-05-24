@@ -27,6 +27,7 @@ type IDatagram interface {
     //Encrypt([]byte)
     //Decrypt([]byte)
 
+    GetEndian() int
     Fetch(c *Transport) (n int, dps []*DataPacket)
     Pack(dp *DataPacket) []byte
 }

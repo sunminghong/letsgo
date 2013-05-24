@@ -28,7 +28,7 @@ func main() {
 
     log.SetLevel(*loglevel)
 
-    datagram := lnet.NewDatagram(lnet.BigEndian)
+    datagram := lnet.NewDatagram(protos.Endian)
 
     config := make(map[string]interface{})
 

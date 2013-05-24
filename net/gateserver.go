@@ -14,7 +14,8 @@ import (
     "strconv"
     "time"
     goconf "github.com/hgfischer/goconf"
-    "github.com/sunminghong/letsgo/helper"
+    //"github.com/sunminghong/letsgo/helper"
+    "github.com/sunminghong/letsgo/log"
 )
 /*
 [GateServer]

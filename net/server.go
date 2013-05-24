@@ -14,7 +14,7 @@ import (
     "net"
     "strconv"
     "sync"
-    "github.com/sunminghong/letsgo/helper"
+    "github.com/sunminghong/letsgo/log"
 )
 
 
@@ -177,7 +177,7 @@ func (s *Server) allocTransportid() int {
 
 //该函数主要是接受新的连接和注册用户在transport list
 func (s *Server) transportHandler(newcid int, connection net.Conn) {
-    transport := NewTransport(newcid, connection, s)
+    transport := NewTransport(newcid, connection, s,s.datagram.GetEndian())
     name := "c_"+strconv.Itoa(newcid)
     client := s.makeclient(name,transport)
     s.Clients.Add(newcid, name, client)

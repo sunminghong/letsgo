@@ -9,6 +9,9 @@
 #      History:
 =============================================================================*/
 package net
+import (
+    "github.com/sunminghong/letsgo/helper"
+)
 
 const (
     mask1 = byte(0x59)
@@ -20,14 +23,20 @@ const (
 )
 
 type Datagram struct {
-    Stream RWStream     //can use enddian
+    endian int
+    Stream *helper.RWStream     //can use enddian
 }
 
-func NewDatagram(endian int) *Datagram{
+func NewDatagram(endian int ) *Datagram{
     dg := &Datagram{}
-    dg.Stream = *NewRWStream([]byte{1},endian)
+    dg.endian = endian
+    dg.Stream = helper.NewRWStream([]byte{1},endian)
 
     return dg
+}
+
+func (d *Datagram) GetEndian() int {
+    return d.endian
 }
 
 func (d *Datagram) encrypt(plan []byte){

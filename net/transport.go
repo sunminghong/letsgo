@@ -2,6 +2,7 @@ package net
 
 import (
     "net"
+    "github.com/sunminghong/letsgo/helper"
 )
 
 type Transport struct {
@@ -13,7 +14,7 @@ type Transport struct {
 
     Quit chan bool
 
-    Stream *RWStream
+    Stream *helper.RWStream
     DataType byte
     DPSize  int
 
@@ -67,14 +68,14 @@ func (c *Transport) SendBoardcast(data []byte) {
 }
 
 // new Transport object
-func NewTransport(newcid int, conn net.Conn, server IServer) *Transport {
+func NewTransport(newcid int, conn net.Conn, server IServer,endian int) *Transport {
     c := &Transport{
         Cid:      newcid,
         Conn:     conn,
         Server:   server,
         Outgoing: make(chan *DataPacket, 10),
         Quit:     make(chan bool),
-        Stream:   NewRWStream(1024,BigEndian),
+        Stream:   helper.NewRWStream(1024,endian),
     }
 
     c.InitBuff()
