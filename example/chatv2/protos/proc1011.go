@@ -20,9 +20,14 @@ func init() {
 }
 
 func Process1011(c *Client, reader *lnet.MessageReader) {
-    lnet.Log("process 1011 is called")
+    lnet.Trace("process 1011 is called")
 
     md := reader.ReadString()
+
+    if md == "/quit" {
+        c.Close()
+        return
+    }
 
     var msg string
     if *c.Username == "someone" {
@@ -33,10 +38,10 @@ func Process1011(c *Client, reader *lnet.MessageReader) {
         msg = (*c.Username) + "> " + md
     }
 
-    if md == "/quit" {
-        c.Close()
-        return
-    }
-    c.GetTransport().SendBoardcast([]byte(msg))
+    lnet.Debug("1011 write out:",msg)
 
+    mw := lnet.NewMessageWriter(Endian)
+    mw.SetCode(2011,0)
+    mw.WriteString(msg,0)
+    c.SendBoardcast(mw)
 }

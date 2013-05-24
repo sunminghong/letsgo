@@ -26,7 +26,7 @@ type MessageListWriter struct {
 func NewMessageListWriter(endian int) *MessageListWriter {
     list := &MessageListWriter{}
 
-    Log("messagelistwriter Init by called")
+    Trace("messagelistwriter Init by called")
     list.init(768,endian)
     return list
 }
@@ -61,13 +61,13 @@ func (list *MessageListWriter) ToBytes() []byte {
         uint16(list.buf.Len()+list.metabuf.Len() - 2))
     heads[2] = byte(list.length)
 
-    Log("wind:",list.wind)
+    Trace("wind:",list.wind)
     heads[3] = byte(list.wind)
-    Log("metabuflist",list.metabuf.Bytes())
+    Trace("metabuflist",list.metabuf.Bytes())
 
     list.metabuf.Write(list.buf.Bytes())
 
-    Log("metabuflist",list.metabuf.Bytes())
+    Trace("metabuflist",list.metabuf.Bytes())
     return list.metabuf.Bytes()
 }
 
@@ -81,7 +81,7 @@ type MessageListReader struct {
     ByteLength int
 }
 
-func NewMessageListReader(buf *RWStream, endian int) *MessageListReader {
+func NewMessageListReader(buf *RWStream) *MessageListReader {
     list := &MessageListReader{}
 
     _=buf
@@ -101,7 +101,7 @@ func NewMessageListReader(buf *RWStream, endian int) *MessageListReader {
     list.ByteLength = int(byteLength)
     list.Length = int(length)
 
-    list.init(endian)
+    list.init()
 
     return list
 }
@@ -115,7 +115,7 @@ func (list *MessageListReader) ReadStartTag() {
     //对齐列表项，如果列表数据项比读取的多，读下一个列表的数据是需要先将指针对齐
     for i:=list.wind;i<list.maxInd;i++ {
         ty,ok := list.meta[i]
-        Log("checkread ty,ok",ty,ok)
+        Trace("checkread ty,ok",ty,ok)
         if !ok {
             continue
         }

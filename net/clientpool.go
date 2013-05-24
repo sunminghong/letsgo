@@ -143,12 +143,16 @@ func (c *ClientPool) transportSender(transport *Transport) {
     for {
         select {
         case dp := <-transport.Outgoing:
-            //Log(dp.Type, dp.Data)
+            Trace("clientpool transportSender:",dp.Type, dp.Data)
             buf := c.datagram.Pack(dp)
             transport.Conn.Write(buf)
         case <-transport.Quit:
             //Log("Transport ", transport.Cid, " quitting")
             transport.Conn.Close()
+
+            //client.Closed()
+            transport.Closed()
+            c.removeClient(transport.Cid)
             break
         }
     }

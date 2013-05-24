@@ -39,6 +39,7 @@ process = 7,8
 */
 
 type GateServer struct {
+    Name                string
     GateService        *Server
     LogicServicePool    *ClientPool
 
@@ -71,12 +72,13 @@ func (gs *GateServer) Start(configfile string) {
         section := "GateServer" + strconv.Itoa(i)
         gname, err := c.GetString(section,"name")
         if err != nil {
-            if err.Reason == goconf.SectionNotFound {
-                break
-            } else {
+            //if err.Reason == goconf.SectionNotFound {
+            //    break
+            //} else {
                 Error(err.Error())
-                continue
-            }
+            //    continue
+            //}
+            break
         }
 
         host, err := c.GetString(section,"host")
@@ -94,9 +96,24 @@ func (gs *GateServer) Start(configfile string) {
 
     //start gate service
     gatename, err := c.GetString("GateServer","name")
-    gatehost, err := c.GetString("GateServer","host")
-    maxConnections, err := c.GetInt("GateServer","maxConnections")
+    if err != nil {
+        Error(err.Error())
+        return
+    }
 
+    gatehost, err := c.GetString("GateServer","host")
+    if err != nil {
+        Error(err.Error())
+        return
+    }
+
+    maxConnections, err := c.GetInt("GateServer","maxConnections")
+    if err != nil {
+        Error(err.Error())
+        return
+    }
+
+    gs.Name = gatename
     gs.GateService.Start(gatehost,maxConnections)
 }
 
@@ -110,10 +127,10 @@ func (gs *GateServer) AddLogicServer(name string,host string,protocols string) {
         c := pool.Clients.GetByName(name)
         if c == nil {
             Error(host + " can't connect")
-            continue
+            return
         }
 
         //add route
-        gs.RouteHandler.Add(c.Cid,prototols)
+        gs.RouteHandler.Add(c.GetTransport().Cid,protocols)
 }
 

@@ -1,6 +1,6 @@
 /*=============================================================================
 #     FileName: interface.go
-#         Desc: server base 
+#         Desc: server base
 #       Author: sunminghong
 #        Email: allen.fantasy@gmail.com
 #     HomePage: http://weibo.com/5d13
@@ -13,10 +13,11 @@ package net
 import (
     "net"
 )
+
 //define a struct or class of rec transport connection
 type DataPacket struct {
     Type  byte
-    Code uint16
+    Code  uint16
     Data  []byte
     Other interface{}
 }
@@ -39,21 +40,21 @@ type IClient interface {
     Close()
     Closed()
     GetTransport() *Transport
-    SendMessage(msg *MessageWriter)
+    SendMessage(msg IMessageWriter)
+    SendBoardcast(msg IMessageWriter)
 
     /*
-    SetStatus(status int)
-    // return this client status ,=0 connected =1 disconnect =2 pause
-    GetStatus() int
+       SetStatus(status int)
+       // return this client status ,=0 connected =1 disconnect =2 pause
+       GetStatus() int
     */
 }
 
 type IServer interface {
-    SendDP(t *Transport,dataType byte, data []byte)
+    SendDP(t *Transport, dataType byte, data []byte)
 
-    SendBoardcast(t *Transport,data []byte)
+    SendBoardcast(t *Transport, data []byte)
 }
-
 
 type newTransportFunc func(
     newcid int, conn net.Conn, server IServer) *Transport
@@ -61,7 +62,37 @@ type newTransportFunc func(
 type IRouter interface {
     Init()
     //Add(client IClient,protocols []int)
-    Add(cid int,protocols string)
-    Handler(dp DataPacket) (cid int,ok bool)
+    Add(cid int, protocols string)
+    Handler(dp DataPacket) (cid int, ok bool)
     ParseProtos(messageCode int) int
 }
+
+type IMessageWriter interface {
+    SetCode(code int, ver byte)
+
+    preWrite(wind int)
+    writeMeta(datatype int)
+    WriteUint16(x int, wind int)
+    WriteUint32(x int, wind int)
+
+    WriteUint(x int, wind int)
+    WriteInt(x int, wind int)
+
+    WriteString(x string, wind int)
+    //WriteList(list *MessageListWriter, wind int)
+
+    //对数据进行封包
+    ToBytes() []byte
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+
+type IMessageReader interface {
+    ReadUint() int
+    ReadInt() int
+    ReadUint32() int
+    ReadUint16() int
+    ReadString() string
+    //ReadList() *MessageListReader
+}
+

@@ -85,12 +85,17 @@ func (tm *ClientMap) All() map[int]IClient {
     return tm.maps
 }
 
+func (tm *ClientMap) Len() int {
+    return len(tm.maps)
+}
+
 func NewClientMap() *ClientMap { return &ClientMap{maps: make(map[int]IClient),mapsByName: make(map[string]int)} }
 
 type Server struct {
     boardcast_chan_num int
     read_buffer_size   int
 
+    maxConnections int
     makeclient NewClientFunc
     datagram   IDatagram
 
@@ -119,9 +124,9 @@ func NewServer(makeclient NewClientFunc, datagram IDatagram, config map[string]i
 }
 
 func (s *Server) Start(addr string, maxConnections int) {
-    Log("Hello Server!")
+    Info("Hello Server!")
 
-    s.maxConnectios = maxConnections
+    s.maxConnections = maxConnections
     //todo: maxConnections don't proccess
     //addr := host + ":" + strconv.Itoa(port)
 
@@ -129,21 +134,25 @@ func (s *Server) Start(addr string, maxConnections int) {
     s.boardcastChan = make(chan *DataPacket, s.boardcast_chan_num)
     go s.boardcastHandler(s.boardcastChan)
 
-    Log("listen with :", addr)
+    Info("listen with :", addr)
     netListen, error := net.Listen("tcp", addr)
     if error != nil {
-        Log(error)
+        Error(error)
     } else {
         //defer函数退出时执行
         defer netListen.Close()
         for {
-            Log("Waiting for transports")
+            Trace("Waiting for connection")
             connection, error := netListen.Accept()
             if error != nil {
-                Log("Transport error: ", error)
+                Error("Transport error: ", error)
             } else {
                 newcid := s.allocTransportid()
-                go s.transportHandler(newcid, connection)
+                if newcid == 0 {
+                    Warn("connection num is more than ",s.maxConnections)
+                } else {
+                    go s.transportHandler(newcid, connection)
+                }
             }
         }
     }
@@ -154,6 +163,9 @@ func (s *Server) removeClient(cid int) {
 }
 
 func (s *Server) allocTransportid() int {
+    if (s.Clients.Len() >= s.maxConnections) {
+        return 0
+    }
     s.TransportNum += 1
     return s.TransportNum
 }
@@ -166,7 +178,7 @@ func (s *Server) transportHandler(newcid int, connection net.Conn) {
     s.Clients.Add(newcid, name, client)
 
     //创建go的线程 使用Goroutine
-    go s.transportSender(transport)
+    go s.transportSender(transport, client)
     go s.transportReader(transport, client)
 
 }
@@ -178,36 +190,41 @@ func (s *Server) transportReader(transport *Transport, client IClient) {
         bytesRead, err := transport.Conn.Read(buffer)
 
         if err != nil {
+
             client.Closed()
             transport.Closed()
+            transport.Conn.Close()
             s.removeClient(transport.Cid)
-            Log(err)
+            Error(err)
             break
         }
 
-        Log("read to buff:", bytesRead)
+        Trace("read to buff:", bytesRead)
         transport.BuffAppend(buffer[0:bytesRead])
 
-        Log("transport.Buff", transport.Stream.Bytes())
+        Trace("transport.Buff", transport.Stream.Bytes())
         n, dps := s.datagram.Fetch(transport)
-        Log("fetch message number", n)
+        Trace("fetch message number", n)
         if n > 0 {
             client.ProcessDPs(dps)
         }
     }
-    Log("TransportReader stopped for ", transport.Cid)
+    Trace("TransportReader stopped for ", transport.Cid)
 }
 
-func (s *Server) transportSender(transport *Transport) {
+func (s *Server) transportSender(transport *Transport, client IClient) {
     for {
         select {
         case dp := <-transport.Outgoing:
-            Log(dp.Type, dp.Data)
+            Trace("transportSender outgoing:",dp.Type, len(dp.Data))
             buf := s.datagram.Pack(dp)
             transport.Conn.Write(buf)
         case <-transport.Quit:
-            Log("Transport ", transport.Cid, " quitting")
+            Debug("Transport ", transport.Cid, " quitting")
+
+            transport.Closed()
             transport.Conn.Close()
+            s.removeClient(transport.Cid)
             break
         }
     }
@@ -216,7 +233,7 @@ func (s *Server) transportSender(transport *Transport) {
 func (s *Server) boardcastHandler(boardcastChan <-chan *DataPacket) {
     for {
         //在go里面没有while do ，for可以无限循环
-        Log("boardcastHandler: chan Waiting for input")
+        Trace("boardcastHandler: chan Waiting for input")
         dp := <-boardcastChan
         //buf := s.datagram.pack(dp)
 
@@ -231,7 +248,7 @@ func (s *Server) boardcastHandler(boardcastChan <-chan *DataPacket) {
             }
             c.GetTransport().Outgoing <- dp
         }
-        Log("boardcastHandler: Handle end!")
+        Trace("boardcastHandler: Handle end!")
     }
 }
 

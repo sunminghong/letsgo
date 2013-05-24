@@ -22,7 +22,7 @@ func init() {
 }
 
 func Process2011(c *Client,reader *lnet.MessageReader) {
-    lnet.Log("process 2011 is called")
+    lnet.Trace("process 2011 is called")
 
     md := reader.ReadString()
     fmt.Println()

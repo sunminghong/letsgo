@@ -14,6 +14,8 @@ import (
     lnet "github.com/sunminghong/letsgo/net"
 )
 
+var Endian int = lnet.BigEndian
+
 // IClient  
 type Client struct {
     Transport *lnet.Transport
@@ -29,8 +31,8 @@ func MakeClient (name string,transport *lnet.Transport) lnet.IClient {
 //对数据进行拆包
 func (c *Client) ProcessDPs(dps []*lnet.DataPacket) {
     for _, dp := range dps {
-        msg := lnet.NewMessageReader(dp.Data)
-        lnet.Log("msg.code:",msg.Code,msg.Ver)
+        msg := lnet.NewMessageReader(dp.Data,Endian)
+        lnet.Trace("msg.code:",msg.Code,msg.Ver)
 
         Handlers[msg.Code](c,msg)
     }
@@ -54,7 +56,11 @@ func (c *Client) Closed() {
     c.Transport.SendBoardcast([]byte(msg))
 }
 
-func (c *Client) SendMessage(msg *lnet.MessageWriter) {
+func (c *Client) SendMessage(msg lnet.IMessageWriter) {
     c.Transport.SendDP(0,msg.ToBytes())
+}
+
+func (c *Client) SendBoardcast(msg lnet.IMessageWriter) {
+    c.Transport.SendBoardcast(msg.ToBytes())
 }
 

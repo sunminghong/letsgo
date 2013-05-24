@@ -13,13 +13,16 @@ package main
 import (
     "bufio"
     "fmt"
-    lnet "github.com/sunminghong/letsgo/net"
     "os"
     "strings"
     "time"
     "strconv"
     "./protos"
+    lnet "github.com/sunminghong/letsgo/net"
+    "flag"
 )
+
+var endian = lnet.BigEndian
 
 // clientsender(): read from stdin and send it via network
 func clientsender(cid *int,client *lnet.ClientPool) {
@@ -31,7 +34,7 @@ func clientsender(cid *int,client *lnet.ClientPool) {
         fmt.Print("you> ")
         input, _ := reader.ReadBytes('\n')
         cmd := string(input[:len(input)-1])
-        
+
         var text string
 
         if cmd[0] == '/' {
@@ -53,7 +56,7 @@ func clientsender(cid *int,client *lnet.ClientPool) {
                     continue
                 }
 
-                go client.Start(name,addr,0)
+                go client.Start(name,addr)
 
 
                 fmt.Print("please input your name:")
@@ -85,11 +88,11 @@ func clientsender(cid *int,client *lnet.ClientPool) {
             text = string(input[:len(input)-1])
         }
 
-        msg := lnet.NewMessageWriter()
+        msg := lnet.NewMessageWriter(endian)
         msg.SetCode(1011,0)
         msg.WriteString(text,0)
 
-        lnet.Log(client.Clients.All())
+        lnet.Trace("has %v clients",client.Clients.Len())
         client.Clients.Get(*cid).SendMessage(msg)
     }
 }
@@ -111,8 +114,16 @@ func change(cid *int,client *lnet.ClientPool,name string,) {
     }
 }
 
+var (
+    loglevel = flag.Int("loglevel","0","log level")
+)
+
 func main() {
-    datagram := &lnet.Datagram{}
+    flag.Parse()
+
+    llog.SetLevel(loglevel)
+
+    datagram := lnet.NewDatagram(lnet.BigEndian)
 
     cid := 0
     client := lnet.NewClientPool(protos.MakeClient, datagram)

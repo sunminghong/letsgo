@@ -144,3 +144,4 @@ func (d *Datagram) Pack(dp *DataPacket) []byte {
     copy(buf[7:], dp.Data)
     return buf
 }
+

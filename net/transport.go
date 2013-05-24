@@ -53,10 +53,16 @@ func (c *Transport) BuffAppend(p []byte) (n int) {
 }
 
 func (c *Transport) SendDP(dataType byte, data []byte) {
+    if data == nil {
+        return 
+    }
     c.Server.SendDP(c, dataType, data)
 }
 
 func (c *Transport) SendBoardcast(data []byte) {
+    if data == nil {
+        return 
+    }
     c.Server.SendBoardcast(c, data)
 }
 

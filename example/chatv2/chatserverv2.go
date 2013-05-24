@@ -14,33 +14,13 @@ import (
     lnet "github.com/sunminghong/letsgo/net"
     "./protos"
 )
-/*
-//对数据进行拆包
-func (c *Client) ProcessDPs(dps []*lnet.DataPacket) {
-    for _, dp := range dps {
-        msg := lnet.NewMessageReader(dp.Data)
-        lnet.Log("msg.code:",msg.Code,msg.Ver)
-
-        protos.Handlers[msg.Code](c,msg)
-    }
-
-    for _,dp:=range dps {
-        md := string(dp.Data)
-
-        if md == "/quit" {
-            c.Close()
-            return
-        }
-    }
-}
-*/
 
 func main() {
-    datagram := &lnet.Datagram{ }
+    datagram := lnet.NewDatagram(lnet.BigEndian)
 
     config := make(map[string]interface{})
 
     serv := lnet.NewServer(protos.MakeClient,datagram,config)
 
-    serv.Start("",4444)
+    serv.Start(":4444",2)
 }

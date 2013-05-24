@@ -11,21 +11,21 @@
 package net
 
 import (
-    //"encoding/binary"
+//"encoding/binary"
 )
 
 const (
-    TY_UINT = 0
+    TY_UINT   = 0
     TY_STRING = 1
-    TY_INT = 2
-    TY_LIST = 3
+    TY_INT    = 2
+    TY_LIST   = 3
     TY_UINT16 = 4
     TY_UINT32 = 5
 )
 
 type MessageWriter struct {
     Code int
-    Ver byte
+    Ver  byte
 
     // data item buff
     buf *RWStream
@@ -36,9 +36,8 @@ type MessageWriter struct {
     meta map[int]byte
     //items map[int]interface{}
 
-
     //meta data write item current index
-    wind int
+    wind   int
     maxInd int
 
     needWriteMeta bool
@@ -47,29 +46,27 @@ type MessageWriter struct {
 func NewMessageWriter(endian int) *MessageWriter {
     msg := &MessageWriter{}
 
-    msg.init(128,endian)
+    msg.init(128, endian)
     return msg
 }
 
-
-func (msg *MessageWriter) init(bufsize int,endian int) {
+func (msg *MessageWriter) init(bufsize int, endian int) {
     msg.meta = make(map[int]byte)
-    msg.endian = endian
-    msg.buf = NewRWStream(bufsize,endian)
+    msg.buf = NewRWStream(bufsize, endian)
     msg.maxInd = 0
     msg.Code = 0
     msg.Ver = 0
     msg.wind = 0
     msg.needWriteMeta = true
 
-    msg.metabuf = NewRWStream(30,BigEndian)
+    msg.metabuf = NewRWStream(30, BigEndian)
 
     //leave 4 bytes to head(code,ver,metaitemdata)
     //leave 4 bytes to head(list length(uint16),list length(byte),metaitemdataLength(byte))
-    msg.metabuf.Write([]byte{0,0,0,0})
+    msg.metabuf.Write([]byte{0, 0, 0, 0})
 }
 
-func (msg *MessageWriter) SetCode(code int,ver byte) {
+func (msg *MessageWriter) SetCode(code int, ver byte) {
     msg.Code = code
     msg.Ver = ver
 }
@@ -78,7 +75,7 @@ func (msg *MessageWriter) preWrite(wind int) {
     if wind == 0 {
         return
     }
-    if wind < msg.maxInd{
+    if wind < msg.maxInd {
         panic("item write order is wrong!")
     }
     msg.maxInd = wind
@@ -91,85 +88,85 @@ func (msg *MessageWriter) writeMeta(datatype int) {
     msg.metabuf.WriteByte(byte((msg.maxInd << 3) | datatype))
 }
 
-func (msg *MessageWriter) WriteUint16(x int,wind int){
+func (msg *MessageWriter) WriteUint16(x int, wind int) {
     msg.preWrite(wind)
 
     msg.buf.WriteUint16(uint16(x))
     msg.writeMeta(TY_UINT16)
-    msg.wind ++
-    msg.maxInd ++
+    msg.wind++
+    msg.maxInd++
 }
 
-func (msg *MessageWriter) WriteUint32(x int,wind int){
+func (msg *MessageWriter) WriteUint32(x int, wind int) {
     msg.preWrite(wind)
 
     msg.buf.WriteUint32(uint32(x))
     msg.writeMeta(TY_UINT32)
-    msg.wind ++
-    msg.maxInd ++
+    msg.wind++
+    msg.maxInd++
 }
 
-func (msg *MessageWriter) WriteUint(x int,wind int){
+func (msg *MessageWriter) WriteUint(x int, wind int) {
     msg.preWrite(wind)
 
     msg.buf.WriteUint(uint(x))
     msg.writeMeta(TY_UINT)
-    msg.wind ++
-    msg.maxInd ++
+    msg.wind++
+    msg.maxInd++
 }
 
-func (msg *MessageWriter) WriteInt(x int,wind int){
+func (msg *MessageWriter) WriteInt(x int, wind int) {
     msg.preWrite(wind)
 
     msg.buf.WriteInt(int(x))
     msg.writeMeta(TY_INT)
-    msg.wind ++
-    msg.maxInd ++
+    msg.wind++
+    msg.maxInd++
 }
 
-func (msg *MessageWriter) WriteString(x string,wind int){
+func (msg *MessageWriter) WriteString(x string, wind int) {
     msg.preWrite(wind)
 
     msg.buf.WriteString(x)
     msg.writeMeta(TY_STRING)
-    msg.wind ++
-    msg.maxInd ++
+    msg.wind++
+    msg.maxInd++
 }
 
-func (msg *MessageWriter) WriteList(list *MessageListWriter,wind int) {
+func (msg *MessageWriter) WriteList(list *MessageListWriter, wind int) {
     msg.preWrite(wind)
 
     msg.buf.Write(list.ToBytes())
     msg.writeMeta(TY_LIST)
-    msg.wind ++
-    msg.maxInd ++
+    msg.wind++
+    msg.maxInd++
 }
 
 //write no sign interge
 func (msg *MessageWriter) WriteU(x ...interface{}) {
-    for _,v := range x {
+    for _, v := range x {
         switch v.(type) {
         case uint:
-            vv,_:= v.(uint)
-            msg.WriteUint(int(vv),0)
+            vv, _ := v.(uint)
+            msg.WriteUint(int(vv), 0)
         case int:
-            vv,_:= v.(int)
-            if vv <0 {
+            vv, _ := v.(int)
+            if vv < 0 {
                 panic("WriteU only write > 0 integer")
             }
-            msg.WriteUint(int(vv),0)
+            msg.WriteUint(int(vv), 0)
         case uint32:
-            vv,_:= v.(uint32)
-            msg.WriteUint32(int(vv),0)
+            vv, _ := v.(uint32)
+            msg.WriteUint32(int(vv), 0)
         case uint16:
-            vv,_:= v.(uint16)
-            msg.WriteUint16(int(vv),0)
+            vv, _ := v.(uint16)
+            msg.WriteUint16(int(vv), 0)
         case string:
-            vv,_:= v.(string)
-            msg.WriteString(vv,0)
+            vv, _ := v.(string)
+            msg.WriteString(vv, 0)
         case *MessageListWriter:
-            vv,_:= v.(*MessageListWriter)
-            msg.WriteList(vv,0)
+            vv, _ := v.(*MessageListWriter)
+            msg.WriteList(vv, 0)
 
         }
     }
@@ -177,26 +174,26 @@ func (msg *MessageWriter) WriteU(x ...interface{}) {
 
 // write sign number
 func (msg *MessageWriter) Write(x ...interface{}) {
-    for _,v := range x {
+    for _, v := range x {
         switch v.(type) {
         case uint:
-            vv,_:= v.(uint)
-            msg.WriteInt(int(vv),0)
+            vv, _ := v.(uint)
+            msg.WriteInt(int(vv), 0)
         case int:
-            vv,_:= v.(int)
-            msg.WriteInt(vv,0)
+            vv, _ := v.(int)
+            msg.WriteInt(vv, 0)
         case uint32:
-            vv,_:= v.(uint32)
-            msg.WriteUint32(int(vv),0)
+            vv, _ := v.(uint32)
+            msg.WriteUint32(int(vv), 0)
         case uint16:
-            vv,_:= v.(uint16)
-            msg.WriteUint16(int(vv),0)
+            vv, _ := v.(uint16)
+            msg.WriteUint16(int(vv), 0)
         case string:
-            vv,_:= v.(string)
-            msg.WriteString(vv,0)
+            vv, _ := v.(string)
+            msg.WriteString(vv, 0)
         case *MessageListWriter:
-            vv,_:= v.(*MessageListWriter)
-            msg.WriteList(vv,0)
+            vv, _ := v.(*MessageListWriter)
+            msg.WriteList(vv, 0)
 
         }
     }
@@ -205,22 +202,23 @@ func (msg *MessageWriter) Write(x ...interface{}) {
 //对数据进行封包
 func (msg *MessageWriter) ToBytes() []byte {
     if msg.Code == 0 {
-        panic("msg.Code is 0")
+        Warn("messagewriter ToBytes() msg.Code == 0")
+        return nil
     }
 
     msg.metabuf.SetPos(0)
     msg.buf.SetPos(0)
     //write heads
-    heads,_ := msg.metabuf.Read(4)
+    heads, _ := msg.metabuf.Read(4)
     msg.metabuf.Endianer.PutUint16(heads, uint16(msg.Code))
     heads[2] = msg.Ver
 
-    Log("wind:",msg.wind)
+    Trace("wind:", msg.wind)
     heads[3] = byte(msg.wind)
-    Log("metabuf",msg.metabuf.Bytes())
+    Trace("metabuf", msg.metabuf.Bytes())
     msg.metabuf.Write(msg.buf.Bytes())
 
-    Log("metabuf",msg.metabuf.Bytes())
+    Trace("metabuf", msg.metabuf.Bytes())
     return msg.metabuf.Bytes()
 }
 
@@ -228,8 +226,9 @@ func (msg *MessageWriter) ToBytes() []byte {
 
 type MessageReader struct {
     Code int
-    Ver int
+    Ver  int
 
+    endian int
     // data item buff
     buf *RWStream
 
@@ -239,18 +238,19 @@ type MessageReader struct {
     meta map[int]byte
     //items map[int]interface{}
 
-    maxInd int
+    maxInd  int
     itemnum int
 }
 
-func NewMessageReader(data []byte,endian int) *MessageReader{
+func NewMessageReader(data []byte, endian int) *MessageReader {
     msg := &MessageReader{}
 
-    msg.buf = NewRWStream(data,endian)
+    msg.endian = endian
+    msg.buf = NewRWStream(data, endian)
     buf := msg.buf
 
-    code,_:= buf.ReadUint16()
-    ver,_ := buf.ReadByte()
+    code, _ := buf.ReadUint16()
+    ver, _ := buf.ReadByte()
 
     msg.Code = int(code)
     msg.Ver = int(ver)
@@ -263,20 +263,21 @@ func NewMessageReader(data []byte,endian int) *MessageReader{
 func (msg *MessageReader) init() {
 
     buf := msg.buf
-    _itemnum,_ := buf.ReadByte()
+    _itemnum, _ := buf.ReadByte()
     itemnum := int(_itemnum)
-    meta,n := buf.Read(itemnum)
+    meta, n := buf.Read(itemnum)
     if n < itemnum {
+        Error("messageReader data init ",n,itemnum,buf.Bytes())
         panic("data init error")
     }
 
-    Log("init meta:",meta)
+    Trace("init meta:", meta)
     maxind := 0
     msg.meta = make(map[int]byte)
 
-    for i:=0;i<itemnum;i++ {
+    for i := 0; i < itemnum; i++ {
         m := meta[i]
-        ind := int(m>>3)
+        ind := int(m >> 3)
         if ind > maxind {
             maxind = ind
         }
@@ -286,15 +287,15 @@ func (msg *MessageReader) init() {
     msg.maxInd = maxind
     msg.itemnum = itemnum
     msg.wind = 0
-    Log(msg.meta)
+    Trace(msg.meta)
 }
 
-
 func checkConvert(err error) {
-    if err !=nil {
+    if err != nil {
         panic("type cast failed!")
     }
 }
+
 /*
 func (msg *MessageReader) preRead() {
     buf := msg.buf
@@ -358,7 +359,7 @@ func (msg *MessageReader) ReadInt(wind int) int {
     if !ok {
         panic("type cast failed!")
     }
-    
+
     return a,ok
 }
     m := msg.meta[wind]
@@ -393,89 +394,88 @@ func (msg *MessageReader) alignPos(wind int) {
 }
 */
 
-func (msg *MessageReader) checkRead(datatype int) bool{
-    Log("checkread wind,maxInd",msg.wind,msg.maxInd)
+func (msg *MessageReader) checkRead(datatype int) bool {
+    Trace("checkread wind,maxInd", msg.wind, msg.maxInd)
     if msg.wind > msg.maxInd {
         return false
     }
 
-    ty,ok := msg.meta[msg.wind]
-    Log("checkread ty,ok",ty,ok,datatype)
+    ty, ok := msg.meta[msg.wind]
+    Trace("checkread ty,ok", ty, ok, datatype)
     if !ok {
-        msg.wind ++
+        msg.wind++
         return false
     }
 
     /////if (ty & 0x07) != TY_UINT{
-    if ty != byte(datatype){
+    if ty != byte(datatype) {
         panic("item data type that is reader is wrong")
     }
     return true
 }
 
 func (msg *MessageReader) ReadUint() int {
-    if msg.checkRead(TY_UINT) != true{
+    if msg.checkRead(TY_UINT) != true {
         return 0
     }
 
-    v,err := msg.buf.ReadUint()
+    v, err := msg.buf.ReadUint()
     checkConvert(err)
-    msg.wind ++
+    msg.wind++
     return int(v)
 }
 
 func (msg *MessageReader) ReadInt() int {
-    if msg.checkRead(TY_INT) != true{
+    if msg.checkRead(TY_INT) != true {
         return 0
     }
 
-    v,err := msg.buf.ReadInt()
+    v, err := msg.buf.ReadInt()
     checkConvert(err)
-    msg.wind ++
+    msg.wind++
     return v
 }
 
 func (msg *MessageReader) ReadUint32() int {
-    if msg.checkRead(TY_UINT32) != true{
+    if msg.checkRead(TY_UINT32) != true {
         return 0
     }
 
-    v,err := msg.buf.ReadUint32()
+    v, err := msg.buf.ReadUint32()
     checkConvert(err)
-    msg.wind ++
+    msg.wind++
     return int(v)
 }
 
 func (msg *MessageReader) ReadUint16() int {
-    if msg.checkRead(TY_UINT16) != true{
+    if msg.checkRead(TY_UINT16) != true {
         return 0
     }
 
-    v,err := msg.buf.ReadUint16()
+    v, err := msg.buf.ReadUint16()
     checkConvert(err)
-    msg.wind ++
+    msg.wind++
     return int(v)
 }
 
-func (msg *MessageReader) ReadString() string{
-    if msg.checkRead(TY_STRING) != true{
+func (msg *MessageReader) ReadString() string {
+    if msg.checkRead(TY_STRING) != true {
         return ""
     }
 
-    v,err := msg.buf.ReadString()
+    v, err := msg.buf.ReadString()
     checkConvert(err)
-    msg.wind ++
+    msg.wind++
     return v
 }
 
-func (msg *MessageReader) ReadList() *MessageListReader{
-    if msg.checkRead(TY_LIST) != true{
+func (msg *MessageReader) ReadList() *MessageListReader {
+    if msg.checkRead(TY_LIST) != true {
         return nil
     }
 
-    list := NewMessageListReader(msg.buf,msg.endian)
+    list := NewMessageListReader(msg.buf)
 
-    msg.wind ++
+    msg.wind++
     return list
 }
-

@@ -54,6 +54,10 @@ func (c *Client) GetTransport() *lnet.Transport {
     return c.Transport
 }
 
+func (c *Client) SendMessage(msg *lnet.MessageWriter) {
+    //c.Transport.SendDP(0,msg.ToBytes())
+}
+
 func (c *Client) GetName() string {
     return c.Name
 }
