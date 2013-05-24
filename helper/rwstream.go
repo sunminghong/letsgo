@@ -8,7 +8,7 @@
 #   LastChange: 2013-05-10 11:04:07
 #      History:
 =============================================================================*/
-package net
+package helper
 
 import (
     "encoding/binary"

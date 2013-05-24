@@ -1,14 +1,14 @@
 /*=============================================================================
-#     FileName: rwstream.go
+#     FileName: rwstream_b_test.go
 #         Desc: RWStream struct
 #       Author: sunminghong
 #        Email: allen.fantasy@gmail.com
 #     HomePage: http://weibo.com/5d13
 #      Version: 0.0.1
-#   LastChange: 2013-05-09 17:53:15
+#   LastChange: 2013-05-24 17:07:57
 #      History:
 =============================================================================*/
-package net
+package helper
 
 import (
     //    "encoding/binary"

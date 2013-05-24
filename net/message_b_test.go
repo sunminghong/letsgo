@@ -12,6 +12,7 @@ package net
 
 import (
     "testing"
+    "fmt"
 )
 
 func Benchmark_MessageWrite(t *testing.B) {
@@ -21,7 +22,7 @@ func Benchmark_MessageWrite(t *testing.B) {
 }
 
 func test() {
-    msgw := NewMessageWriter()
+    msgw := NewMessageWriter(BigEndian)
 
     a1 := 989887834
     a2 := 243
@@ -35,7 +36,7 @@ func test() {
     b2 :=uint(42323499)
     b3 :="bsdbbbb"
 
-    b4 := NewMessageListWriter() 
+    b4 := NewMessageListWriter(BigEndian) 
     for i:=0;i<5;i++ {
         b4.WriteStartTag()
         
@@ -55,9 +56,10 @@ func test() {
     msgw.WriteList(b4,0)
     //Log("messageWrite",msgw.ToBytes(1,1))
 
-    data := msgw.ToBytes(1,1)
+    msgw.SetCode(2,0)
+    data := msgw.ToBytes()
 
-    msg := NewMessageReader(data)
+    msg := NewMessageReader(data,BigEndian)
 
     v1 := msg.ReadInt() 
     if v1!= a1 {
@@ -111,7 +113,7 @@ func test() {
         
     }
 
-    Log("------------------------------------------------------")
+    fmt.Println("------------------------------------------------------")
     vv4 := msg.ReadList() 
     
     if vv4.Length != 5 {

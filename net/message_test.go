@@ -12,10 +12,11 @@ package net
 
 import (
     "testing"
+    "fmt"
 )
 
 func Test_MessageWrite(t *testing.T) {
-    msgw := NewMessageWriter()
+    msgw := NewMessageWriter(BigEndian)
 
     a1 := 989887834
     a2 := 243
@@ -29,7 +30,7 @@ func Test_MessageWrite(t *testing.T) {
     b2 :=uint(42323499)
     b3 :="bsdbbbb"
 
-    b4 := NewMessageListWriter() 
+    b4 := NewMessageListWriter(BigEndian) 
     for i:=0;i<5;i++ {
         b4.WriteStartTag()
         
@@ -47,11 +48,12 @@ func Test_MessageWrite(t *testing.T) {
     msgw.WriteU(b2)
     msgw.WriteU(b3)
     msgw.WriteList(b4,0)
-    //Log("messageWrite",msgw.ToBytes(1,1))
+    //fmt.Println("messageWrite",msgw.ToBytes(1,1))
 
-    data := msgw.ToBytes(1,1)
+    msgw.SetCode(1,1)
+    data := msgw.ToBytes()
 
-    msg := NewMessageReader(data)
+    msg := NewMessageReader(data,BigEndian)
 
     v1 := msg.ReadInt() 
     if v1!= a1 {
@@ -105,7 +107,7 @@ func Test_MessageWrite(t *testing.T) {
         t.Error("item a1 ReadInt is wrong:",vv3,b3)
     }
 
-    Log("------------------------------------------------------")
+    fmt.Println("------------------------------------------------------")
     vv4 := msg.ReadList() 
     
     if vv4.Length != 5 {

@@ -14,6 +14,7 @@ import (
     //"encoding/binary"
     "testing"
     "bytes"
+    "fmt"
 )
 
 /*
@@ -57,23 +58,23 @@ func Test_Fetch(t *testing.T) {
             trans.InitBuff()
         }
 
-    Log("buff1:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
+    fmt.Println("buff1:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
     buff := []byte{0x59 ^ 0x37,0x7a ^ 0x37,1 ^ 0x37,0 ^ 0x37,0 ^ 0x37,0 ^ 0x37,10 ^ 0x37}
     trans.BuffAppend(buff)
 
-    Log("buff1:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
+    fmt.Println("buff1:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
     data0 := []byte("1234567890")
     trans.BuffAppend(data0)
 
-    Log("buff2:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
+    fmt.Println("buff2:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
     data := trans.Stream.Bytes()
     trans.BuffAppend(data)
     trans.BuffAppend(data)
-    Log("buff3:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
+    fmt.Println("buff3:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
     trans.BuffAppend(data)
     trans.BuffAppend(data)
     
-    Log("buff0:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
+    fmt.Println("buff0:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
 
     n,dps := datagram.Fetch(trans)
     if n != 5 || len(dps)!= 5 {
