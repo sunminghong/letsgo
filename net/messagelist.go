@@ -11,7 +11,7 @@
 package net
 
 import (
-    //"encoding/binary"
+    "github.com/sunminghong/letsgo/helper"
 )
 
 type MessageListWriter struct {
@@ -26,7 +26,7 @@ type MessageListWriter struct {
 func NewMessageListWriter(endian int) *MessageListWriter {
     list := &MessageListWriter{}
 
-    Trace("messagelistwriter Init by called")
+    log.Trace("messagelistwriter Init by called")
     list.init(768,endian)
     return list
 }
@@ -61,13 +61,13 @@ func (list *MessageListWriter) ToBytes() []byte {
         uint16(list.buf.Len()+list.metabuf.Len() - 2))
     heads[2] = byte(list.length)
 
-    Trace("wind:",list.wind)
+    log.Trace("wind:",list.wind)
     heads[3] = byte(list.wind)
-    Trace("metabuflist",list.metabuf.Bytes())
+    log.Trace("metabuflist",list.metabuf.Bytes())
 
     list.metabuf.Write(list.buf.Bytes())
 
-    Trace("metabuflist",list.metabuf.Bytes())
+    log.Trace("metabuflist",list.metabuf.Bytes())
     return list.metabuf.Bytes()
 }
 
@@ -115,7 +115,7 @@ func (list *MessageListReader) ReadStartTag() {
     //对齐列表项，如果列表数据项比读取的多，读下一个列表的数据是需要先将指针对齐
     for i:=list.wind;i<list.maxInd;i++ {
         ty,ok := list.meta[i]
-        Trace("checkread ty,ok",ty,ok)
+        log.Trace("checkread ty,ok",ty,ok)
         if !ok {
             continue
         }

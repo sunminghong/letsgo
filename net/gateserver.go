@@ -14,6 +14,7 @@ import (
     "strconv"
     "time"
     goconf "github.com/hgfischer/goconf"
+    "github.com/sunminghong/letsgo/helper"
 )
 /*
 [GateServer]
@@ -63,7 +64,7 @@ func (gs *GateServer) Start(configfile string) {
     //parse config ini file
     c, err := goconf.ReadConfigFile(configfile)
     if err != nil {
-        Error(err.Error())
+        log.Error(err.Error())
         return
     }
 
@@ -75,7 +76,7 @@ func (gs *GateServer) Start(configfile string) {
             //if err.Reason == goconf.SectionNotFound {
             //    break
             //} else {
-                Error(err.Error())
+                log.Error(err.Error())
             //    continue
             //}
             break
@@ -97,19 +98,19 @@ func (gs *GateServer) Start(configfile string) {
     //start gate service
     gatename, err := c.GetString("GateServer","name")
     if err != nil {
-        Error(err.Error())
+        log.Error(err.Error())
         return
     }
 
     gatehost, err := c.GetString("GateServer","host")
     if err != nil {
-        Error(err.Error())
+        log.Error(err.Error())
         return
     }
 
     maxConnections, err := c.GetInt("GateServer","maxConnections")
     if err != nil {
-        Error(err.Error())
+        log.Error(err.Error())
         return
     }
 
@@ -126,7 +127,7 @@ func (gs *GateServer) AddLogicServer(name string,host string,protocols string) {
         //if Pool don't find it ,then that is no success!
         c := pool.Clients.GetByName(name)
         if c == nil {
-            Error(host + " can't connect")
+            log.Error(host + " can't connect")
             return
         }
 

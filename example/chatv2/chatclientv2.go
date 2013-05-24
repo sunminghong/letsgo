@@ -17,9 +17,11 @@ import (
     "strings"
     "time"
     "strconv"
+    "flag"
+
     "./protos"
     lnet "github.com/sunminghong/letsgo/net"
-    "flag"
+    "github.com/sunminghong/letsgo/helper"
 )
 
 var endian = lnet.BigEndian
@@ -92,7 +94,7 @@ func clientsender(cid *int,client *lnet.ClientPool) {
         msg.SetCode(1011,0)
         msg.WriteString(text,0)
 
-        lnet.Trace("has %v clients",client.Clients.Len())
+        log.Trace("has %v clients",client.Clients.Len())
         client.Clients.Get(*cid).SendMessage(msg)
     }
 }
@@ -115,13 +117,13 @@ func change(cid *int,client *lnet.ClientPool,name string,) {
 }
 
 var (
-    loglevel = flag.Int("loglevel","0","log level")
+    loglevel = flag.Int("loglevel",0,"log level")
 )
 
 func main() {
     flag.Parse()
 
-    llog.SetLevel(loglevel)
+    log.SetLevel(*loglevel)
 
     datagram := lnet.NewDatagram(lnet.BigEndian)
 

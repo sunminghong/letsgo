@@ -14,6 +14,7 @@ import (
     "net"
     "strconv"
     "sync"
+    "github.com/sunminghong/letsgo/helper"
 )
 
 
@@ -124,7 +125,7 @@ func NewServer(makeclient NewClientFunc, datagram IDatagram, config map[string]i
 }
 
 func (s *Server) Start(addr string, maxConnections int) {
-    Info("Hello Server!")
+    log.Info("Hello Server!")
 
     s.maxConnections = maxConnections
     //todo: maxConnections don't proccess
@@ -134,28 +135,32 @@ func (s *Server) Start(addr string, maxConnections int) {
     s.boardcastChan = make(chan *DataPacket, s.boardcast_chan_num)
     go s.boardcastHandler(s.boardcastChan)
 
-    Info("listen with :", addr)
+    log.Info("listen with :", addr)
     netListen, error := net.Listen("tcp", addr)
     if error != nil {
-        Error(error)
+        log.Error(error)
     } else {
         //defer函数退出时执行
         defer netListen.Close()
         for {
-            Trace("Waiting for connection")
+            log.Trace("Waiting for connection")
             connection, error := netListen.Accept()
             if error != nil {
-                Error("Transport error: ", error)
+                log.Error("Transport error: ", error)
             } else {
                 newcid := s.allocTransportid()
                 if newcid == 0 {
-                    Warn("connection num is more than ",s.maxConnections)
+                    log.Warn("connection num is more than ",s.maxConnections)
                 } else {
                     go s.transportHandler(newcid, connection)
                 }
             }
         }
     }
+}
+
+func (s *Server) SetMaxConnections(max int) {
+    s.maxConnections = max
 }
 
 func (s *Server) removeClient(cid int) {
@@ -181,6 +186,7 @@ func (s *Server) transportHandler(newcid int, connection net.Conn) {
     go s.transportSender(transport, client)
     go s.transportReader(transport, client)
 
+    log.Debug("has clients:",s.Clients.Len())
 }
 
 func (s *Server) transportReader(transport *Transport, client IClient) {
@@ -195,32 +201,32 @@ func (s *Server) transportReader(transport *Transport, client IClient) {
             transport.Closed()
             transport.Conn.Close()
             s.removeClient(transport.Cid)
-            Error(err)
+            log.Error(err)
             break
         }
 
-        Trace("read to buff:", bytesRead)
+        log.Trace("read to buff:", bytesRead)
         transport.BuffAppend(buffer[0:bytesRead])
 
-        Trace("transport.Buff", transport.Stream.Bytes())
+        log.Trace("transport.Buff", transport.Stream.Bytes())
         n, dps := s.datagram.Fetch(transport)
-        Trace("fetch message number", n)
+        log.Trace("fetch message number", n)
         if n > 0 {
             client.ProcessDPs(dps)
         }
     }
-    Trace("TransportReader stopped for ", transport.Cid)
+    log.Trace("TransportReader stopped for ", transport.Cid)
 }
 
 func (s *Server) transportSender(transport *Transport, client IClient) {
     for {
         select {
         case dp := <-transport.Outgoing:
-            Trace("transportSender outgoing:",dp.Type, len(dp.Data))
+            log.Trace("transportSender outgoing:",dp.Type, len(dp.Data))
             buf := s.datagram.Pack(dp)
             transport.Conn.Write(buf)
         case <-transport.Quit:
-            Debug("Transport ", transport.Cid, " quitting")
+            log.Debug("Transport ", transport.Cid, " quitting")
 
             transport.Closed()
             transport.Conn.Close()
@@ -233,7 +239,7 @@ func (s *Server) transportSender(transport *Transport, client IClient) {
 func (s *Server) boardcastHandler(boardcastChan <-chan *DataPacket) {
     for {
         //在go里面没有while do ，for可以无限循环
-        Trace("boardcastHandler: chan Waiting for input")
+        log.Trace("boardcastHandler: chan Waiting for input")
         dp := <-boardcastChan
         //buf := s.datagram.pack(dp)
 
@@ -248,7 +254,7 @@ func (s *Server) boardcastHandler(boardcastChan <-chan *DataPacket) {
             }
             c.GetTransport().Outgoing <- dp
         }
-        Trace("boardcastHandler: Handle end!")
+        log.Trace("boardcastHandler: Handle end!")
     }
 }
 

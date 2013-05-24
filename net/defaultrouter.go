@@ -13,6 +13,7 @@ package net
 import (
     "strconv"
     "strings"
+    "github.com/sunminghong/letsgo/helper"
 )
 
 type DefaultRouter struct {
@@ -46,7 +47,7 @@ func (r *DefaultRouter) Handler(dp DataPacket) (cid int,ok bool) {
 
     cid,ok = r.protomaps[proto]
 
-    Debug("router Handler func messageCode,proto,cid:",dp.Code,proto,cid)
+    log.Trace("router Handler func messageCode,proto,cid:",dp.Code,proto,cid)
     return cid,ok
 }
 

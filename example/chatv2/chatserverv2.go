@@ -11,11 +11,23 @@
 package main
 
 import (
+    "flag"
+
     lnet "github.com/sunminghong/letsgo/net"
+    "github.com/sunminghong/letsgo/helper"
     "./protos"
 )
 
+
+var (
+    loglevel = flag.Int("loglevel",0,"log level")
+)
+
 func main() {
+    flag.Parse()
+
+    log.SetLevel(*loglevel)
+
     datagram := lnet.NewDatagram(lnet.BigEndian)
 
     config := make(map[string]interface{})

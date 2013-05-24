@@ -51,6 +51,8 @@ type IClient interface {
 }
 
 type IServer interface {
+    SetMaxConnections(max int)
+
     SendDP(t *Transport, dataType byte, data []byte)
 
     SendBoardcast(t *Transport, data []byte)

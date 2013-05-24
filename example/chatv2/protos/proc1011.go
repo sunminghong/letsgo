@@ -1,6 +1,6 @@
 /*=============================================================================
 #     FileName: proc1011.go
-#         Desc: server base 
+#         Desc: server base
 #       Author: sunminghong
 #        Email: allen.fantasy@gmail.com
 #     HomePage: http://weibo.com/5d13
@@ -12,7 +12,9 @@ package protos
 
 import (
     //"fmt"
+    "github.com/sunminghong/letsgo/helper"
     lnet "github.com/sunminghong/letsgo/net"
+    "strconv"
 )
 
 func init() {
@@ -20,12 +22,22 @@ func init() {
 }
 
 func Process1011(c *Client, reader *lnet.MessageReader) {
-    lnet.Trace("process 1011 is called")
+    log.Trace("process 1011 is called")
 
     md := reader.ReadString()
 
-    if md == "/quit" {
+    switch {
+    case md == "/quit":
         c.Close()
+        return
+    case len(md)>8 && md[:8] == "/setmax=":
+        _max := md[8:]
+        max, err := strconv.Atoi(_max)
+        if err != nil {
+            log.Warn("setmax is error:",err)
+            return
+        }
+        c.GetTransport().Server.SetMaxConnections(max)
         return
     }
 
@@ -38,10 +50,10 @@ func Process1011(c *Client, reader *lnet.MessageReader) {
         msg = (*c.Username) + "> " + md
     }
 
-    lnet.Debug("1011 write out:",msg)
+    log.Debug("1011 write out:", msg)
 
     mw := lnet.NewMessageWriter(Endian)
-    mw.SetCode(2011,0)
-    mw.WriteString(msg,0)
+    mw.SetCode(2011, 0)
+    mw.WriteString(msg, 0)
     c.SendBoardcast(mw)
 }

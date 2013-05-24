@@ -12,6 +12,7 @@ package protos
 
 import (
     lnet "github.com/sunminghong/letsgo/net"
+    "github.com/sunminghong/letsgo/helper"
 )
 
 var Endian int = lnet.BigEndian
@@ -32,7 +33,7 @@ func MakeClient (name string,transport *lnet.Transport) lnet.IClient {
 func (c *Client) ProcessDPs(dps []*lnet.DataPacket) {
     for _, dp := range dps {
         msg := lnet.NewMessageReader(dp.Data,Endian)
-        lnet.Trace("msg.code:",msg.Code,msg.Ver)
+        log.Trace("msg.code:",msg.Code,msg.Ver)
 
         Handlers[msg.Code](c,msg)
     }
@@ -53,7 +54,11 @@ func (c *Client) Close() {
 
 func (c *Client) Closed() {
     msg := "system: " + (*c.Username) + " is leave!"
-    c.Transport.SendBoardcast([]byte(msg))
+    mw := lnet.NewMessageWriter(Endian)
+    mw.SetCode(2011,0)
+    mw.WriteString(msg,0)
+
+    c.Transport.SendBoardcast(mw.ToBytes())
 }
 
 func (c *Client) SendMessage(msg lnet.IMessageWriter) {

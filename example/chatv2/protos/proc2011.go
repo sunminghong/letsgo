@@ -14,6 +14,7 @@ import (
     "fmt"
 
     lnet "github.com/sunminghong/letsgo/net"
+    "github.com/sunminghong/letsgo/helper"
 )
 
 
@@ -22,7 +23,7 @@ func init() {
 }
 
 func Process2011(c *Client,reader *lnet.MessageReader) {
-    lnet.Trace("process 2011 is called")
+    log.Trace("process 2011 is called")
 
     md := reader.ReadString()
     fmt.Println()

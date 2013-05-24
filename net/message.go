@@ -11,7 +11,7 @@
 package net
 
 import (
-//"encoding/binary"
+    "github.com/sunminghong/letsgo/helper"
 )
 
 const (
@@ -202,7 +202,7 @@ func (msg *MessageWriter) Write(x ...interface{}) {
 //对数据进行封包
 func (msg *MessageWriter) ToBytes() []byte {
     if msg.Code == 0 {
-        Warn("messagewriter ToBytes() msg.Code == 0")
+        log.Warn("messagewriter ToBytes() msg.Code == 0")
         return nil
     }
 
@@ -213,12 +213,12 @@ func (msg *MessageWriter) ToBytes() []byte {
     msg.metabuf.Endianer.PutUint16(heads, uint16(msg.Code))
     heads[2] = msg.Ver
 
-    Trace("wind:", msg.wind)
+    log.Trace("wind:", msg.wind)
     heads[3] = byte(msg.wind)
-    Trace("metabuf", msg.metabuf.Bytes())
+    log.Trace("metabuf", msg.metabuf.Bytes())
     msg.metabuf.Write(msg.buf.Bytes())
 
-    Trace("metabuf", msg.metabuf.Bytes())
+    log.Trace("metabuf", msg.metabuf.Bytes())
     return msg.metabuf.Bytes()
 }
 
@@ -267,11 +267,11 @@ func (msg *MessageReader) init() {
     itemnum := int(_itemnum)
     meta, n := buf.Read(itemnum)
     if n < itemnum {
-        Error("messageReader data init ",n,itemnum,buf.Bytes())
+        log.Error("messageReader data init ",n,itemnum,buf.Bytes())
         panic("data init error")
     }
 
-    Trace("init meta:", meta)
+    log.Trace("init meta:", meta)
     maxind := 0
     msg.meta = make(map[int]byte)
 
@@ -287,7 +287,7 @@ func (msg *MessageReader) init() {
     msg.maxInd = maxind
     msg.itemnum = itemnum
     msg.wind = 0
-    Trace(msg.meta)
+    log.Trace(msg.meta)
 }
 
 func checkConvert(err error) {
@@ -395,13 +395,13 @@ func (msg *MessageReader) alignPos(wind int) {
 */
 
 func (msg *MessageReader) checkRead(datatype int) bool {
-    Trace("checkread wind,maxInd", msg.wind, msg.maxInd)
+    log.Trace("checkread wind,maxInd", msg.wind, msg.maxInd)
     if msg.wind > msg.maxInd {
         return false
     }
 
     ty, ok := msg.meta[msg.wind]
-    Trace("checkread ty,ok", ty, ok, datatype)
+    log.Trace("checkread ty,ok", ty, ok, datatype)
     if !ok {
         msg.wind++
         return false

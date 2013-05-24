@@ -14,6 +14,7 @@ import (
     "net"
     //"strconv"
     "time"
+    "github.com/sunminghong/letsgo/helper"
 )
 
 type ClientPool struct {
@@ -90,6 +91,10 @@ func (c *ClientPool) Start(name string,addr string) {
     <-c.Quit
 }
 
+func (c *ClientPool) SetMaxConnections(max int) {
+
+}
+
 func (c *ClientPool) Close(cid int) {
     if cid == 0 {
         for _, client := range c.Clients.All(){
@@ -143,7 +148,7 @@ func (c *ClientPool) transportSender(transport *Transport) {
     for {
         select {
         case dp := <-transport.Outgoing:
-            Trace("clientpool transportSender:",dp.Type, dp.Data)
+            log.Trace("clientpool transportSender:",dp.Type, dp.Data)
             buf := c.datagram.Pack(dp)
             transport.Conn.Write(buf)
         case <-transport.Quit:
