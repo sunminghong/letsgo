@@ -63,6 +63,14 @@ func (c *Client) Closed() {
     c.Transport.SendBoardcast([]byte(msg))
 }
 
+func (c *Client) SendMessage(msg lnet.IMessageWriter) {
+    c.Transport.SendDP(0,msg.ToBytes())
+}
+
+func (c *Client) SendBoardcast(msg lnet.IMessageWriter) {
+    c.Transport.SendBoardcast(msg.ToBytes())
+}
+
 // clientsender(): read from stdin and send it via network
 func clientsender(cid *int,client *lnet.ClientPool) {
     reader := bufio.NewReader(os.Stdin)
@@ -92,7 +100,7 @@ func clientsender(cid *int,client *lnet.ClientPool) {
                     continue
                 }
 
-                go client.Start(name,addr,0)
+                go client.Start(name,addr)
 
 
                 fmt.Print("please input your name:")

@@ -54,10 +54,6 @@ func (c *Client) GetTransport() *lnet.Transport {
     return c.Transport
 }
 
-func (c *Client) SendMessage(msg *lnet.MessageWriter) {
-    //c.Transport.SendDP(0,msg.ToBytes())
-}
-
 func (c *Client) GetName() string {
     return c.Name
 }
@@ -69,6 +65,14 @@ func (c *Client) Close() {
 func (c *Client) Closed() {
     msg := "system: " + (*c.Username) + " is leave!"
     c.Transport.SendBoardcast([]byte(msg))
+}
+
+func (c *Client) SendMessage(msg lnet.IMessageWriter) {
+    c.Transport.SendDP(0,msg.ToBytes())
+}
+
+func (c *Client) SendBoardcast(msg lnet.IMessageWriter) {
+    c.Transport.SendBoardcast(msg.ToBytes())
 }
 
 func main() {
