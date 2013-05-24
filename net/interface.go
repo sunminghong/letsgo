@@ -27,7 +27,9 @@ type IDatagram interface {
     //Encrypt([]byte)
     //Decrypt([]byte)
 
+    Clone(endian int) IDatagram
     GetEndian() int
+    SetEndian(endian int)
     Fetch(c *Transport) (n int, dps []*DataPacket)
     Pack(dp *DataPacket) []byte
 }
@@ -41,8 +43,8 @@ type IClient interface {
     Close()
     Closed()
     GetTransport() *Transport
-    SendMessage(msg IMessageWriter)
-    SendBoardcast(msg IMessageWriter)
+    //SendMessage(msg IMessageWriter)
+    //SendBoardcast(msg IMessageWriter)
 
     /*
        SetStatus(status int)

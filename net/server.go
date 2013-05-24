@@ -90,7 +90,12 @@ func (tm *ClientMap) Len() int {
     return len(tm.maps)
 }
 
-func NewClientMap() *ClientMap { return &ClientMap{maps: make(map[int]IClient),mapsByName: make(map[string]int)} }
+func NewClientMap() *ClientMap {
+    return &ClientMap{
+        maps: make(map[int]IClient),
+        mapsByName: make(map[string]int),
+    }
+}
 
 type Server struct {
     boardcast_chan_num int
@@ -111,7 +116,7 @@ type Server struct {
     boardcastChan chan *DataPacket
 }
 
-func NewServer(makeclient NewClientFunc, datagram IDatagram, config map[string]interface{}) *Server {
+func NewServer(makeclient NewClientFunc, datagram IDatagram) *Server {
     s := &Server{Clients: NewClientMap()}
 
     s.makeclient = makeclient
@@ -177,7 +182,7 @@ func (s *Server) allocTransportid() int {
 
 //该函数主要是接受新的连接和注册用户在transport list
 func (s *Server) transportHandler(newcid int, connection net.Conn) {
-    transport := NewTransport(newcid, connection, s,s.datagram.GetEndian())
+    transport := NewTransport(newcid, connection, s,s.datagram)
     name := "c_"+strconv.Itoa(newcid)
     client := s.makeclient(name,transport)
     s.Clients.Add(newcid, name, client)

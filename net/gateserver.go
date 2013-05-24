@@ -22,27 +22,33 @@ import (
 name = gate1
 host = :12000
 maxConnections = 3000
+endian = 1 #BigEndian= 0 ,LittleEndian = 1
 
 [LogicServer1]
 name = game1
 host = :12001
 process = 1,2,3,4,5,6
+endian = 1
 
 [LogicServer2]
 name = game2
 host = :12002
 process = 
+endian = 1
 
 [LogicServer3]
 name = game3
 host = :12003
 process = 7,8
+endian = 1
 
 */
 
 type GateServer struct {
     Name                string
-    GateService        *Server
+
+    datagram            IDatagram
+    GateService         *Server
     LogicServicePool    *ClientPool
 
     RouteHandler IRouter
@@ -54,7 +60,8 @@ func NewGateServer(Client,makeclient NewClientFunc,
 
     gs := &GateServer{}
 
-    gs.GateService = NewServer(makeclient, datagram,nil)
+    gs.datagram = datagram
+    gs.GateService = NewServer(makeclient, datagram)
     gs.LogicServicePool = NewClientPool(makeLogicService,datagram)
     gs.RouteHandler = routehand
 
@@ -93,7 +100,14 @@ func (gs *GateServer) Start(configfile string) {
             protocols = ""
         }
 
-        gs.AddLogicServer(gname, host, protocols)
+        endian, err := c.GetInt("GateServer","endian")
+        if err == nil {
+            da := gs.datagram.Clone(endian)
+            gs.AddLogicServer(gname, host, protocols,da)
+        } else {
+            gs.AddLogicServer(gname, host, protocols,nil)
+        }
+
     }
 
     //start gate service
@@ -115,14 +129,19 @@ func (gs *GateServer) Start(configfile string) {
         return
     }
 
+    endian, err := c.GetInt("GateServer","endian")
+    if err == nil {
+        gs.datagram.SetEndian(endian)
+    }
+
     gs.Name = gatename
     gs.GateService.Start(gatehost,maxConnections)
 }
 
-func (gs *GateServer) AddLogicServer(name string,host string,protocols string) {
+func (gs *GateServer) AddLogicServer(name string,host string,protocols string,datagram IDatagram) {
 
         pool := gs.LogicServicePool
-        go pool.Start(name, host)
+        go pool.Start(name, host, datagram)
         time.Sleep(1)
 
         //if Pool don't find it ,then that is no success!

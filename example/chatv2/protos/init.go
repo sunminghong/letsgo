@@ -18,6 +18,13 @@ type processHandler func(c *Client,reader *lnet.MessageReader)
 
 var Handlers map[int]processHandler = make(map[int]processHandler)
 
+func Handl(code int,c *Client,reader *lnet.MessageReader) {
+    h, ok := Handlers[code]
+    if ok {
+        h(c,reader)
+    }
+}
+
 func init() {
 
 }

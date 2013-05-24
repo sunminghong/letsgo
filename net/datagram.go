@@ -10,6 +10,7 @@
 =============================================================================*/
 package net
 import (
+    "encoding/binary"
     "github.com/sunminghong/letsgo/helper"
 )
 
@@ -24,19 +25,34 @@ const (
 
 type Datagram struct {
     endian int
-    Stream *helper.RWStream     //can use enddian
+    Endianer helper.ItoB
 }
 
 func NewDatagram(endian int ) *Datagram{
     dg := &Datagram{}
-    dg.endian = endian
-    dg.Stream = helper.NewRWStream([]byte{1},endian)
 
+    dg.SetEndian(endian)
     return dg
 }
 
 func (d *Datagram) GetEndian() int {
     return d.endian
+}
+
+func (d *Datagram) Clone(endian int) IDatagram {
+    dg := &Datagram{}
+
+    dg.SetEndian(endian)
+    return dg
+}
+
+func (d *Datagram) SetEndian(endian int) {
+    d.endian = endian
+    if endian == helper.BigEndian {
+        d.Endianer = binary.BigEndian
+    } else {
+        d.Endianer = binary.LittleEndian
+    }
 }
 
 func (d *Datagram) encrypt(plan []byte){
@@ -146,7 +162,7 @@ func (d *Datagram) Pack(dp *DataPacket) []byte {
     buf[1] = byte(mask2)
     buf[2] = byte(dp.Type)
 
-    d.Stream.Endianer.PutUint32(buf[3:], uint32(ilen))
+    d.Endianer.PutUint32(buf[3:], uint32(ilen))
 
     d.encrypt(buf)
 

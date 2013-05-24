@@ -18,6 +18,7 @@ type Transport struct {
     DataType byte
     DPSize  int
 
+    datagram IDatagram
     Server IServer
     Conn   net.Conn
 }
@@ -53,29 +54,34 @@ func (c *Transport) BuffAppend(p []byte) (n int) {
     return c.Stream.Write(p)
 }
 
+func (c *Transport) Fetch() (n int, dps []*DataPacket) {
+    return c.datagram.Fetch(c)
+}
+
 func (c *Transport) SendDP(dataType byte, data []byte) {
     if data == nil {
-        return 
+        return
     }
     c.Server.SendDP(c, dataType, data)
 }
 
 func (c *Transport) SendBoardcast(data []byte) {
     if data == nil {
-        return 
+        return
     }
     c.Server.SendBoardcast(c, data)
 }
 
 // new Transport object
-func NewTransport(newcid int, conn net.Conn, server IServer,endian int) *Transport {
+func NewTransport(newcid int, conn net.Conn, server IServer,datagram IDatagram) *Transport {
     c := &Transport{
         Cid:      newcid,
         Conn:     conn,
+        datagram: datagram,
         Server:   server,
         Outgoing: make(chan *DataPacket, 10),
         Quit:     make(chan bool),
-        Stream:   helper.NewRWStream(1024,endian),
+        Stream:   helper.NewRWStream(1024,datagram.GetEndian()),
     }
 
     c.InitBuff()

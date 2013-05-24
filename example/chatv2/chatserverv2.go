@@ -14,7 +14,7 @@ import (
     "flag"
 
     lnet "github.com/sunminghong/letsgo/net"
-    "github.com/sunminghong/letsgo/helper"
+    "github.com/sunminghong/letsgo/log"
     "./protos"
 )
 
@@ -30,9 +30,7 @@ func main() {
 
     datagram := lnet.NewDatagram(protos.Endian)
 
-    config := make(map[string]interface{})
-
-    serv := lnet.NewServer(protos.MakeClient,datagram,config)
+    serv := lnet.NewServer(protos.MakeClient,datagram)
 
     serv.Start(":4444",2)
 }

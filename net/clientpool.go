@@ -55,7 +55,7 @@ func NewClientPool(newclient NewClientFunc, datagram IDatagram /*,runloop IRunLo
     return c
 }
 
-func (c *ClientPool) Start(name string,addr string) {
+func (c *ClientPool) Start(name string,addr string,datagram IDatagram) {
     //go func() {
         ////Log("Hello Client!")
 
@@ -75,7 +75,10 @@ func (c *ClientPool) Start(name string,addr string) {
 
         newcid := c.allocTransportid()
 
-        transport := NewTransport(newcid, connection, c,c.datagram.GetEndian())
+        if datagram == nil {
+            datagram = c.datagram
+        }
+        transport := NewTransport(newcid, connection, c,datagram)
         client := c.newclient(name,transport)
         c.Clients.Add(newcid,name, client)
 

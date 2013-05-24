@@ -12,7 +12,7 @@ package protos
 
 import (
     //"fmt"
-    "github.com/sunminghong/letsgo/helper"
+    "github.com/sunminghong/letsgo/log"
     lnet "github.com/sunminghong/letsgo/net"
     "strconv"
 )
@@ -52,7 +52,7 @@ func Process1011(c *Client, reader *lnet.MessageReader) {
 
     log.Debug("1011 write out:", msg)
 
-    mw := lnet.NewMessageWriter(Endian)
+    mw := NewMessageWriter(c)
     mw.SetCode(2011, 0)
     mw.WriteString(msg, 0)
     c.SendBoardcast(mw)

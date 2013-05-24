@@ -22,9 +22,10 @@ import (
     "./protos"
     lnet "github.com/sunminghong/letsgo/net"
     "github.com/sunminghong/letsgo/helper"
+    "github.com/sunminghong/letsgo/log"
 )
 
-var endian = lnet.BigEndian
+var endian = helper.BigEndian
 
 // clientsender(): read from stdin and send it via network
 func clientsender(cid *int,client *lnet.ClientPool) {
@@ -58,7 +59,19 @@ func clientsender(cid *int,client *lnet.ClientPool) {
                     continue
                 }
 
-                go client.Start(name,addr)
+                if len(cmds)>3 {
+                    endian,err := strconv.Atoi(cmds[3])
+
+                    if err ==nil && (endian == 0 || endian == 1) {
+                        log.Debug("connect to server use endian:",endian)
+                        datagram := lnet.NewDatagram(endian)
+                        go client.Start(name,addr,datagram)
+                    } else {
+                        go client.Start(name,addr,nil)
+                    }
+                } else {
+                    go client.Start(name,addr,nil)
+                }
 
 
                 fmt.Print("please input your name:")
@@ -90,12 +103,13 @@ func clientsender(cid *int,client *lnet.ClientPool) {
             text = string(input[:len(input)-1])
         }
 
-        msg := lnet.NewMessageWriter(endian)
+        c := client.Clients.Get(*cid)
+        msg := protos.NewMessageWriter(c)
         msg.SetCode(1011,0)
         msg.WriteString(text,0)
 
         log.Trace("has %v clients",client.Clients.Len())
-        client.Clients.Get(*cid).SendMessage(msg)
+        c.GetTransport().SendDP(0,msg.ToBytes())
     }
 }
 
