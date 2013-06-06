@@ -25,6 +25,14 @@ type ClientMap struct {
     mapsByName map[string]int
 }
 
+func NewClientMap() *ClientMap {
+    return &ClientMap{
+        maplock: new(sync.RWRutex),
+        maps: make(map[int]IClient),
+        mapsByName: make(map[string]int),
+    }
+}
+
 func (tm *ClientMap) Add(cid int,name string, client IClient) {
     tm.maplock.Lock()
     defer tm.maplock.Unlock()
@@ -67,6 +75,9 @@ func (tm *ClientMap) RemoveByName(name string) {
 }
 
 func (tm *ClientMap) Get(cid int) IClient {
+    tm.maplock.Lock()
+    defer tm.maplock.Unlock()
+
     c, ok := tm.maps[cid]
     if ok {
         return c
@@ -75,6 +86,9 @@ func (tm *ClientMap) Get(cid int) IClient {
 }
 
 func (tm *ClientMap) GetByName(name string) IClient {
+    tm.maplock.Lock()
+    defer tm.maplock.Unlock()
+
     cid, ok := tm.mapsByName[name]
     if ok {
         return tm.maps[cid]
@@ -83,18 +97,17 @@ func (tm *ClientMap) GetByName(name string) IClient {
 }
 
 func (tm *ClientMap) All() map[int]IClient {
+    tm.maplock.Lock()
+    defer tm.maplock.Unlock()
+
     return tm.maps
 }
 
 func (tm *ClientMap) Len() int {
-    return len(tm.maps)
-}
+    tm.maplock.Lock()
+    defer tm.maplock.Unlock()
 
-func NewClientMap() *ClientMap {
-    return &ClientMap{
-        maps: make(map[int]IClient),
-        mapsByName: make(map[string]int),
-    }
+    return len(tm.maps)
 }
 
 type Server struct {

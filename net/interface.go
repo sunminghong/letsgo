@@ -101,3 +101,7 @@ type IMessageReader interface {
     //ReadList() *MessageListReader
 }
 
+type IIDAssign interface {
+    GetFree() int
+    Free(id int)
+}
