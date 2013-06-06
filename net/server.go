@@ -19,7 +19,7 @@ import (
 
 
 type ClientMap struct {
-    maplock sync.RWMutex
+    maplock *sync.RWMutex
 
     maps map[int]IClient
     mapsByName map[string]int
@@ -27,7 +27,7 @@ type ClientMap struct {
 
 func NewClientMap() *ClientMap {
     return &ClientMap{
-        maplock: new(sync.RWRutex),
+        maplock: new(sync.RWMutex),
         maps: make(map[int]IClient),
         mapsByName: make(map[string]int),
     }
