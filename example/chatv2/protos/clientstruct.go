@@ -20,14 +20,17 @@ var Endian int = helper.BigEndian
 
 // IClient  
 type Client struct {
-    Transport *lnet.Transport
-    Name string
-    Username *string
+    *lnet.DefaultClient
 }
 
 func MakeClient (name string,transport *lnet.Transport) lnet.IClient {
     username := "someone"
-    return &Client{transport,name,&username}
+    c := &Client{}
+    c.Username = &username
+    c.Transport = transport
+    c.Name = name
+
+    return c
 }
 
 //对数据进行拆包
@@ -39,19 +42,6 @@ func (c *Client) ProcessDPs(dps []*lnet.DataPacket) {
         //todo: route don't execute
         Handl(msg.Code,c,msg)
     }
-}
-
-//对数据进行拆包
-func (c *Client) GetTransport() *lnet.Transport {
-    return c.Transport
-}
-
-func (c *Client) GetName() string {
-    return c.Name
-}
-
-func (c *Client) Close() {
-    c.Transport.Close()
 }
 
 func (c *Client) Closed() {

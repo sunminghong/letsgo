@@ -34,14 +34,15 @@ type ClientPool struct {
     localport int
 
     Quit    chan bool
+    boardcastChan    chan *DataPacket
 
     connaddr chan string
 }
 
 func NewClientPool(newclient NewClientFunc, datagram IDatagram /*,runloop IRunLoop*/) *ClientPool {
-    c := &ClientPool{Clients: NewClientMap()}
-    c.newclient = newclient
-    c.datagram = datagram
+    cp := &ClientPool{Clients: NewClientMap()}
+    cp.newclient = newclient
+    cp.datagram = datagram
     /*
        if runloop != nil {
            c.runloop = runloop
@@ -50,12 +51,18 @@ func NewClientPool(newclient NewClientFunc, datagram IDatagram /*,runloop IRunLo
        }
     */
 
-    c.Quit = make(chan bool)
-    c.read_buffer_size = 1024
-    return c
+    cp.Quit = make(chan bool)
+    cp.read_buffer_size = 1024
+
+
+    //创建一个管道 chan map 需要make creates slices, maps, and channels only
+    cp.boardcastChan = make(chan *DataPacket,1)
+    go cp.boardcastHandler(cp.boardcastChan)
+
+    return cp
 }
 
-func (c *ClientPool) Start(name string,addr string,datagram IDatagram) {
+func (cp *ClientPool) Start(name string,addr string,datagram IDatagram) {
     //go func() {
         ////Log("Hello Client!")
 
@@ -73,34 +80,34 @@ func (c *ClientPool) Start(name string,addr string,datagram IDatagram) {
         defer connection.Close()
         //Log("main(): connected ")
 
-        newcid := c.allocTransportid()
+        newcid := cp.allocTransportid()
 
         if datagram == nil {
-            datagram = c.datagram
+            datagram = cp.datagram
         }
-        transport := NewTransport(newcid, connection, c,datagram)
-        client := c.newclient(name,transport)
-        c.Clients.Add(newcid,name, client)
+        transport := NewTransport(newcid, connection, cp,datagram)
+        client := cp.newclient(name,transport)
+        cp.Clients.Add(newcid,name, client)
 
         //创建go的线程 使用Goroutine
-        go c.transportSender(transport)
-        go c.transportReader(transport, client)
+        go cp.transportSender(transport)
+        go cp.transportReader(transport, client)
 
 
         time.Sleep(2)
 
         <-transport.Quit
     //}()
-    <-c.Quit
+    <-cp.Quit
 }
 
-func (c *ClientPool) SetMaxConnections(max int) {
+func (cp *ClientPool) SetMaxConnections(max int) {
 
 }
 
-func (c *ClientPool) Close(cid int) {
+func (cp *ClientPool) Close(cid int) {
     if cid == 0 {
-        for _, client := range c.Clients.All(){
+        for _, client := range cp.Clients.All(){
             //c.running[cid] = false
             client.GetTransport().Quit <- true
         }
@@ -108,20 +115,20 @@ func (c *ClientPool) Close(cid int) {
     }
 
     //c.running[cid] = false
-    c.Clients.Get(cid).GetTransport().Quit <- true
+    cp.Clients.Get(cid).GetTransport().Quit <- true
 }
 
-func (c *ClientPool) removeClient(cid int) {
-    c.Clients.Remove(cid)
+func (cp *ClientPool) removeClient(cid int) {
+    cp.Clients.Remove(cid)
 }
 
-func (c *ClientPool) allocTransportid() int {
-    c.TransportNum += 1
-    return c.TransportNum
+func (cp *ClientPool) allocTransportid() int {
+    cp.TransportNum += 1
+    return cp.TransportNum
 }
 
-func (c *ClientPool) transportReader(transport *Transport, client IClient) {
-    buffer := make([]byte, c.read_buffer_size)
+func (cp *ClientPool) transportReader(transport *Transport, client IClient) {
+    buffer := make([]byte, cp.read_buffer_size)
     for {
 
         bytesRead, err := transport.Conn.Read(buffer)
@@ -129,7 +136,7 @@ func (c *ClientPool) transportReader(transport *Transport, client IClient) {
         if err != nil {
             client.Closed()
             transport.Closed()
-            c.removeClient(transport.Cid)
+            cp.removeClient(transport.Cid)
             //Log(err)
             break
         }
@@ -138,7 +145,7 @@ func (c *ClientPool) transportReader(transport *Transport, client IClient) {
         transport.BuffAppend(buffer[0:bytesRead])
 
         //Log("transport.Buff", transport.Stream.Bytes())
-        n, dps := c.datagram.Fetch(transport)
+        n, dps := cp.datagram.Fetch(transport)
         //Log("fetch message number", n)
         if n > 0 {
             client.ProcessDPs(dps)
@@ -147,89 +154,47 @@ func (c *ClientPool) transportReader(transport *Transport, client IClient) {
     //Log("TransportReader stopped for ", transport.Cid)
 }
 
-func (c *ClientPool) transportSender(transport *Transport) {
+func (cp *ClientPool) transportSender(transport *Transport) {
     for {
         select {
-        case dp := <-transport.Outgoing:
+        case dp := <-transport.outgoing:
             log.Trace("clientpool transportSender:",dp.Type, dp.Data)
-            buf := c.datagram.Pack(dp)
-            transport.Conn.Write(buf)
+            //buf := cp.datagram.Pack(dp)
+            //transport.Conn.Write(buf)
+
+            cp.datagram.PackWrite(transport.Conn.Write,dp)
         case <-transport.Quit:
             //Log("Transport ", transport.Cid, " quitting")
             transport.Conn.Close()
 
             //client.Closed()
             transport.Closed()
-            c.removeClient(transport.Cid)
+            cp.removeClient(transport.Cid)
             break
         }
     }
 }
 
-func (c *ClientPool) boardcastHandler(boardcastChan <-chan *DataPacket) {
+func (cp *ClientPool) boardcastHandler(boardcastChan <-chan *DataPacket) {
     for {
         //在go里面没有while do ，for可以无限循环
         //Log("boardcastHandler: chan Waiting for input")
         dp := <-boardcastChan
         //buf := c.datagram.pack(dp)
 
-        sendCid, ok := dp.Other.(int)
-        if !ok {
-            sendCid = 0
-        }
-
-        for Cid, c := range c.Clients.All() {
+        sendCid := dp.FromCid
+        for Cid, c := range cp.Clients.All() {
             if sendCid == Cid {
                 continue
             }
-            c.GetTransport().Outgoing <- dp
+            c.GetTransport().outgoing <- dp
         }
         //Log("boardcastHandler: Handle end!")
     }
 }
 
 //send boardcast message data for other object
-func (c *ClientPool) SendBoardcast(transport *Transport, data []byte) {
-    //dp := &DataPacket{Type: DATAPACKET_TYPE_BOARDCAST, Data: data, Other: transport.Cid}
-    //c.boardcastChan <- dp
+func (cp *ClientPool) SendBoardcast(transport *Transport, dp *DataPacket) {
+    cp.boardcastChan <- dp
 }
 
-//send message data for other object
-func (c *ClientPool) SendDP(transport *Transport, dataType byte, data []byte) {
-    dp := &DataPacket{Type: dataType, Data: data}
-    transport.Outgoing <- dp
-
-}
-
-/*
-type RunLoop struct {
-    //running map[int]bool
-    running bool
-}
-
-func (r *RunLoop) Loop() {
-    r.running = true
-    // wait for quiting (/quit). run until running ic true
-    for r.running {
-            time.Sleep(1 * 1e9)
-    }
-}
-
-func (r *RunLoop) Stop() {
-    r.running = false
-}
-
-func (r *RunLoop) Status() bool{
-    return r.running
-}
-
-func NewRunLoop() *RunLoop {
-    return &RunLoop{true}
-}
-
-type IRunLoop interface{
-    Loop()
-    Stop()
-    Status()
-}
-*/

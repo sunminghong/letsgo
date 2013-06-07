@@ -17,10 +17,12 @@ import (
 //define a struct or class of rec transport connection
 type DataPacket struct {
     Type  byte
-    Code  uint16
     Data  []byte
-    Other interface{}
+
+    FromCid int
 }
+
+type WriteFunc func (data []byte) (int,error)
 
 //datagram and datapacket define
 type IDatagram interface {
@@ -31,20 +33,28 @@ type IDatagram interface {
     GetEndian() int
     SetEndian(endian int)
     Fetch(c *Transport) (n int, dps []*DataPacket)
-    Pack(dp *DataPacket) []byte
+    //Pack(dp *DataPacket) []byte
+    PackWrite(write WriteFunc,dp *DataPacket) []byte
 }
 
 //define client
 type NewClientFunc func(name string, transport *Transport) IClient
 
+const (
+    CLIENT_TYPE_GENERAL = 0 
+    CLIENT_TYPE_GATE = 1
+)
 type IClient interface {
+
+    GetType() int
+    SetType(t int)
     GetName() string
     ProcessDPs(dps []*DataPacket)
     Close()
     Closed()
     GetTransport() *Transport
-    //SendMessage(msg IMessageWriter)
-    //SendBoardcast(msg IMessageWriter)
+    SendMessage(fromcid int,msg IMessageWriter)
+    SendBoardcast(fromcid int,msg IMessageWriter)
 
     /*
        SetStatus(status int)
@@ -56,21 +66,13 @@ type IClient interface {
 type IServer interface {
     SetMaxConnections(max int)
 
-    SendDP(t *Transport, dataType byte, data []byte)
+    //SendDP(t *Transport, dp *DataPacket)
 
-    SendBoardcast(t *Transport, data []byte)
+    SendBoardcast(t *Transport, dp *DataPacket)
 }
 
 type newTransportFunc func(
     newcid int, conn net.Conn, server IServer) *Transport
-
-type IRouter interface {
-    Init()
-    //Add(client IClient,protocols []int)
-    Add(cid int, protocols string)
-    Handler(dp DataPacket) (cid int, ok bool)
-    ParseProtos(messageCode int) int
-}
 
 type IMessageWriter interface {
     SetCode(code int, ver byte)
@@ -90,7 +92,7 @@ type IMessageWriter interface {
     ToBytes() []byte
 }
 
-/////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 type IMessageReader interface {
     ReadUint() int

@@ -10,7 +10,7 @@ type Transport struct {
     Cid  int
 
     //需要输出的数据(protocolcode+body) 的channel
-    Outgoing chan *DataPacket
+    outgoing chan *DataPacket
 
     Quit chan bool
 
@@ -58,18 +58,12 @@ func (c *Transport) Fetch() (n int, dps []*DataPacket) {
     return c.datagram.Fetch(c)
 }
 
-func (c *Transport) SendDP(dataType byte, data []byte) {
-    if data == nil {
-        return
-    }
-    c.Server.SendDP(c, dataType, data)
+func (c *Transport) SendDP(dp *DataPacket) {
+    c.outgoing <- dp
 }
 
-func (c *Transport) SendBoardcast(data []byte) {
-    if data == nil {
-        return
-    }
-    c.Server.SendBoardcast(c, data)
+func (c *Transport) SendBoardcast(dp *DataPacket) {
+    c.Server.SendBoardcast(c, dp)
 }
 
 // new Transport object
@@ -79,7 +73,7 @@ func NewTransport(newcid int, conn net.Conn, server IServer,datagram IDatagram) 
         Conn:     conn,
         datagram: datagram,
         Server:   server,
-        Outgoing: make(chan *DataPacket, 10),
+        outgoing: make(chan *DataPacket, 10),
         Quit:     make(chan bool),
         Stream:   helper.NewRWStream(1024,datagram.GetEndian()),
     }

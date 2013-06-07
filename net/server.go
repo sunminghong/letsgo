@@ -239,10 +239,12 @@ func (s *Server) transportReader(transport *Transport, client IClient) {
 func (s *Server) transportSender(transport *Transport, client IClient) {
     for {
         select {
-        case dp := <-transport.Outgoing:
+        case dp := <-transport.outgoing:
             log.Trace("transportSender outgoing:",dp.Type, len(dp.Data))
-            buf := s.datagram.Pack(dp)
-            transport.Conn.Write(buf)
+            //buf := s.datagram.Pack(dp)
+            //transport.Conn.Write(buf)
+
+            s.datagram.PackWrite(transport.Conn.Write,dp)
         case <-transport.Quit:
             log.Debug("Transport ", transport.Cid, " quitting")
 
@@ -261,30 +263,26 @@ func (s *Server) boardcastHandler(boardcastChan <-chan *DataPacket) {
         dp := <-boardcastChan
         //buf := s.datagram.pack(dp)
 
-        sendCid, ok := dp.Other.(int)
-        if !ok {
-            sendCid = 0
-        }
-
-        for Cid, c := range s.Clients.All() {
-            if sendCid == Cid {
-                continue
+        fromCid := dp.FromCid
+        for _, c := range s.Clients.All() {
+            //if fromCid == Cid {
+            //    continue
+            //}
+            if c.GetType() != CLIENT_TYPE_GATE {
+                dp.FromCid = 0
+                dp.Type = DATAPACKET_TYPE_GENERAL
+            } else {
+                dp.FromCid = fromCid
+                dp.Type = DATAPACKET_TYPE_BOARDCAST
             }
-            c.GetTransport().Outgoing <- dp
+            c.GetTransport().outgoing <- dp
         }
         log.Trace("boardcastHandler: Handle end!")
     }
 }
 
 //send boardcast message data for other object
-func (s *Server) SendBoardcast(transport *Transport, data []byte) {
-    dp := &DataPacket{Type: DATAPACKET_TYPE_BOARDCAST, Data: data, Other: transport.Cid}
+func (s *Server) SendBoardcast(transport *Transport, dp *DataPacket) {
     s.boardcastChan <- dp
 }
 
-//send message data for other object
-func (s *Server) SendDP(transport *Transport, dataType byte, data []byte) {
-    dp := &DataPacket{Type: dataType, Data: data}
-    transport.Outgoing <- dp
-
-}

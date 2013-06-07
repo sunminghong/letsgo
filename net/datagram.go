@@ -21,6 +21,7 @@ const (
     DATAPACKET_TYPE_GENERAL = 0
     DATAPACKET_TYPE_DELAY = 1
     DATAPACKET_TYPE_BOARDCAST = 3
+    DATAPACKET_TYPE_GATECONNECT = 3
 )
 
 type Datagram struct {
@@ -67,6 +68,8 @@ func (d *Datagram) decrypt(plan []byte){
     }
 }
 
+
+//flag1(byte)+flag2(byte)+datatype(byte)+data(datasize(int32)+body)+fromcid(int16)
 //对数据进行拆包
 func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
     dps = []*DataPacket{}
@@ -112,7 +115,12 @@ func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
                     return 0,nil
                 }
 
-                dpSize = int(_dpSize)
+                if dataType == DATAPACKET_TYPE_GENERAL{
+                    dpSize = int(_dpSize)
+                } else {
+                    dpSize = int(_dpSize) + 2
+                }
+
                 pos = cs.GetPos()
                 if ilen - pos < dpSize {
                     c.DPSize = dpSize
@@ -130,9 +138,15 @@ func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
 
         data,size := cs.Read(dpSize)
         if size > 0 {
+            dp := &DataPacket{Type:dataType}
 
-            code := cs.Endianer.Uint16(data[0:2])
-            dp := &DataPacket{Type:dataType, Data:data, Code:code}
+            if dataType != DATAPACKET_TYPE_GENERAL {
+                dp.FromCid = int(d.Endianer.Uint16(data[dpSize-2:]))
+                dp.Data = data[:dpSize-2]
+            } else {
+                dp.Data = data
+            }
+
             dps = append(dps,dp)
             n += 1
         }
@@ -154,19 +168,52 @@ func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
 }
 
 //对数据进行封包
-func (d *Datagram) Pack(dp *DataPacket) []byte {
+func (d *Datagram) Pack__(dp *DataPacket) []byte {
     ilen := len(dp.Data)
+    if (dp.Type != DATAPACKET_TYPE_GENERAL) {
+        ilen += 2
+    }
     buf := make([]byte, ilen+7)
 
     buf[0] = byte(mask1)
     buf[1] = byte(mask2)
     buf[2] = byte(dp.Type)
 
-    d.Endianer.PutUint32(buf[3:], uint32(ilen))
+    d.Endianer.PutUint32(buf[3:], uint32(ilen-2))
 
     d.encrypt(buf)
 
     copy(buf[7:], dp.Data)
+
+    if (dp.Type != DATAPACKET_TYPE_GENERAL) {
+        d.Endianer.PutUint16(buf[5+ilen:], uint16(dp.FromCid))
+    }
+    return buf
+}
+
+
+//对数据进行封包
+func (d *Datagram) PackWrite(write WriteFunc,dp *DataPacket) []byte {
+    buf := make([]byte,7)
+
+    buf[0] = byte(mask1)
+    buf[1] = byte(mask2)
+    buf[2] = byte(dp.Type)
+
+    ilen := len(dp.Data)
+    d.Endianer.PutUint32(buf[3:], uint32(ilen))
+
+    d.encrypt(buf)
+
+    write(buf)
+    write(dp.Data)
+
+    if (dp.Type == DATAPACKET_TYPE_DELAY) {
+        cid := make([]byte,2)
+        d.Endianer.PutUint16(cid, uint16(dp.FromCid))
+        write(cid)
+    }
+
     return buf
 }
 
