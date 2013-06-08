@@ -13,6 +13,7 @@ package net
 import (
     "net"
     "strconv"
+    . "github.com/sunminghong/letsgo/helper"
     . "github.com/sunminghong/letsgo/log"
 )
 
@@ -33,6 +34,8 @@ type LGServer struct {
     TransportNum int
 
     broadcastChan chan *LGDataPacket
+
+    idassign *LGIDAssign
 }
 
 func LGNewServer(makeclient LGNewClientFunc, datagram LGIDatagram) *LGServer {
@@ -44,6 +47,8 @@ func LGNewServer(makeclient LGNewClientFunc, datagram LGIDatagram) *LGServer {
 
     s.broadcast_chan_num = 10
     s.read_buffer_size = 1024
+
+    s.idassign = LGNewIDAssign(1<<16)
 
     return s
 }
@@ -95,8 +100,8 @@ func (s *LGServer) allocTransportid() int {
     if (s.Clients.Len() >= s.maxConnections) {
         return 0
     }
-    s.TransportNum += 1
-    return s.TransportNum
+
+    return s.idassign.GetFree()
 }
 
 //该函数主要是接受新的连接和注册用户在transport list

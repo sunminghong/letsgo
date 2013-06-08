@@ -46,7 +46,7 @@ type LGIDAssign struct {
     freeChan chan int
 }
 
-func LGNewLGIDAssign(maxid ...int) *LGIDAssign {
+func LGNewIDAssign(maxid ...int) *LGIDAssign {
     _maxid := MaxID
     if len(maxid)>0 {
         _maxid = maxid[0]
