@@ -18,7 +18,7 @@ import (
 )
 
 var maxid = 1 << 16
-var ida *IDAssign = NewIDAssign(maxid)
+var ida *LGIDAssign = NewLGIDAssign(maxid)
 
 
 func log(v ...interface{}) {
@@ -29,7 +29,7 @@ func logs(v ...interface{}) {
     fmt.Print(v[0])
 }
 
-func TestFree(t *testing.T) {
+func LGTestFree(t *testing.T) {
     log("colMask,lineMask:",colMask,lineMask)
 
     ida.setBit(30,1)
@@ -49,7 +49,7 @@ func TestFree(t *testing.T) {
     }
 }
 
-func TestGetFreeID(t *testing.T) {
+func LGTestGetFreeID(t *testing.T) {
     ida.Init()
     counts := make(map[int]int)
     for i:=0;i<maxid;i++ {

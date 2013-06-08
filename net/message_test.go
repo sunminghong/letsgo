@@ -15,7 +15,7 @@ import (
     "fmt"
 )
 
-func Test_MessageWrite(t *testing.T) {
+func LGTest_MessageWrite(t *testing.T) {
     msgw := NewMessageWriter(BigEndian)
 
     a1 := 989887834
@@ -138,15 +138,15 @@ func Test_MessageWrite(t *testing.T) {
 
 }
 /*
-type Message struct {
+type LGMessage struct {
     Code uint16
     Ver byte
 
     // data item buff
-    buf *RWStream
+    buf *LGRWStream
 
     //meta data buff
-    metabuf *RWStream
+    metabuf *LGRWStream
 
     //meta data write item current index
     wind int

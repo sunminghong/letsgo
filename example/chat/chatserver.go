@@ -15,20 +15,20 @@ import (
     "./lib"
 )
 
-// IClient  
+// LGIClient  
 type Client struct {
     Transport *lnet.Transport
     Name string
     Username *string
 }
 
-func MakeClient (name string,transport *lnet.Transport) lnet.IClient {
+func LGMakeClient (name string,transport *lnet.Transport) lnet.LGIClient {
     username := "someone"
     return &Client{transport,name,&username}
 }
 
 //对数据进行拆包
-func (c *Client) ProcessDPs(dps []*lnet.DataPacket) {
+func (c *Client) ProcessDPs(dps []*lnet.LGDataPacket) {
     for _,dp:=range dps {
         md := string(dp.Data)
 
@@ -67,11 +67,11 @@ func (c *Client) Closed() {
     c.Transport.SendBoardcast([]byte(msg))
 }
 
-func (c *Client) SendMessage(msg lnet.IMessageWriter) {
+func (c *Client) SendMessage(msg lnet.LGIMessageWriter) {
     c.Transport.SendDP(0,msg.ToBytes())
 }
 
-func (c *Client) SendBoardcast(msg lnet.IMessageWriter) {
+func (c *Client) SendBoardcast(msg lnet.LGIMessageWriter) {
     c.Transport.SendBoardcast(msg.ToBytes())
 }
 

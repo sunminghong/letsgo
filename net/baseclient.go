@@ -11,53 +11,53 @@
 package net
 
 import (
-    "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/log"
 )
 
 // Client  
-type BaseClient struct {
-    Transport *Transport
+type LGBaseClient struct {
+    Transport *LGTransport
     Name string
     connectionType int
 }
 
 //对数据进行拆包
-func (c *BaseClient) ProcessDPs(dps []*DataPacket) {
+func (c *LGBaseClient) ProcessDPs(dps []*LGDataPacket) {
     for _, dp := range dps {
         code := int(c.Transport.Stream.Endianer.Uint16(dp.Data))
-        log.Trace("msg.code:",code,len(dp.Data))
+        LGTrace("msg.code:",code,len(dp.Data))
     }
 }
 
-func (c *BaseClient) GetTransport() *Transport {
+func (c *LGBaseClient) GetTransport() *LGTransport {
     return c.Transport
 }
 
-func (c *BaseClient) GetName() string {
+func (c *LGBaseClient) GetName() string {
     return c.Name
 }
 
-func (c *BaseClient) GetType() int{
+func (c *LGBaseClient) GetType() int{
     return c.connectionType
 }
 
-func (c *BaseClient) SetType(t int) {
+func (c *LGBaseClient) SetType(t int) {
     c.connectionType = t
 }
 
-func (c *BaseClient) Close() {
+func (c *LGBaseClient) Close() {
     c.Transport.Close()
 }
 
-func (c *BaseClient) Closed() {
-    log.Trace("this client is closed!")
+func (c *LGBaseClient) Closed() {
+    LGTrace("this client is closed!")
     //todo: override write by sub object
     panic("Closed need override write by sub object")
 }
 
-func (c *BaseClient) SendMessage(fromcid int,msg IMessageWriter) {
-    dp := &DataPacket{
-        Type: DATAPACKET_TYPE_GENERAL,
+func (c *LGBaseClient) SendMessage(fromcid int,msg LGIMessageWriter) {
+    dp := &LGDataPacket{
+        Type: LGDATAPACKET_TYPE_GENERAL,
         FromCid: fromcid,
         Data: msg.ToBytes(),
     }
@@ -65,9 +65,9 @@ func (c *BaseClient) SendMessage(fromcid int,msg IMessageWriter) {
     c.Transport.SendDP(dp)
 }
 
-func (c *BaseClient) SendBoardcast(fromcid int,msg IMessageWriter) {
-    dp := &DataPacket{
-        Type: DATAPACKET_TYPE_BOARDCAST,
+func (c *LGBaseClient) SendBroadcast(fromcid int,msg LGIMessageWriter) {
+    dp := &LGDataPacket{
+        Type: LGDATAPACKET_TYPE_BROADCAST,
         Data: msg.ToBytes(),
         FromCid: fromcid,
     }

@@ -13,30 +13,30 @@ package net
 import (
     "net"
     "strconv"
-    "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/log"
 )
 
-type Server struct {
+type LGServer struct {
     boardcast_chan_num int
     read_buffer_size   int
 
     maxConnections int
-    makeclient NewClientFunc
-    Datagram   IDatagram
+    makeclient LGNewClientFunc
+    Datagram   LGIDatagram
 
     host string
     port int
 
     //define transport dict/map set
-    Clients *ClientMap
+    Clients *LGClientMap
 
     TransportNum int
 
-    boardcastChan chan *DataPacket
+    boardcastChan chan *LGDataPacket
 }
 
-func NewServer(makeclient NewClientFunc, datagram IDatagram) *Server {
-    s := &Server{Clients: NewClientMap()}
+func LGNewServer(makeclient LGNewClientFunc, datagram LGIDatagram) *LGServer {
+    s := &LGServer{Clients: LGNewClientMap()}
 
     s.makeclient = makeclient
 
@@ -48,33 +48,33 @@ func NewServer(makeclient NewClientFunc, datagram IDatagram) *Server {
     return s
 }
 
-func (s *Server) Start(addr string, maxConnections int) {
-    log.Info("Hello Server!")
+func (s *LGServer) Start(addr string, maxConnections int) {
+    LGInfo("Hello Server!")
 
     s.maxConnections = maxConnections
     //todo: maxConnections don't proccess
     //addr := host + ":" + strconv.Itoa(port)
 
     //创建一个管道 chan map 需要make creates slices, maps, and channels only
-    s.boardcastChan = make(chan *DataPacket, s.boardcast_chan_num)
+    s.boardcastChan = make(chan *LGDataPacket, s.boardcast_chan_num)
     go s.boardcastHandler(s.boardcastChan)
 
-    log.Info("listen with :", addr)
+    LGInfo("listen with :", addr)
     netListen, error := net.Listen("tcp", addr)
     if error != nil {
-        log.Error(error)
+        LGError(error)
     } else {
         //defer函数退出时执行
         defer netListen.Close()
         for {
-            log.Trace("Waiting for connection")
+            LGTrace("Waiting for connection")
             connection, error := netListen.Accept()
             if error != nil {
-                log.Error("Transport error: ", error)
+                LGError("Transport error: ", error)
             } else {
                 newcid := s.allocTransportid()
                 if newcid == 0 {
-                    log.Warn("connection num is more than ",s.maxConnections)
+                    LGWarn("connection num is more than ",s.maxConnections)
                 } else {
                     go s.transportHandler(newcid, connection)
                 }
@@ -83,15 +83,15 @@ func (s *Server) Start(addr string, maxConnections int) {
     }
 }
 
-func (s *Server) SetMaxConnections(max int) {
+func (s *LGServer) SetMaxConnections(max int) {
     s.maxConnections = max
 }
 
-func (s *Server) removeClient(cid int) {
+func (s *LGServer) removeClient(cid int) {
     s.Clients.Remove(cid)
 }
 
-func (s *Server) allocTransportid() int {
+func (s *LGServer) allocTransportid() int {
     if (s.Clients.Len() >= s.maxConnections) {
         return 0
     }
@@ -100,8 +100,8 @@ func (s *Server) allocTransportid() int {
 }
 
 //该函数主要是接受新的连接和注册用户在transport list
-func (s *Server) transportHandler(newcid int, connection net.Conn) {
-    transport := NewTransport(newcid, connection, s,s.Datagram)
+func (s *LGServer) transportHandler(newcid int, connection net.Conn) {
+    transport := LGNewTransport(newcid, connection, s,s.Datagram)
     name := "c_"+strconv.Itoa(newcid)
     client := s.makeclient(name,transport)
     s.Clients.Add(newcid, name, client)
@@ -110,10 +110,10 @@ func (s *Server) transportHandler(newcid int, connection net.Conn) {
     go s.transportSender(transport, client)
     go s.transportReader(transport, client)
 
-    log.Debug("has clients:",s.Clients.Len())
+    LGDebug("has clients:",s.Clients.Len())
 }
 
-func (s *Server) transportReader(transport *Transport, client IClient) {
+func (s *LGServer) transportReader(transport *LGTransport, client LGIClient) {
     buffer := make([]byte, s.read_buffer_size)
     for {
 
@@ -125,34 +125,34 @@ func (s *Server) transportReader(transport *Transport, client IClient) {
             transport.Closed()
             transport.Conn.Close()
             s.removeClient(transport.Cid)
-            log.Error(err)
+            LGError(err)
             break
         }
 
-        log.Trace("read to buff:", bytesRead)
+        LGTrace("read to buff:", bytesRead)
         transport.BuffAppend(buffer[0:bytesRead])
 
-        log.Trace("transport.Buff", transport.Stream.Bytes())
+        LGTrace("transport.Buff", transport.Stream.Bytes())
         n, dps := s.Datagram.Fetch(transport)
-        log.Trace("fetch message number", n)
+        LGTrace("fetch message number", n)
         if n > 0 {
             client.ProcessDPs(dps)
         }
     }
-    log.Trace("TransportReader stopped for ", transport.Cid)
+    LGTrace("TransportReader stopped for ", transport.Cid)
 }
 
-func (s *Server) transportSender(transport *Transport, client IClient) {
+func (s *LGServer) transportSender(transport *LGTransport, client LGIClient) {
     for {
         select {
         case dp := <-transport.outgoing:
-            log.Trace("transportSender outgoing:",dp.Type, len(dp.Data))
+            LGTrace("transportSender outgoing:",dp.Type, len(dp.Data))
             //buf := s.Datagram.Pack(dp)
             //transport.Conn.Write(buf)
 
             s.Datagram.PackWrite(transport.Conn.Write,dp)
         case <-transport.Quit:
-            log.Debug("Transport ", transport.Cid, " quitting")
+            LGDebug("Transport ", transport.Cid, " quitting")
 
             transport.Closed()
             transport.Conn.Close()
@@ -162,10 +162,10 @@ func (s *Server) transportSender(transport *Transport, client IClient) {
     }
 }
 
-func (s *Server) boardcastHandler(boardcastChan <-chan *DataPacket) {
+func (s *LGServer) boardcastHandler(boardcastChan <-chan *LGDataPacket) {
     for {
         //在go里面没有while do ，for可以无限循环
-        log.Trace("boardcastHandler: chan Waiting for input")
+        LGTrace("boardcastHandler: chan Waiting for input")
         dp := <-boardcastChan
         //buf := s.Datagram.pack(dp)
 
@@ -174,21 +174,21 @@ func (s *Server) boardcastHandler(boardcastChan <-chan *DataPacket) {
             //if fromCid == Cid {
             //    continue
             //}
-            if c.GetType() != CLIENT_TYPE_GATE {
+            if c.GetType() != LGCLIENT_TYPE_GATE {
                 dp.FromCid = 0
-                dp.Type = DATAPACKET_TYPE_GENERAL
+                dp.Type = LGDATAPACKET_TYPE_GENERAL
             } else {
                 dp.FromCid = fromCid
-                dp.Type = DATAPACKET_TYPE_BOARDCAST
+                dp.Type = LGDATAPACKET_TYPE_BROADCAST
             }
             c.GetTransport().outgoing <- dp
         }
-        log.Trace("boardcastHandler: Handle end!")
+        LGTrace("boardcastHandler: Handle end!")
     }
 }
 
 //send boardcast message data for other object
-func (s *Server) SendBoardcast(transport *Transport, dp *DataPacket) {
+func (s *LGServer) SendBroadcast(transport *LGTransport, dp *LGDataPacket) {
     s.boardcastChan <- dp
 }
 

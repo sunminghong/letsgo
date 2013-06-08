@@ -15,57 +15,57 @@ import (
 )
 
 const (
-    DATAPACKET_TYPE_GENERAL = 0
-    DATAPACKET_TYPE_DELAY = 1
-    DATAPACKET_TYPE_BOARDCAST = 3
-    DATAPACKET_TYPE_GATECONNECT = 3
+    LGDATAPACKET_TYPE_GENERAL = 0
+    LGDATAPACKET_TYPE_DELAY = 1
+    LGDATAPACKET_TYPE_BROADCAST = 3
+    LGDATAPACKET_TYPE_GATECONNECT = 3
 )
 
 //define a struct or class of rec transport connection
-type DataPacket struct {
+type LGDataPacket struct {
     Type  byte
     Data  []byte
 
     FromCid int
 }
 
-type WriteFunc func (data []byte) (int,error)
+type LGWriteFunc func (data []byte) (int,error)
 
 //datagram and datapacket define
-type IDatagram interface {
+type LGIDatagram interface {
     //Encrypt([]byte)
     //Decrypt([]byte)
 
-    Clone(endian int) IDatagram
+    Clone(endian int) LGIDatagram
     GetEndian() int
     SetEndian(endian int)
-    Fetch(c *Transport) (n int, dps []*DataPacket)
-    //Pack(dp *DataPacket) []byte
-    PackWrite(write WriteFunc,dp *DataPacket) []byte
+    Fetch(c *LGTransport) (n int, dps []*LGDataPacket)
+    //Pack(dp *LGDataPacket) []byte
+    PackWrite(write LGWriteFunc,dp *LGDataPacket) []byte
 }
 
 
 //define client
-type ProcessHandleFunc func(
-    code int,msg *MessageReader,c IClient,fromCid int)
+type LGProcessHandleFunc func(
+    code int,msg LGIMessageReader,c LGIClient,fromCid int)
 
-type NewClientFunc func(name string, transport *Transport) IClient
+type LGNewClientFunc func(name string, transport *LGTransport) LGIClient
 
 const (
-    CLIENT_TYPE_GENERAL = 0
-    CLIENT_TYPE_GATE = 1
+    LGCLIENT_TYPE_GENERAL = 0
+    LGCLIENT_TYPE_GATE = 1
 )
-type IClient interface {
+type LGIClient interface {
 
     GetType() int
     SetType(t int)
     GetName() string
-    ProcessDPs(dps []*DataPacket)
+    ProcessDPs(dps []*LGDataPacket)
     Close()
     Closed()
-    GetTransport() *Transport
-    SendMessage(fromcid int,msg IMessageWriter)
-    SendBoardcast(fromcid int,msg IMessageWriter)
+    GetTransport() *LGTransport
+    SendMessage(fromcid int,msg LGIMessageWriter)
+    SendBroadcast(fromcid int,msg LGIMessageWriter)
 
     /*
        SetStatus(status int)
@@ -74,18 +74,18 @@ type IClient interface {
     */
 }
 
-type IServer interface {
+type LGIServer interface {
     SetMaxConnections(max int)
 
-    //SendDP(t *Transport, dp *DataPacket)
+    //SendDP(t *LGTransport, dp *LGDataPacket)
 
-    SendBoardcast(t *Transport, dp *DataPacket)
+    SendBroadcast(t *LGTransport, dp *LGDataPacket)
 }
 
-type newTransportFunc func(
-    newcid int, conn net.Conn, server IServer) *Transport
+type LGnewTransportFunc func(
+    newcid int, conn net.Conn, server LGIServer) *LGTransport
 
-type IMessageWriter interface {
+type LGIMessageWriter interface {
     SetCode(code int, ver byte)
 
     preWrite(wind int)
@@ -105,7 +105,7 @@ type IMessageWriter interface {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-type IMessageReader interface {
+type LGIMessageReader interface {
     ReadUint() int
     ReadInt() int
     ReadUint32() int
@@ -114,7 +114,7 @@ type IMessageReader interface {
     //ReadList() *MessageListReader
 }
 
-type IIDAssign interface {
+type LGILGIDAssign interface {
     GetFree() int
     Free(id int)
 }

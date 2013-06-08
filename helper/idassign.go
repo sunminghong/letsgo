@@ -27,7 +27,7 @@ var (
 )
 
 // 分配一个唯一的ID，如clientID，pid
-type IDAssign struct {
+type LGIDAssign struct {
     maxid int
     bitsPerPageMask int
 
@@ -46,13 +46,13 @@ type IDAssign struct {
     freeChan chan int
 }
 
-func NewIDAssign(maxid ...int) *IDAssign {
+func LGNewLGIDAssign(maxid ...int) *LGIDAssign {
     _maxid := MaxID
     if len(maxid)>0 {
         _maxid = maxid[0]
     }
 
-    ia := &IDAssign{}
+    ia := &LGIDAssign{}
     ia.maxid = _maxid
 
     ia.idChan = ia.getFreeChan()
@@ -78,7 +78,7 @@ func NewIDAssign(maxid ...int) *IDAssign {
     return ia
 }
 
-func (ia *IDAssign) Init() {
+func (ia *LGIDAssign) Init() {
     ia.lastid = 0
     ia.free = ia.maxid
     ia.bitsPerPageMask = ia.maxid -1
@@ -87,7 +87,7 @@ func (ia *IDAssign) Init() {
 }
 
 //分配一个ID，如果没有可分配的ID 了，就返回0
-func (ia *IDAssign) GetFree() int {
+func (ia *LGIDAssign) GetFree() int {
     
     select {
     case _id := <- ia.idChan:
@@ -100,11 +100,11 @@ func (ia *IDAssign) GetFree() int {
 }
 
 //释放一个id
-func (ia *IDAssign) Free(id int) {
+func (ia *LGIDAssign) Free(id int) {
     ia.freeChan <- id
 }
 
-func (ia *IDAssign) getFreeChan() (chan int) {
+func (ia *LGIDAssign) getFreeChan() (chan int) {
     out := make(chan int)
     go func() {
         for {
@@ -122,7 +122,7 @@ func (ia *IDAssign) getFreeChan() (chan int) {
 }
 
 
-func (ia *IDAssign) free_(offset int) {
+func (ia *LGIDAssign) free_(offset int) {
     if ia.test(offset) == 0 {
         return
     }
@@ -131,7 +131,7 @@ func (ia *IDAssign) free_(offset int) {
 }
 
 //设置offset位值，0或1'''
-func (ia *IDAssign) setBit(offset,value int) {
+func (ia *LGIDAssign) setBit(offset,value int) {
     bit_off := uint(offset & colMask)
     int_off := offset >> lineMask
 
@@ -144,7 +144,7 @@ func (ia *IDAssign) setBit(offset,value int) {
     //fmt.Println("changed:",(ia.page[int_off] & (1 << bit_off))==0)
 }
 
-func (ia *IDAssign) test(offset int) int {
+func (ia *LGIDAssign) test(offset int) int {
     bit_off := uint(offset & colMask)
     int_off := offset >> lineMask
 
@@ -156,7 +156,7 @@ func (ia *IDAssign) test(offset int) int {
 
 
 //扫描map，返回一个为0的位'''
-func (ia *IDAssign) findFree(offset int) int {
+func (ia *LGIDAssign) findFree(offset int) int {
     size := ia.maxid
     page := ia.page
     for offset < size {
@@ -173,7 +173,7 @@ func (ia *IDAssign) findFree(offset int) int {
     return -1
 }
 
-func (ia *IDAssign) getFree() int {
+func (ia *LGIDAssign) getFree() int {
     if ia.free == 0 {
         return 0
     }

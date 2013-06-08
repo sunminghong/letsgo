@@ -15,7 +15,7 @@ import (
     "fmt"
 )
 
-func Benchmark_MessageWrite(t *testing.B) {
+func LGBenchmark_MessageWrite(t *testing.B) {
     for i := 0; i < t.N; i++ {
         test()
     }

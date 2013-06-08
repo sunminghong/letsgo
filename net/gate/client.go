@@ -11,25 +11,25 @@
 package gate
 
 import (
-    "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/log"
     . "github.com/sunminghong/letsgo/net"
 )
 
 // Client  
-type Client struct {
-    *BaseClient
+type LGClient struct {
+    *LGBaseClient
 
-    //gate *GateServer
+    //gate *LGGateServer
 
-    dispatcher IDispatcher
-    grids *ClientMap
+    dispatcher LGIDispatcher
+    grids *LGClientMap
 }
 
-func MakeClient (name string,transport *Transport,gate *GateServer) IClient {
-    log.Trace("gateclient is connect:",name)
+func LGMakeClient (name string,transport *LGTransport,gate *LGGateServer) LGIClient {
+    LGTrace("gateclient is connect:",name)
 
-    c := &Client{
-        BaseClient:&BaseClient{Transport:transport,Name:name},
+    c := &LGClient{
+        LGBaseClient:&LGBaseClient{Transport:transport,Name:name},
         dispatcher : gate.Dispatcher,
         grids : gate.Grids.Clients,
     }
@@ -38,26 +38,26 @@ func MakeClient (name string,transport *Transport,gate *GateServer) IClient {
 }
 
 //对数据进行拆包
-func (c *Client) ProcessDPs(dps []*DataPacket) {
+func (c *LGClient) ProcessDPs(dps []*LGDataPacket) {
     for _, dp := range dps {
         //msg := NewMessageReader(dp.Data,c.Transport.Stream.Endian)
         code := c.Transport.Stream.Endianer.Uint16(dp.Data)
-        log.Trace("msg.code:",code)
+        LGTrace("msg.code:",code)
 
         //dispatch to one grid
         gridID,ok := c.dispatcher.Dispatch(dp)
         if ok {
-            log.Trace("dispatch to gridID",gridID)
+            LGTrace("dispatch to gridID",gridID)
             gridClient := c.grids.Get(gridID)
 
-            dp.Type = DATAPACKET_TYPE_DELAY
+            dp.Type = LGDATAPACKET_TYPE_DELAY
             dp.FromCid = c.Transport.Cid
 
             gridClient.GetTransport().SendDP(dp)
 
             //todo: 当grid超时处理是需要返回原协议失败
         } else {
-            log.Error("messageCode has not grid process:",code)
+            LGError("messageCode has not grid process:",code)
         }
     }
 }

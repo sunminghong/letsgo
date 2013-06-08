@@ -1,6 +1,6 @@
 /*=============================================================================
 #     FileName: rwstream_b_test.go
-#         Desc: RWStream struct
+#         Desc: LGRWStream struct
 #       Author: sunminghong
 #        Email: allen.fantasy@gmail.com
 #     HomePage: http://weibo.com/5d13
@@ -17,28 +17,28 @@ import (
     "testing"
 )
 
-func Benchmark_NewRWStream(t *testing.B) {
+func LGBenchmark_NewLGRWStream(t *testing.B) {
     bys := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
     for i := 0; i < t.N; i++ {
-        b := NewRWStream(bys, BigEndian)
+        b := NewLGRWStream(bys, BigEndian)
         if b.Endian == BigEndian{
-            t.Error("NewRWStream error:BigEndian is error", b.Endian)
+            t.Error("NewLGRWStream error:BigEndian is error", b.Endian)
         }
 
         _bs := b.Bytes()
         if !bytes.Equal(bys, _bs) {
-            t.Error("func Bytes is error:", _bs, bys)
+            t.Error("func LGBytes is error:", _bs, bys)
         }
 
     }
 }
 
-func Benchmark_RW(t *testing.B) {
+func LGBenchmark_RW(t *testing.B) {
     bytes := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
     for i := 0; i < t.N; i++ {
-        b := NewRWStream(bytes, LittleEndian)
+        b := NewLGRWStream(bytes, LittleEndian)
         //Log("b.buf Len(),off,end,last=",b.Len(),b.off,b.end,b.last)
         b.Init()
         //Log("b.buf Len(),off,end,last=",b.Len(),b.off,b.end,b.last)

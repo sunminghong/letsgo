@@ -20,15 +20,15 @@ type Datagram struct {
 
 
 //对数据进行拆包
-func (d *Datagram) Fetch(c *lnet.Transport) (n int,msgs []*lnet.DataPacket) {
-    msgs = []*lnet.DataPacket{}
+func (d *LGDatagram) Fetch(c *lnet.Transport) (n int,msgs []*lnet.LGDataPacket) {
+    msgs = []*lnet.LGDataPacket{}
 
     ilen := c.Stream.Len()
     if ilen == 0 {
         return
     }
     //lnet.Log("Fetch",c.Stream.Bytes())
-    msg := &lnet.DataPacket{Data: c.Stream.Bytes()}
+    msg := &lnet.LGDataPacket{Data: c.Stream.Bytes()}
     msgs = append(msgs,msg)
     n += 1
 
@@ -39,6 +39,6 @@ func (d *Datagram) Fetch(c *lnet.Transport) (n int,msgs []*lnet.DataPacket) {
 }
 
 //对数据进行封包
-func (d *Datagram) Pack(dp *lnet.DataPacket) []byte {
+func (d *LGDatagram) Pack(dp *lnet.LGDataPacket) []byte {
     return dp.Data
 }

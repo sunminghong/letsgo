@@ -18,12 +18,12 @@ import (
 
 var Endian int = helper.BigEndian
 
-// IClient  
+// LGIClient  
 type Client struct {
-    *lnet.BaseClient
+    *lnet.LGBaseClient
 }
 
-func MakeClient (name string,transport *lnet.Transport) lnet.IClient {
+func LGMakeClient (name string,transport *lnet.Transport) lnet.LGIClient {
     username := "someone"
     c := &Client{}
     c.Username = &username
@@ -34,10 +34,10 @@ func MakeClient (name string,transport *lnet.Transport) lnet.IClient {
 }
 
 //对数据进行拆包
-func (c *Client) ProcessDPs(dps []*lnet.DataPacket) {
+func (c *Client) ProcessDPs(dps []*lnet.LGDataPacket) {
     for _, dp := range dps {
         msg := lnet.NewMessageReader(dp.Data,Endian)
-        log.Trace("msg.code:",msg.Code,msg.Ver)
+        log.LGTrace("msg.code:",msg.Code,msg.Ver)
 
         //todo: route don't execute
         Handl(msg.Code,c,msg)
@@ -53,14 +53,14 @@ func (c *Client) Closed() {
     c.Transport.SendBoardcast(mw.ToBytes())
 }
 
-func (c *Client) SendMessage(msg lnet.IMessageWriter) {
+func (c *Client) SendMessage(msg lnet.LGIMessageWriter) {
     c.Transport.SendDP(0,msg.ToBytes())
 }
 
-func (c *Client) SendBoardcast(msg lnet.IMessageWriter) {
+func (c *Client) SendBoardcast(msg lnet.LGIMessageWriter) {
     c.Transport.SendBoardcast(msg.ToBytes())
 }
 
-func NewMessageWriter(c lnet.IClient) *lnet.MessageWriter {
+func LGNewMessageWriter(c lnet.LGIClient) *lnet.MessageWriter {
     return lnet.NewMessageWriter(c.GetTransport().Stream.Endian)
 }

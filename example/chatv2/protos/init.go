@@ -18,7 +18,7 @@ type processHandler func(c *Client,reader *lnet.MessageReader)
 
 var Handlers map[int]processHandler = make(map[int]processHandler)
 
-func Handl(code int,c *Client,reader *lnet.MessageReader) {
+func LGHandl(code int,c *Client,reader *lnet.MessageReader) {
     h, ok := Handlers[code]
     if ok {
         h(c,reader)
@@ -29,9 +29,9 @@ func init() {
 
 }
 /*
-func Process(c *Client,reader *MessageReader) {
+func LGProcess(c *Client,reader *MessageReader) {
 
-    rw := lnet.RWStream(body,lnet.BigEndian)
+    rw := lnet.LGRWStream(body,lnet.BigEndian)
 
     msg = rw.ReadString()
         md := string(dp.Data)

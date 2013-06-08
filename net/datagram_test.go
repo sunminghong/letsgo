@@ -20,17 +20,17 @@ import (
 /*
 
 //datagram and datapacket define
-type IDatagram interface {
-    Fetch(c *Transport) (n int, dps []*DataPacket)
-    Pack(dp *DataPacket) []byte
+type LGIDatagram interface {
+    Fetch(c *LGTransport) (n int, dps []*LGDataPacket)
+    Pack(dp *LGDataPacket) []byte
 }
 */
 
-func Test_Pack(t *testing.T) {
+func LGTest_Pack(t *testing.T) {
     datagram := NewDatagram(BigEndian)
 
     data := []byte("1234567890")
-    dp := &DataPacket{Type:1,Data:data}
+    dp := &LGDataPacket{Type:1,Data:data}
     data2 := datagram.Pack(dp)
 
     _data := [17]byte{0x59 ^ 0x37,0x7a ^ 0x37,1 ^ 0x37,0 ^ 0x37,0 ^ 0x37,0 ^ 0x37,10 ^ 0x37}
@@ -42,7 +42,7 @@ func Test_Pack(t *testing.T) {
 
 }
 
-func Test_Fetch(t *testing.T) {
+func LGTest_Fetch(t *testing.T) {
     /*
   username, _ := getAdmin(1)
     if (username != "admin") {

@@ -11,7 +11,7 @@
 package net
 import (
     "encoding/binary"
-    "github.com/sunminghong/letsgo/helper"
+    . "github.com/sunminghong/letsgo/helper"
 )
 
 const (
@@ -19,45 +19,45 @@ const (
     mask2 = byte(0x7a)
 )
 
-type Datagram struct {
+type LGDatagram struct {
     endian int
-    Endianer helper.ItoB
+    Endianer LGItoB
 }
 
-func NewDatagram(endian int ) *Datagram{
-    dg := &Datagram{}
+func LGNewDatagram(endian int ) *LGDatagram{
+    dg := &LGDatagram{}
 
     dg.SetEndian(endian)
     return dg
 }
 
-func (d *Datagram) GetEndian() int {
+func (d *LGDatagram) GetEndian() int {
     return d.endian
 }
 
-func (d *Datagram) Clone(endian int) IDatagram {
-    dg := &Datagram{}
+func (d *LGDatagram) Clone(endian int) LGIDatagram {
+    dg := &LGDatagram{}
 
     dg.SetEndian(endian)
     return dg
 }
 
-func (d *Datagram) SetEndian(endian int) {
+func (d *LGDatagram) SetEndian(endian int) {
     d.endian = endian
-    if endian == helper.BigEndian {
+    if endian == LGBigEndian {
         d.Endianer = binary.BigEndian
     } else {
         d.Endianer = binary.LittleEndian
     }
 }
 
-func (d *Datagram) encrypt(plan []byte){
+func (d *LGDatagram) encrypt(plan []byte){
     for i,_ := range plan {
         plan[i] ^= 0x37
     }
 }
 
-func (d *Datagram) decrypt(plan []byte){
+func (d *LGDatagram) decrypt(plan []byte){
     for i,_ := range plan {
         plan[i] ^= 0x37
     }
@@ -66,8 +66,8 @@ func (d *Datagram) decrypt(plan []byte){
 
 //flag1(byte)+flag2(byte)+datatype(byte)+data(datasize(int32)+body)+fromcid(int16)
 //对数据进行拆包
-func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
-    dps = []*DataPacket{}
+func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
+    dps = []*LGDataPacket{}
 
     cs := c.Stream
     ilen := cs.Len()
@@ -110,7 +110,7 @@ func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
                     return 0,nil
                 }
 
-                if dataType == DATAPACKET_TYPE_GENERAL{
+                if dataType == LGDATAPACKET_TYPE_GENERAL{
                     dpSize = int(_dpSize)
                 } else {
                     dpSize = int(_dpSize) + 2
@@ -133,9 +133,9 @@ func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
 
         data,size := cs.Read(dpSize)
         if size > 0 {
-            dp := &DataPacket{Type:dataType}
+            dp := &LGDataPacket{Type:dataType}
 
-            if dataType != DATAPACKET_TYPE_GENERAL {
+            if dataType != LGDATAPACKET_TYPE_GENERAL {
                 dp.FromCid = int(d.Endianer.Uint16(data[dpSize-2:]))
                 dp.Data = data[:dpSize-2]
             } else {
@@ -163,9 +163,9 @@ func (d *Datagram) Fetch(c *Transport) (n int, dps []*DataPacket) {
 }
 
 //对数据进行封包
-func (d *Datagram) Pack__(dp *DataPacket) []byte {
+func (d *LGDatagram) Pack__(dp *LGDataPacket) []byte {
     ilen := len(dp.Data)
-    if (dp.Type != DATAPACKET_TYPE_GENERAL) {
+    if (dp.Type != LGDATAPACKET_TYPE_GENERAL) {
         ilen += 2
     }
     buf := make([]byte, ilen+7)
@@ -180,7 +180,7 @@ func (d *Datagram) Pack__(dp *DataPacket) []byte {
 
     copy(buf[7:], dp.Data)
 
-    if (dp.Type != DATAPACKET_TYPE_GENERAL) {
+    if (dp.Type != LGDATAPACKET_TYPE_GENERAL) {
         d.Endianer.PutUint16(buf[5+ilen:], uint16(dp.FromCid))
     }
     return buf
@@ -188,7 +188,7 @@ func (d *Datagram) Pack__(dp *DataPacket) []byte {
 
 
 //对数据进行封包
-func (d *Datagram) PackWrite(write WriteFunc,dp *DataPacket) []byte {
+func (d *LGDatagram) PackWrite(write LGWriteFunc,dp *LGDataPacket) []byte {
     buf := make([]byte,7)
 
     buf[0] = byte(mask1)
@@ -203,7 +203,7 @@ func (d *Datagram) PackWrite(write WriteFunc,dp *DataPacket) []byte {
     write(buf)
     write(dp.Data)
 
-    if (dp.Type == DATAPACKET_TYPE_DELAY) {
+    if (dp.Type == LGDATAPACKET_TYPE_DELAY) {
         cid := make([]byte,2)
         d.Endianer.PutUint16(cid, uint16(dp.FromCid))
         write(cid)

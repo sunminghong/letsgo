@@ -2,47 +2,47 @@ package net
 
 import (
     "net"
-    "github.com/sunminghong/letsgo/helper"
+    . "github.com/sunminghong/letsgo/helper"
 )
 
-type Transport struct {
+type LGTransport struct {
     //transport connection 唯一 id
     Cid  int
 
     //需要输出的数据(protocolcode+body) 的channel
-    outgoing chan *DataPacket
+    outgoing chan *LGDataPacket
 
     Quit chan bool
 
-    Stream *helper.RWStream
+    Stream *LGRWStream
     DataType byte
     DPSize  int
 
-    datagram IDatagram
-    Server IServer
+    datagram LGIDatagram
+    Server LGIServer
     Conn   net.Conn
 }
 
 
 //define method what Close transport's connection for struct Transport
-func (c *Transport) Close() {
+func (c *LGTransport) Close() {
     c.Quit <- true
     c.Conn.Close()
 }
 
 //define method what Close transport's connection for struct Transport
-func (c *Transport) Closed() {
+func (c *LGTransport) Closed() {
     //
 }
 
-func (c *Transport) Equal(other *Transport) bool {
+func (c *LGTransport) Equal(other *LGTransport) bool {
     if c.Cid == other.Cid {
         return true
     }
     return false
 }
 
-func (c *Transport) InitBuff() {
+func (c *LGTransport) InitBuff() {
     c.Stream.Reset()
 }
 
@@ -50,32 +50,32 @@ func (c *Transport) InitBuff() {
 // value n is the length of p; err is always nil.
 // If the buffer becomes too large, Write will panic with
 // ErrTooLarge.
-func (c *Transport) BuffAppend(p []byte) (n int) {
+func (c *LGTransport) BuffAppend(p []byte) (n int) {
     return c.Stream.Write(p)
 }
 
-func (c *Transport) Fetch() (n int, dps []*DataPacket) {
+func (c *LGTransport) Fetch() (n int, dps []*LGDataPacket) {
     return c.datagram.Fetch(c)
 }
 
-func (c *Transport) SendDP(dp *DataPacket) {
+func (c *LGTransport) SendDP(dp *LGDataPacket) {
     c.outgoing <- dp
 }
 
-func (c *Transport) SendBoardcast(dp *DataPacket) {
-    c.Server.SendBoardcast(c, dp)
+func (c *LGTransport) SendBoardcast(dp *LGDataPacket) {
+    c.Server.SendBroadcast(c, dp)
 }
 
 // new Transport object
-func NewTransport(newcid int, conn net.Conn, server IServer,datagram IDatagram) *Transport {
-    c := &Transport{
+func LGNewTransport(newcid int, conn net.Conn, server LGIServer,datagram LGIDatagram) *LGTransport {
+    c := &LGTransport{
         Cid:      newcid,
         Conn:     conn,
         datagram: datagram,
         Server:   server,
-        outgoing: make(chan *DataPacket, 10),
+        outgoing: make(chan *LGDataPacket, 10),
         Quit:     make(chan bool),
-        Stream:   helper.NewRWStream(1024,datagram.GetEndian()),
+        Stream:   LGNewRWStream(1024,datagram.GetEndian()),
     }
 
     c.InitBuff()

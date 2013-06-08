@@ -11,8 +11,8 @@
 package net
 
 import (
-    "github.com/sunminghong/letsgo/helper"
-    "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/helper"
+    . "github.com/sunminghong/letsgo/log"
 )
 
 const (
@@ -24,15 +24,15 @@ const (
     TY_UINT32 = 5
 )
 
-type MessageWriter struct {
+type LGMessageWriter struct {
     Code int
     Ver  byte
 
     // data item buff
-    buf *helper.RWStream
+    buf *LGRWStream
 
     //meta data buff
-    metabuf *helper.RWStream
+    metabuf *LGRWStream
 
     meta map[int]byte
     //items map[int]interface{}
@@ -44,35 +44,35 @@ type MessageWriter struct {
     needWriteMeta bool
 }
 
-func NewMessageWriter(endian int) *MessageWriter {
-    msg := &MessageWriter{}
+func LGNewMessageWriter(endian int) *LGMessageWriter {
+    msg := &LGMessageWriter{}
 
     msg.init(128, endian)
     return msg
 }
 
-func (msg *MessageWriter) init(bufsize int, endian int) {
+func (msg *LGMessageWriter) init(bufsize int, endian int) {
     msg.meta = make(map[int]byte)
-    msg.buf = helper.NewRWStream(bufsize, endian)
+    msg.buf = LGNewRWStream(bufsize, endian)
     msg.maxInd = 0
     msg.Code = 0
     msg.Ver = 0
     msg.wind = 0
     msg.needWriteMeta = true
 
-    msg.metabuf = helper.NewRWStream(30, endian)
+    msg.metabuf = LGNewRWStream(30, endian)
 
     //leave 4 bytes to head(code,ver,metaitemdata)
     //leave 4 bytes to head(list length(uint16),list length(byte),metaitemdataLength(byte))
     msg.metabuf.Write([]byte{0, 0, 0, 0})
 }
 
-func (msg *MessageWriter) SetCode(code int, ver byte) {
+func (msg *LGMessageWriter) SetCode(code int, ver byte) {
     msg.Code = code
     msg.Ver = ver
 }
 
-func (msg *MessageWriter) preWrite(wind int) {
+func (msg *LGMessageWriter) preWrite(wind int) {
     if wind == 0 {
         return
     }
@@ -82,14 +82,14 @@ func (msg *MessageWriter) preWrite(wind int) {
     msg.maxInd = wind
 }
 
-func (msg *MessageWriter) writeMeta(datatype int) {
+func (msg *LGMessageWriter) writeMeta(datatype int) {
     if !msg.needWriteMeta {
         return
     }
     msg.metabuf.WriteByte(byte((msg.maxInd << 3) | datatype))
 }
 
-func (msg *MessageWriter) WriteUint16(x int, wind int) {
+func (msg *LGMessageWriter) WriteUint16(x int, wind int) {
     msg.preWrite(wind)
 
     msg.buf.WriteUint16(uint16(x))
@@ -98,7 +98,7 @@ func (msg *MessageWriter) WriteUint16(x int, wind int) {
     msg.maxInd++
 }
 
-func (msg *MessageWriter) WriteUint32(x int, wind int) {
+func (msg *LGMessageWriter) WriteUint32(x int, wind int) {
     msg.preWrite(wind)
 
     msg.buf.WriteUint32(uint32(x))
@@ -107,7 +107,7 @@ func (msg *MessageWriter) WriteUint32(x int, wind int) {
     msg.maxInd++
 }
 
-func (msg *MessageWriter) WriteUint(x int, wind int) {
+func (msg *LGMessageWriter) WriteUint(x int, wind int) {
     msg.preWrite(wind)
 
     msg.buf.WriteUint(uint(x))
@@ -116,7 +116,7 @@ func (msg *MessageWriter) WriteUint(x int, wind int) {
     msg.maxInd++
 }
 
-func (msg *MessageWriter) WriteInt(x int, wind int) {
+func (msg *LGMessageWriter) WriteInt(x int, wind int) {
     msg.preWrite(wind)
 
     msg.buf.WriteInt(int(x))
@@ -125,7 +125,7 @@ func (msg *MessageWriter) WriteInt(x int, wind int) {
     msg.maxInd++
 }
 
-func (msg *MessageWriter) WriteString(x string, wind int) {
+func (msg *LGMessageWriter) WriteString(x string, wind int) {
     msg.preWrite(wind)
 
     msg.buf.WriteString(x)
@@ -134,7 +134,7 @@ func (msg *MessageWriter) WriteString(x string, wind int) {
     msg.maxInd++
 }
 
-func (msg *MessageWriter) WriteList(list *MessageListWriter, wind int) {
+func (msg *LGMessageWriter) WriteList(list *LGMessageListWriter, wind int) {
     msg.preWrite(wind)
 
     msg.buf.Write(list.ToBytes())
@@ -144,7 +144,7 @@ func (msg *MessageWriter) WriteList(list *MessageListWriter, wind int) {
 }
 
 //write no sign interge
-func (msg *MessageWriter) WriteU(x ...interface{}) {
+func (msg *LGMessageWriter) WriteU(x ...interface{}) {
     for _, v := range x {
         switch v.(type) {
         case uint:
@@ -165,8 +165,8 @@ func (msg *MessageWriter) WriteU(x ...interface{}) {
         case string:
             vv, _ := v.(string)
             msg.WriteString(vv, 0)
-        case *MessageListWriter:
-            vv, _ := v.(*MessageListWriter)
+        case *LGMessageListWriter:
+            vv, _ := v.(*LGMessageListWriter)
             msg.WriteList(vv, 0)
 
         }
@@ -174,7 +174,7 @@ func (msg *MessageWriter) WriteU(x ...interface{}) {
 }
 
 // write sign number
-func (msg *MessageWriter) Write(x ...interface{}) {
+func (msg *LGMessageWriter) Write(x ...interface{}) {
     for _, v := range x {
         switch v.(type) {
         case uint:
@@ -192,8 +192,8 @@ func (msg *MessageWriter) Write(x ...interface{}) {
         case string:
             vv, _ := v.(string)
             msg.WriteString(vv, 0)
-        case *MessageListWriter:
-            vv, _ := v.(*MessageListWriter)
+        case *LGMessageListWriter:
+            vv, _ := v.(*LGMessageListWriter)
             msg.WriteList(vv, 0)
 
         }
@@ -201,9 +201,9 @@ func (msg *MessageWriter) Write(x ...interface{}) {
 }
 
 //对数据进行封包
-func (msg *MessageWriter) ToBytes() []byte {
+func (msg *LGMessageWriter) ToBytes() []byte {
     if msg.Code == 0 {
-        log.Warn("messagewriter ToBytes() msg.Code == 0")
+        LGWarn("messagewriter ToBytes() msg.Code == 0")
         return nil
     }
 
@@ -214,24 +214,24 @@ func (msg *MessageWriter) ToBytes() []byte {
     msg.metabuf.Endianer.PutUint16(heads, uint16(msg.Code))
     heads[2] = msg.Ver
 
-    log.Trace("wind:", msg.wind)
+    LGTrace("wind:", msg.wind)
     heads[3] = byte(msg.wind)
-    log.Trace("metabuf", msg.metabuf.Bytes())
+    LGTrace("metabuf", msg.metabuf.Bytes())
     msg.metabuf.Write(msg.buf.Bytes())
 
-    log.Trace("metabuf", msg.metabuf.Bytes())
+    LGTrace("metabuf", msg.metabuf.Bytes())
     return msg.metabuf.Bytes()
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 
-type MessageReader struct {
+type LGMessageReader struct {
     Code int
     Ver  int
 
     endian int
     // data item buff
-    buf *helper.RWStream
+    buf *LGRWStream
 
     //meta data write item current index
     wind int
@@ -243,11 +243,11 @@ type MessageReader struct {
     itemnum int
 }
 
-func NewMessageReader(data []byte, endian int) *MessageReader {
-    msg := &MessageReader{}
+func LGNewMessageReader(data []byte, endian int) *LGMessageReader {
+    msg := &LGMessageReader{}
 
     msg.endian = endian
-    msg.buf = helper.NewRWStream(data, endian)
+    msg.buf = LGNewRWStream(data, endian)
     buf := msg.buf
 
     code, _ := buf.ReadUint16()
@@ -261,18 +261,18 @@ func NewMessageReader(data []byte, endian int) *MessageReader {
     return msg
 }
 
-func (msg *MessageReader) init() {
+func (msg *LGMessageReader) init() {
 
     buf := msg.buf
     _itemnum, _ := buf.ReadByte()
     itemnum := int(_itemnum)
     meta, n := buf.Read(itemnum)
     if n < itemnum {
-        log.Error("messageReader data init ",n,itemnum,buf.Bytes())
+        LGError("messageReader data init ",n,itemnum,buf.Bytes())
         panic("data init error")
     }
 
-    log.Trace("init meta:", meta)
+    LGTrace("init meta:", meta)
     maxind := 0
     msg.meta = make(map[int]byte)
 
@@ -288,7 +288,7 @@ func (msg *MessageReader) init() {
     msg.maxInd = maxind
     msg.itemnum = itemnum
     msg.wind = 0
-    log.Trace(msg.meta)
+    LGTrace(msg.meta)
 }
 
 func checkConvert(err error) {
@@ -298,7 +298,7 @@ func checkConvert(err error) {
 }
 
 /*
-func (msg *MessageReader) preRead() {
+func (msg *LGMessageReader) preRead() {
     buf := msg.buf
     //data item meta data
     itemnum,_ = buf.ReadByte()
@@ -341,7 +341,7 @@ func (msg *MessageReader) preRead() {
     }
     msg.items = items
 }
-func (msg *MessageReader) ReadUint(wind int) uint {
+func (msg *LGMessageReader) ReadUint(wind int) uint {
     if len(msg.items) == 0 {
         msg.preRead()
     }
@@ -354,7 +354,7 @@ func (msg *MessageReader) ReadUint(wind int) uint {
     return uint(a),ok
 }
 
-func (msg *MessageReader) ReadInt(wind int) int {
+func (msg *LGMessageReader) ReadInt(wind int) int {
     v := msg.items[wind]
     a,ok := v.(int)
     if !ok {
@@ -376,7 +376,7 @@ func (msg *MessageReader) ReadInt(wind int) int {
         return v.(int32)
     }
 
-func (msg *MessageReader) alignPos(wind int) {
+func (msg *LGMessageReader) alignPos(wind int) {
     for i:=msg.wind;i<wind;i++ {
         m := msg.meta[i]
         switch m & 0x07 {
@@ -395,14 +395,14 @@ func (msg *MessageReader) alignPos(wind int) {
 }
 */
 
-func (msg *MessageReader) checkRead(datatype int) bool {
-    log.Trace("checkread wind,maxInd", msg.wind, msg.maxInd)
+func (msg *LGMessageReader) checkRead(datatype int) bool {
+    LGTrace("checkread wind,maxInd", msg.wind, msg.maxInd)
     if msg.wind > msg.maxInd {
         return false
     }
 
     ty, ok := msg.meta[msg.wind]
-    log.Trace("checkread ty,ok", ty, ok, datatype)
+    LGTrace("checkread ty,ok", ty, ok, datatype)
     if !ok {
         msg.wind++
         return false
@@ -415,7 +415,7 @@ func (msg *MessageReader) checkRead(datatype int) bool {
     return true
 }
 
-func (msg *MessageReader) ReadUint() int {
+func (msg *LGMessageReader) ReadUint() int {
     if msg.checkRead(TY_UINT) != true {
         return 0
     }
@@ -426,7 +426,7 @@ func (msg *MessageReader) ReadUint() int {
     return int(v)
 }
 
-func (msg *MessageReader) ReadInt() int {
+func (msg *LGMessageReader) ReadInt() int {
     if msg.checkRead(TY_INT) != true {
         return 0
     }
@@ -437,7 +437,7 @@ func (msg *MessageReader) ReadInt() int {
     return v
 }
 
-func (msg *MessageReader) ReadUint32() int {
+func (msg *LGMessageReader) ReadUint32() int {
     if msg.checkRead(TY_UINT32) != true {
         return 0
     }
@@ -448,7 +448,7 @@ func (msg *MessageReader) ReadUint32() int {
     return int(v)
 }
 
-func (msg *MessageReader) ReadUint16() int {
+func (msg *LGMessageReader) ReadUint16() int {
     if msg.checkRead(TY_UINT16) != true {
         return 0
     }
@@ -459,7 +459,7 @@ func (msg *MessageReader) ReadUint16() int {
     return int(v)
 }
 
-func (msg *MessageReader) ReadString() string {
+func (msg *LGMessageReader) ReadString() string {
     if msg.checkRead(TY_STRING) != true {
         return ""
     }
@@ -470,12 +470,12 @@ func (msg *MessageReader) ReadString() string {
     return v
 }
 
-func (msg *MessageReader) ReadList() *MessageListReader {
+func (msg *LGMessageReader) ReadList() *LGMessageListReader {
     if msg.checkRead(TY_LIST) != true {
         return nil
     }
 
-    list := NewMessageListReader(msg.buf)
+    list := LGNewMessageListReader(msg.buf)
 
     msg.wind++
     return list

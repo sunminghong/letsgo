@@ -108,7 +108,7 @@ func clientsender(cid *int,client *lnet.ClientPool) {
         msg.SetCode(1011,0)
         msg.WriteString(text,0)
 
-        log.Trace("has %v clients",client.Clients.Len())
+        log.LGTrace("has %v clients",client.Clients.Len())
         c.GetTransport().SendDP(0,msg.ToBytes())
     }
 }
@@ -137,7 +137,7 @@ var (
 func main() {
     flag.Parse()
 
-    log.SetLevel(*loglevel)
+    log.SetLGLevel(*loglevel)
 
     datagram := lnet.NewDatagram(protos.Endian)
 

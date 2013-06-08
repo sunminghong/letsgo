@@ -26,7 +26,7 @@ var (
 func main() {
     flag.Parse()
 
-    log.SetLevel(*loglevel)
+    log.SetLGLevel(*loglevel)
 
     datagram := lnet.NewDatagram(protos.Endian)
 

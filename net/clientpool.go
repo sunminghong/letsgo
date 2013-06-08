@@ -14,33 +14,33 @@ import (
     "net"
     //"strconv"
     "time"
-    "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/log"
 )
 
-type ClientPool struct {
+type LGClientPool struct {
     read_buffer_size int
 
-    newclient NewClientFunc
-    datagram IDatagram
+    newclient LGNewClientFunc
+    datagram LGIDatagram
     /*runloop IRunLoop*/
 
     host string
     port int
 
-    Clients       *ClientMap
+    Clients       *LGClientMap
     TransportNum int
 
     localhost string
     localport int
 
     Quit    chan bool
-    boardcastChan    chan *DataPacket
+    boardcastChan    chan *LGDataPacket
 
     connaddr chan string
 }
 
-func NewClientPool(newclient NewClientFunc, datagram IDatagram /*,runloop IRunLoop*/) *ClientPool {
-    cp := &ClientPool{Clients: NewClientMap()}
+func LGNewClientPool(newclient LGNewClientFunc, datagram LGIDatagram /*,runloop IRunLoop*/) *LGClientPool {
+    cp := &LGClientPool{Clients: LGNewClientMap()}
     cp.newclient = newclient
     cp.datagram = datagram
     /*
@@ -56,13 +56,13 @@ func NewClientPool(newclient NewClientFunc, datagram IDatagram /*,runloop IRunLo
 
 
     //创建一个管道 chan map 需要make creates slices, maps, and channels only
-    cp.boardcastChan = make(chan *DataPacket,1)
+    cp.boardcastChan = make(chan *LGDataPacket,1)
     go cp.boardcastHandler(cp.boardcastChan)
 
     return cp
 }
 
-func (cp *ClientPool) Start(name string,addr string,datagram IDatagram) {
+func (cp *LGClientPool) Start(name string,addr string,datagram LGIDatagram) {
     //go func() {
         ////Log("Hello Client!")
 
@@ -85,7 +85,7 @@ func (cp *ClientPool) Start(name string,addr string,datagram IDatagram) {
         if datagram == nil {
             datagram = cp.datagram
         }
-        transport := NewTransport(newcid, connection, cp,datagram)
+        transport := LGNewTransport(newcid, connection, cp,datagram)
         client := cp.newclient(name,transport)
         cp.Clients.Add(newcid,name, client)
 
@@ -101,11 +101,11 @@ func (cp *ClientPool) Start(name string,addr string,datagram IDatagram) {
     <-cp.Quit
 }
 
-func (cp *ClientPool) SetMaxConnections(max int) {
+func (cp *LGClientPool) SetMaxConnections(max int) {
 
 }
 
-func (cp *ClientPool) Close(cid int) {
+func (cp *LGClientPool) Close(cid int) {
     if cid == 0 {
         for _, client := range cp.Clients.All(){
             //c.running[cid] = false
@@ -118,16 +118,16 @@ func (cp *ClientPool) Close(cid int) {
     cp.Clients.Get(cid).GetTransport().Quit <- true
 }
 
-func (cp *ClientPool) removeClient(cid int) {
+func (cp *LGClientPool) removeClient(cid int) {
     cp.Clients.Remove(cid)
 }
 
-func (cp *ClientPool) allocTransportid() int {
+func (cp *LGClientPool) allocTransportid() int {
     cp.TransportNum += 1
     return cp.TransportNum
 }
 
-func (cp *ClientPool) transportReader(transport *Transport, client IClient) {
+func (cp *LGClientPool) transportReader(transport *LGTransport, client LGIClient) {
     buffer := make([]byte, cp.read_buffer_size)
     for {
 
@@ -154,11 +154,11 @@ func (cp *ClientPool) transportReader(transport *Transport, client IClient) {
     //Log("TransportReader stopped for ", transport.Cid)
 }
 
-func (cp *ClientPool) transportSender(transport *Transport) {
+func (cp *LGClientPool) transportSender(transport *LGTransport) {
     for {
         select {
         case dp := <-transport.outgoing:
-            log.Trace("clientpool transportSender:",dp.Type, dp.Data)
+            LGTrace("clientpool transportSender:",dp.Type, dp.Data)
             //buf := cp.datagram.Pack(dp)
             //transport.Conn.Write(buf)
 
@@ -175,7 +175,7 @@ func (cp *ClientPool) transportSender(transport *Transport) {
     }
 }
 
-func (cp *ClientPool) boardcastHandler(boardcastChan <-chan *DataPacket) {
+func (cp *LGClientPool) boardcastHandler(boardcastChan <-chan *LGDataPacket) {
     for {
         //在go里面没有while do ，for可以无限循环
         //Log("boardcastHandler: chan Waiting for input")
@@ -194,7 +194,7 @@ func (cp *ClientPool) boardcastHandler(boardcastChan <-chan *DataPacket) {
 }
 
 //send boardcast message data for other object
-func (cp *ClientPool) SendBoardcast(transport *Transport, dp *DataPacket) {
+func (cp *LGClientPool) SendBroadcast(transport *LGTransport, dp *LGDataPacket) {
     cp.boardcastChan <- dp
 }
 

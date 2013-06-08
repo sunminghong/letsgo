@@ -1,6 +1,6 @@
 /*=============================================================================
 #     FileName: rwstream.go
-#         Desc: RWStream struct
+#         Desc: LGRWStream struct
 #       Author: sunminghong
 #        Email: allen.fantasy@gmail.com
 #     HomePage: http://weibo.com/5d13
@@ -16,12 +16,12 @@ import (
 )
 
 const (
-    BigEndian    = 0
-    LittleEndian = 1
+    LGBigEndian    = 0
+    LGLittleEndian = 1
 )
 
 //switch bigEndianer or littleEndianer
-type ItoB interface {
+type LGItoB interface {
     Uint16(b []byte) uint16
     PutUint16(b []byte, v uint16)
 
@@ -34,11 +34,11 @@ type ItoB interface {
 
 // A Buffer is a variable-sized buffer of bytes with Read and Write methods.
 // The zero value for Buffer is an empty buffer ready to use.
-type RWStream struct {
+type LGRWStream struct {
     buffSize int
 
     Endian   int //default to false, means that is littleEdian
-    Endianer ItoB
+    Endianer LGItoB
 
     buf []byte // contents are the bytes buf[off:len(buf)]
 
@@ -47,11 +47,11 @@ type RWStream struct {
     last int // last read operation, so that Unread* can work correctly.
 }
 
-func NewRWStream(buf interface{}, endian int) *RWStream {
-    b := &RWStream{Endian: endian}
+func LGNewRWStream(buf interface{}, endian int) *LGRWStream {
+    b := &LGRWStream{Endian: endian}
 
     b.Endian = endian
-    if endian == BigEndian {
+    if endian == LGBigEndian {
         b.Endianer = binary.BigEndian
     } else {
         b.Endianer = binary.LittleEndian
@@ -62,14 +62,14 @@ func NewRWStream(buf interface{}, endian int) *RWStream {
 }
 
 // ErrTooLarge is passed to panic if memory cannot be allocated to store data in a buffer.
-var ErrTooLarge = errors.New("net.RWStream: too large")
-var ErrIndex = errors.New("net.RWStream: index over range")
+var ErrTooLarge = errors.New("net.LGRWStream: too large")
+var ErrIndex = errors.New("net.LGRWStream: index over range")
 
-func (b *RWStream) Bytes() []byte { return b.buf[b.off:b.end] }
+func (b *LGRWStream) Bytes() []byte { return b.buf[b.off:b.end] }
 
-func (b *RWStream) Len() int { return b.end - b.off }
+func (b *LGRWStream) Len() int { return b.end - b.off }
 
-func (b *RWStream) Init(params ...interface{}) {
+func (b *LGRWStream) Init(params ...interface{}) {
     if len(params) > 0 {
         buf := params[0]
 
@@ -101,7 +101,7 @@ func (b *RWStream) Init(params ...interface{}) {
 }
 
 //call Reset before each use this Buffer
-func (b *RWStream) Reset() {
+func (b *LGRWStream) Reset() {
     b.off = b.end
     b.last = b.off
 }
@@ -109,7 +109,7 @@ func (b *RWStream) Reset() {
 // grow grows the buffer to guarantee space for n more bytes.
 // It returns the index where bytes should be written.
 // If the buffer can't grow it will panic with ErrTooLarge.
-func (b *RWStream) grow(n int) int {
+func (b *LGRWStream) grow(n int) int {
     m := b.Len()
     x := cap(b.buf)
 
@@ -141,18 +141,18 @@ func (b *RWStream) grow(n int) int {
 // value n is the length of p; err is always nil.
 // If the buffer becomes too large, Write will panic with
 // ErrTooLarge.
-func (b *RWStream) Write(p []byte) (n int) {
+func (b *LGRWStream) Write(p []byte) (n int) {
     n = len(p)
     m := b.grow(n)
     b.end += n
     return copy(b.buf[m:], p)
 }
 
-func (b *RWStream) GetPos() int {
+func (b *LGRWStream) GetPos() int {
     return b.last - b.off
 }
 
-func (b *RWStream) SetPos(pos int) {
+func (b *LGRWStream) SetPos(pos int) {
     if pos < 0 {
         b.last += pos
         if b.last < b.off {
@@ -168,7 +168,7 @@ func (b *RWStream) SetPos(pos int) {
     }
 }
 
-func (b *RWStream) Read(n int) ([]byte,int) {
+func (b *LGRWStream) Read(n int) ([]byte,int) {
     if b.last+n > b.end {
         return nil,0
         //n = b.end - b.last
@@ -185,37 +185,37 @@ func (b *RWStream) Read(n int) ([]byte,int) {
 // value n is the length of s; err is always nil.
 // If the buffer becomes too large, WriteString will panic with
 // ErrTooLarge.
-func (b *RWStream) WriteString(s string) int {
+func (b *LGRWStream) WriteString(s string) int {
     b.WriteUint(uint(len(s)))
     return b.Write([]byte(s))
 }
 
-func (b *RWStream) WriteByte(c byte) int {
+func (b *LGRWStream) WriteByte(c byte) int {
     m := b.grow(1)
     b.buf[m] = c
     b.end += 1
     return 1
 }
 
-func (b *RWStream) WriteUint16(x uint16) int {
+func (b *LGRWStream) WriteUint16(x uint16) int {
     var buf = make([]byte, 2)
     b.Endianer.PutUint16(buf, x)
     return b.Write(buf)
 }
 
-func (b *RWStream) WriteUint32(x uint32) int {
+func (b *LGRWStream) WriteUint32(x uint32) int {
     var buf = make([]byte, 4)
     b.Endianer.PutUint32(buf, x)
     return b.Write(buf)
 }
 
-func (b *RWStream) WriteUint64(x uint64) int {
+func (b *LGRWStream) WriteUint64(x uint64) int {
     var buf = make([]byte, 8)
     b.Endianer.PutUint64(buf, x)
     return b.Write(buf)
 }
 
-func (b *RWStream) ReadByte() (byte, error) {
+func (b *LGRWStream) ReadByte() (byte, error) {
     buf, n := b.Read(1)
     if n < 1 {
         return 0, ErrIndex
@@ -223,7 +223,7 @@ func (b *RWStream) ReadByte() (byte, error) {
     return buf[0], nil
 }
 
-func (b *RWStream) ReadUint16() (uint16, error) {
+func (b *LGRWStream) ReadUint16() (uint16, error) {
     buf, n := b.Read(2)
     if n < 2 {
         return 0, ErrIndex
@@ -232,7 +232,7 @@ func (b *RWStream) ReadUint16() (uint16, error) {
     return x, nil
 }
 
-func (b *RWStream) ReadUint32() (uint32, error) {
+func (b *LGRWStream) ReadUint32() (uint32, error) {
     buf, n := b.Read(4)
     if n < 4 {
         return 0, ErrIndex
@@ -241,7 +241,7 @@ func (b *RWStream) ReadUint32() (uint32, error) {
     return x, nil
 }
 
-func (b *RWStream) ReadUint64() (uint64, error) {
+func (b *LGRWStream) ReadUint64() (uint64, error) {
     buf, n := b.Read(8)
     if n < 8 {
         return 0, ErrIndex
@@ -262,7 +262,7 @@ func makeSlice(n int) []byte {
     return make([]byte, n)
 }
 
-func (b *RWStream) ReadUint() (uint, error) {
+func (b *LGRWStream) ReadUint() (uint, error) {
     if b.last >= b.end {
         return 0, ErrIndex
     }
@@ -289,7 +289,7 @@ func (b *RWStream) ReadUint() (uint, error) {
     return 0, ErrTooLarge
 }
 
-func (b *RWStream) ReadInt() (int, error) {
+func (b *LGRWStream) ReadInt() (int, error) {
     ux, err := b.ReadUint() // ok to continue in presence of error
     if err != nil {
         return 0, err
@@ -302,7 +302,7 @@ func (b *RWStream) ReadInt() (int, error) {
     return x, nil
 }
 
-func (b *RWStream) WriteUint(x uint) int {
+func (b *LGRWStream) WriteUint(x uint) int {
     buf := [8]byte{}
     i := 0
     for x >= 0x80 {
@@ -316,7 +316,7 @@ func (b *RWStream) WriteUint(x uint) int {
     return i + 1
 }
 
-func (b *RWStream) WriteInt(x int) int {
+func (b *LGRWStream) WriteInt(x int) int {
     ux := uint(x) << 1
     if x < 0 {
         ux = ^ux
@@ -324,7 +324,7 @@ func (b *RWStream) WriteInt(x int) int {
     return b.WriteUint(ux)
 }
 
-func (b *RWStream) ReadString() (string, error) {
+func (b *LGRWStream) ReadString() (string, error) {
     l, err := b.ReadUint()
     if err != nil {
         return "", err

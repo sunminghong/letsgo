@@ -14,22 +14,22 @@ import (
     "sync"
 )
 
-type ClientMap struct {
+type LGClientMap struct {
     maplock *sync.RWMutex
 
-    maps map[int]IClient
+    maps map[int]LGIClient
     mapsByName map[string]int
 }
 
-func NewClientMap() *ClientMap {
-    return &ClientMap{
+func LGNewClientMap() *LGClientMap {
+    return &LGClientMap{
         maplock: new(sync.RWMutex),
-        maps: make(map[int]IClient),
+        maps: make(map[int]LGIClient),
         mapsByName: make(map[string]int),
     }
 }
 
-func (tm *ClientMap) Add(cid int,name string, client IClient) {
+func (tm *LGClientMap) Add(cid int,name string, client LGIClient) {
     tm.maplock.Lock()
     defer tm.maplock.Unlock()
 
@@ -39,7 +39,7 @@ func (tm *ClientMap) Add(cid int,name string, client IClient) {
     }
 }
 
-func (tm *ClientMap) Remove(cid int) {
+func (tm *LGClientMap) Remove(cid int) {
     tm.maplock.Lock()
     defer tm.maplock.Unlock()
 
@@ -56,7 +56,7 @@ func (tm *ClientMap) Remove(cid int) {
     }
 }
 
-func (tm *ClientMap) RemoveByName(name string) {
+func (tm *LGClientMap) RemoveByName(name string) {
     tm.maplock.Lock()
     defer tm.maplock.Unlock()
 
@@ -70,7 +70,7 @@ func (tm *ClientMap) RemoveByName(name string) {
     }
 }
 
-func (tm *ClientMap) Get(cid int) IClient {
+func (tm *LGClientMap) Get(cid int) LGIClient {
     tm.maplock.Lock()
     defer tm.maplock.Unlock()
 
@@ -81,7 +81,7 @@ func (tm *ClientMap) Get(cid int) IClient {
     return nil
 }
 
-func (tm *ClientMap) GetByName(name string) IClient {
+func (tm *LGClientMap) GetByName(name string) LGIClient {
     tm.maplock.Lock()
     defer tm.maplock.Unlock()
 
@@ -92,14 +92,14 @@ func (tm *ClientMap) GetByName(name string) IClient {
     return nil
 }
 
-func (tm *ClientMap) All() map[int]IClient {
+func (tm *LGClientMap) All() map[int]LGIClient {
     tm.maplock.Lock()
     defer tm.maplock.Unlock()
 
     return tm.maps
 }
 
-func (tm *ClientMap) Len() int {
+func (tm *LGClientMap) Len() int {
     tm.maplock.Lock()
     defer tm.maplock.Unlock()
 

@@ -22,8 +22,8 @@ func init() {
     Handlers[2011] = Process2011
 }
 
-func Process2011(c *Client,reader *lnet.MessageReader) {
-    log.Trace("process 2011 is called")
+func LGProcess2011(c *Client,reader *lnet.MessageReader) {
+    log.LGTrace("process 2011 is called")
 
     md := reader.ReadString()
     fmt.Println()

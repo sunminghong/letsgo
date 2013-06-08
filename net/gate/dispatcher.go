@@ -13,18 +13,18 @@ package gate
 import (
     "strconv"
     "strings"
-    "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/log"
 )
 
-type DefaultDispatcher struct {
+type LGDefaultDispatcher struct {
     messageCodemaps map[int]int
 }
 
-func (r *DefaultDispatcher) Init() {
+func (r *LGDefaultDispatcher) Init() {
     r.messageCodemaps = make(map[int]int)
 }
 
-func (r *DefaultDispatcher) Add(gridID int, messageCodes string) {
+func (r *LGDefaultDispatcher) Add(gridID int, messageCodes string) {
     codes:= strings.Split(messageCodes,",")
     for _,p_ := range codes {
         p := strings.Trim(p_," ")
@@ -38,12 +38,12 @@ func (r *DefaultDispatcher) Add(gridID int, messageCodes string) {
     }
 }
 
-func (r *DefaultDispatcher) Dispatch(messageCode int) (gridID int,ok bool) {
+func (r *LGDefaultDispatcher) Dispatch(messageCode int) (gridID int,ok bool) {
     gcode := r.GroupCode(messageCode)
 
     gridID,ok = r.messageCodemaps[gcode]
 
-    log.Trace(
+    LGTrace(
         "dispatcher Handler func messageCode,messageCode,gridID:",
         messageCode,gcode,gridID)
 
@@ -51,7 +51,7 @@ func (r *DefaultDispatcher) Dispatch(messageCode int) (gridID int,ok bool) {
 }
 
 //将协议编号分组以供Dispatch决策用那个Grid 来处理
-func (r *DefaultDispatcher) GroupCode(messageCode int) int {
+func (r *LGDefaultDispatcher) GroupCode(messageCode int) int {
     return int(messageCode / 100)
 }
 

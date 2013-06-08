@@ -11,12 +11,12 @@
 package net
 
 import (
-    "github.com/sunminghong/letsgo/helper"
-    "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/helper"
+    . "github.com/sunminghong/letsgo/log"
 )
 
-type MessageListWriter struct {
-    MessageWriter
+type LGMessageListWriter struct {
+    *LGMessageWriter
 
     length int
     itemnum int
@@ -24,21 +24,21 @@ type MessageListWriter struct {
     meta []byte
 }
 
-func NewMessageListWriter(endian int) *MessageListWriter {
-    list := &MessageListWriter{}
+func LGNewMessageListWriter(endian int) *LGMessageListWriter {
+    list := &LGMessageListWriter{}
 
-    log.Trace("messagelistwriter Init by called")
+    LGTrace("messagelistwriter Init by called")
     list.init(768,endian)
     return list
 }
 
-func (list *MessageListWriter) WriteStartTag() {
+func (list *LGMessageListWriter) WriteStartTag() {
 
     list.wind = 0
     list.maxInd = 0
 }
 
-func (list *MessageListWriter) WriteEndTag() {
+func (list *LGMessageListWriter) WriteEndTag() {
     if list.itemnum ==0 {
         list.itemnum = list.maxInd
         list.needWriteMeta = false
@@ -51,7 +51,7 @@ func (list *MessageListWriter) WriteEndTag() {
 }
 
 //对数据进行封包
-func (list *MessageListWriter) ToBytes() []byte {
+func (list *LGMessageListWriter) ToBytes() []byte {
     list.metabuf.SetPos(0)
     list.buf.SetPos(0)
     //write heads
@@ -62,18 +62,18 @@ func (list *MessageListWriter) ToBytes() []byte {
         uint16(list.buf.Len()+list.metabuf.Len() - 2))
     heads[2] = byte(list.length)
 
-    log.Trace("wind:",list.wind)
+    LGTrace("wind:",list.wind)
     heads[3] = byte(list.wind)
-    log.Trace("metabuflist",list.metabuf.Bytes())
+    LGTrace("metabuflist",list.metabuf.Bytes())
 
     list.metabuf.Write(list.buf.Bytes())
 
-    log.Trace("metabuflist",list.metabuf.Bytes())
+    LGTrace("metabuflist",list.metabuf.Bytes())
     return list.metabuf.Bytes()
 }
 
-type MessageListReader struct {
-    MessageReader
+type LGMessageListReader struct {
+    *LGMessageReader
 
     //list length
     Length int
@@ -82,8 +82,8 @@ type MessageListReader struct {
     ByteLength int
 }
 
-func NewMessageListReader(buf *helper.RWStream) *MessageListReader {
-    list := &MessageListReader{}
+func LGNewMessageListReader(buf *LGRWStream) *LGMessageListReader {
+    list := &LGMessageListReader{}
 
     _=buf
     list.buf = buf
@@ -108,7 +108,7 @@ func NewMessageListReader(buf *helper.RWStream) *MessageListReader {
 }
 
 
-func (list *MessageListReader) ReadStartTag() {
+func (list *LGMessageListReader) ReadStartTag() {
     if list.wind == 0 {
         return
     }
@@ -116,7 +116,7 @@ func (list *MessageListReader) ReadStartTag() {
     //对齐列表项，如果列表数据项比读取的多，读下一个列表的数据是需要先将指针对齐
     for i:=list.wind;i<list.maxInd;i++ {
         ty,ok := list.meta[i]
-        log.Trace("checkread ty,ok",ty,ok)
+        LGTrace("checkread ty,ok",ty,ok)
         if !ok {
             continue
         }
@@ -140,7 +140,7 @@ func (list *MessageListReader) ReadStartTag() {
     list.wind = 0
 }
 
-func (list *MessageListReader) ReadEndTag() {
+func (list *LGMessageListReader) ReadEndTag() {
     list.wind = 0
 
     //对齐列表项，如果列表数据项比读取的多，读下一个列表的数据是需要先将指针对齐

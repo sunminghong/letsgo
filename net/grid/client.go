@@ -11,60 +11,60 @@
 package grid
 
 import (
-    "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/log"
     . "github.com/sunminghong/letsgo/net"
 )
 
 
-// IClient  
-type GridClient struct {
-    *BaseClient
+// LGIClient  
+type LGGridClient struct {
+    *LGBaseClient
 
-    Process ProcessHandleFunc
+    Process LGProcessHandleFunc
 }
 
 /*
-func ProccessHandle(code int,msg *MessageReader,c IClient,fromCid int) {
+func LGProccessHandle(code int,msg *MessageReader,c LGIClient,fromCid int) {
     fmt.Println("message is request")
 }
 
-func MakeBaseClient (name string,transport *Transport) IClient {
-    c := &BaseClient{
-        BaseClient:&BaseClient{transport,name,CLIENT_TYPE_GENERAL},
+func LGMakeLGBaseClient (name string,transport *LGTransport) LGIClient {
+    c := &LGBaseClient{
+        LGBaseClient:&LGBaseClient{transport,name,LGCLIENT_TYPE_GENERAL},
     }
-    c.Process = ProcessHandleFunc
+    c.Process = LGProcessHandleFunc
 }*/
 
 //对数据进行拆包
-func (c *GridClient) ProcessDPs(dps []*DataPacket) {
+func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
     for _, dp := range dps {
         code := int(c.Transport.Stream.Endianer.Uint16(dp.Data))
-        log.Trace("msg.code:",code,len(dp.Data))
+        LGTrace("msg.code:",code,len(dp.Data))
 
-        msg := NewMessageReader(dp.Data,c.Transport.Stream.Endian)
+        msg := LGNewMessageReader(dp.Data,c.Transport.Stream.Endian)
 
         switch dp.Type {
-        case DATAPACKET_TYPE_DELAY:
+        case LGDATAPACKET_TYPE_DELAY:
             c.Process(code,msg,c,dp.FromCid)
 
-        case DATAPACKET_TYPE_GATECONNECT:
-            c.SetType(CLIENT_TYPE_GATE)
+        case LGDATAPACKET_TYPE_GATECONNECT:
+            c.SetType(LGCLIENT_TYPE_GATE)
 
-        case DATAPACKET_TYPE_GENERAL:
+        case LGDATAPACKET_TYPE_GENERAL:
             c.Process(code,msg,c,0)
         }
     }
 }
 
-func (c *GridClient) SendMessage(fromcid int,msg IMessageWriter) {
-    dp := &DataPacket{
+func (c *LGGridClient) SendMessage(fromcid int,msg LGIMessageWriter) {
+    dp := &LGDataPacket{
         FromCid: fromcid,
         Data: msg.ToBytes(),
     }
     if fromcid == 0 {
-        dp.Type = DATAPACKET_TYPE_GENERAL
+        dp.Type = LGDATAPACKET_TYPE_GENERAL
     } else {
-        dp.Type = DATAPACKET_TYPE_DELAY
+        dp.Type = LGDATAPACKET_TYPE_DELAY
     }
 
     c.Transport.SendDP(dp)

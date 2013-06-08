@@ -11,48 +11,52 @@
 package gate
 
 import (
-    "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/net"
 )
 
 // Client  
-type GridClient struct {
-    *BaseClient
+type LGGridClient struct {
+    *LGBaseClient
 
-    gate *GateServer
+    gate *LGGateServer
 }
 
-func MakeGridClient (name string,transport *Transport,gate *GateServer) Client {
-    log.Trace("gridclient is connect:",name)
+func LGMakeLGGridClient (name string,transport *LGTransport,gate *LGGateServer) LGIClient {
+    LGTrace("gridclient is connect:",name)
 
-    c := &GridClient{transport,name,&username}
+    c := &LGGridClient{LGBaseClient:&LGBaseClient{Transport:transport,Name:name}}
     c.gate = gate
 
     //register to grid server
-    dp := &DataPacket{
-        FromCid: fromcid,
-        Data: msg.ToBytes(),
-        Type : DATAPACKET_TYPE_GATECONNECT,
+    dp := &LGDataPacket{
+        FromCid: 0,
+        Data: []byte{1},
+        Type : LGDATAPACKET_TYPE_GATECONNECT,
     }
 
     transport.SendDP(dp)
+
+    return c
 }
 
 //对数据进行拆包
-func (c *GridClient) ProcessDPs(dps []*DataPacket) {
+func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
     for _, dp := range dps {
         code := c.Transport.Stream.Endianer.Uint16(dp.Data)
-        log.Trace("msg.code:",code)
+        LGTrace("msg.code:",code)
 
         switch dp.Type {
-        case DATAPACKET_TYPE_DELAY:
-            dp.dataType =DATAPACKET_TYPE_COMMON
+        case LGDATAPACKET_TYPE_DELAY:
+            dp.Type =LGDATAPACKET_TYPE_GENERAL
 
             c.gate.Clients.Get(dp.FromCid).GetTransport().SendDP(dp)
 
-        case DATAPACKET_TYPE_BROADCAST:
-            c.gate.SendBroadcast(dp)
+        case LGDATAPACKET_TYPE_BROADCAST:
+            //c.gate.SendBroadcast(c.gate.Clients.Get(dp.FromCid).GetTransport(),dp)
+            c.gate.SendBroadcast(nil,dp)
 
-        default:// DATAPACKET_TYPE_COMMON
+        default:
             //process msg ,eg:command line
         }
     }

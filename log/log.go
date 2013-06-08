@@ -21,26 +21,26 @@ import (
 
 // Log levels to control the logging output.
 const (
-    LevelTrace = iota
-    LevelDebug
-    LevelInfo
-    LevelWarning
-    LevelError
-    LevelCritical
+    LGLevelLGTrace = iota
+    LGLevelDebug
+    LGLevelInfo
+    LGLevelWarning
+    LGLevelError
+    LGLevelCritical
 )
 
-// logLevel controls the global log level used by the logger.
-var level = LevelTrace
+// logLGLevel controls the global log level used by the logger.
+var level = LGLevelLGTrace
 
-// LogLevel returns the global log level and can be used in
+// LogLGLevel returns the global log level and can be used in
 // own implementations of the logger interface.
-func Level() int {
+func LGLevel() int {
     return level
 }
 
-// SetLogLevel sets the global log level used by the simple
+// SetLogLGLevel sets the global log level used by the simple
 // logger.
-func SetLevel(l int) {
+func LGSetLGLevel(l int) {
     level = l
 }
 
@@ -48,48 +48,48 @@ func SetLevel(l int) {
 var LetsLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
 // SetLogger sets a new logger.
-func SetLogger(l *log.Logger) {
+func LGSetLogger(l *log.Logger) {
     LetsLogger = l
 }
 
-// Trace logs a message at trace level.
-func Trace(v ...interface{}) {
-    if level <= LevelTrace {
+// LGTrace logs a message at trace level.
+func LGTrace(v ...interface{}) {
+    if level <= LGLevelLGTrace {
         LetsLogger.Printf("[T] %v\n", v)
     }
 }
 
 // Debug logs a message at debug level.
-func Debug(v ...interface{}) {
-    if level <= LevelDebug {
+func LGDebug(v ...interface{}) {
+    if level <= LGLevelDebug {
         LetsLogger.Printf("[D] %v\n", v)
     }
 }
 
 // Info logs a message at info level.
-func Info(v ...interface{}) {
-    if level <= LevelInfo {
+func LGInfo(v ...interface{}) {
+    if level <= LGLevelInfo {
         LetsLogger.Printf("[I] %v\n", v)
     }
 }
 
 // Warning logs a message at warning level.
-func Warn(v ...interface{}) {
-    if level <= LevelWarning {
+func LGWarn(v ...interface{}) {
+    if level <= LGLevelWarning {
         LetsLogger.Printf("[W] %v\n", v)
     }
 }
 
 // Error logs a message at error level.
-func Error(v ...interface{}) {
-    if level <= LevelError {
+func LGError(v ...interface{}) {
+    if level <= LGLevelError {
         LetsLogger.Printf("[E] %v\n", v)
     }
 }
 
 // Critical logs a message at critical level.
-func Critical(v ...interface{}) {
-    if level <= LevelCritical {
+func LGCritical(v ...interface{}) {
+    if level <= LGLevelCritical {
         LetsLogger.Printf("[C] %v\n", v)
     }
 }
