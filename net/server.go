@@ -22,7 +22,7 @@ type Server struct {
 
     maxConnections int
     makeclient NewClientFunc
-    datagram   IDatagram
+    Datagram   IDatagram
 
     host string
     port int
@@ -40,7 +40,7 @@ func NewServer(makeclient NewClientFunc, datagram IDatagram) *Server {
 
     s.makeclient = makeclient
 
-    s.datagram = datagram
+    s.Datagram = datagram
 
     s.boardcast_chan_num = 10
     s.read_buffer_size = 1024
@@ -101,7 +101,7 @@ func (s *Server) allocTransportid() int {
 
 //该函数主要是接受新的连接和注册用户在transport list
 func (s *Server) transportHandler(newcid int, connection net.Conn) {
-    transport := NewTransport(newcid, connection, s,s.datagram)
+    transport := NewTransport(newcid, connection, s,s.Datagram)
     name := "c_"+strconv.Itoa(newcid)
     client := s.makeclient(name,transport)
     s.Clients.Add(newcid, name, client)
@@ -133,7 +133,7 @@ func (s *Server) transportReader(transport *Transport, client IClient) {
         transport.BuffAppend(buffer[0:bytesRead])
 
         log.Trace("transport.Buff", transport.Stream.Bytes())
-        n, dps := s.datagram.Fetch(transport)
+        n, dps := s.Datagram.Fetch(transport)
         log.Trace("fetch message number", n)
         if n > 0 {
             client.ProcessDPs(dps)
@@ -147,10 +147,10 @@ func (s *Server) transportSender(transport *Transport, client IClient) {
         select {
         case dp := <-transport.outgoing:
             log.Trace("transportSender outgoing:",dp.Type, len(dp.Data))
-            //buf := s.datagram.Pack(dp)
+            //buf := s.Datagram.Pack(dp)
             //transport.Conn.Write(buf)
 
-            s.datagram.PackWrite(transport.Conn.Write,dp)
+            s.Datagram.PackWrite(transport.Conn.Write,dp)
         case <-transport.Quit:
             log.Debug("Transport ", transport.Cid, " quitting")
 
@@ -167,7 +167,7 @@ func (s *Server) boardcastHandler(boardcastChan <-chan *DataPacket) {
         //在go里面没有while do ，for可以无限循环
         log.Trace("boardcastHandler: chan Waiting for input")
         dp := <-boardcastChan
-        //buf := s.datagram.pack(dp)
+        //buf := s.Datagram.pack(dp)
 
         fromCid := dp.FromCid
         for _, c := range s.Clients.All() {

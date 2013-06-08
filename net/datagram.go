@@ -17,11 +17,6 @@ import (
 const (
     mask1 = byte(0x59)
     mask2 = byte(0x7a)
-
-    DATAPACKET_TYPE_GENERAL = 0
-    DATAPACKET_TYPE_DELAY = 1
-    DATAPACKET_TYPE_BOARDCAST = 3
-    DATAPACKET_TYPE_GATECONNECT = 3
 )
 
 type Datagram struct {

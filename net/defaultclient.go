@@ -14,21 +14,26 @@ import (
     "github.com/sunminghong/letsgo/log"
 )
 
-type ProcessHandleFunc func(
-    code int,msg *MessageReader,c IClient,fromCid int)
-
 // Client  
 type DefaultClient struct {
-    Transport *Transport
-    Name string
-    connectionType int
+    *BaseClient
 
     Process ProcessHandleFunc
 }
 
-func MakeDefaultClient (name string,transport *Transport,process ProcessHandleFunc) IClient {
-    return &DefaultClient{transport,name,CLIENT_TYPE_GENERAL,process}
+/*
+ need write blow func
+func ProccessHandle(code int,msg *MessageReader,c IClient,fromCid int) {
+    fmt.Println("message is request")
 }
+
+func MakeDefaultClient (name string,transport *Transport) IClient {
+    c := &BaseClient{
+        BaseClient:&BaseClient{transport,name,CLIENT_TYPE_GENERAL},
+    }
+    c.Process = ProcessHandle
+}
+*/
 
 //对数据进行拆包
 func (c *DefaultClient) ProcessDPs(dps []*DataPacket) {
@@ -40,51 +45,5 @@ func (c *DefaultClient) ProcessDPs(dps []*DataPacket) {
 
         c.Process(code, msgReader,c,0)
     }
-}
-
-func (c *DefaultClient) GetTransport() *Transport {
-    return c.Transport
-}
-
-func (c *DefaultClient) GetName() string {
-    return c.Name
-}
-
-func (c *DefaultClient) GetType() int{
-    return c.connectionType
-}
-
-func (c *DefaultClient) SetType(t int) {
-    c.connectionType = t
-}
-
-func (c *DefaultClient) Close() {
-    c.Transport.Close()
-}
-
-func (c *DefaultClient) Closed() {
-    log.Trace("this client is closed!")
-    //todo: override write by sub object
-    panic("Closed need override write by sub object")
-}
-
-func (c *DefaultClient) SendMessage(fromcid int,msg IMessageWriter) {
-    dp := &DataPacket{
-        Type: DATAPACKET_TYPE_GENERAL,
-        FromCid: fromcid,
-        Data: msg.ToBytes(),
-    }
-
-    c.Transport.SendDP(dp)
-}
-
-func (c *DefaultClient) SendBoardcast(fromcid int,msg IMessageWriter) {
-    dp := &DataPacket{
-        Type: DATAPACKET_TYPE_BOARDCAST,
-        Data: msg.ToBytes(),
-        FromCid: fromcid,
-    }
-
-    c.Transport.SendBoardcast(dp)
 }
 

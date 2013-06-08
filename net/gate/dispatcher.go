@@ -39,21 +39,19 @@ func (r *DefaultDispatcher) Add(gridID int, messageCodes string) {
 }
 
 func (r *DefaultDispatcher) Dispatch(messageCode int) (gridID int,ok bool) {
-    if dp.Type == DATAPACKET_TYPE_DELAY {
-        return 0,false
-    }
-
     gcode := r.GroupCode(messageCode)
 
     gridID,ok = r.messageCodemaps[gcode]
 
-    log.Trace("dispatcher Handler func messageCode,messageCode,gridID:",messageCode,gcode,gridID)
+    log.Trace(
+        "dispatcher Handler func messageCode,messageCode,gridID:",
+        messageCode,gcode,gridID)
 
     return gridID,ok
 }
 
 //将协议编号分组以供Dispatch决策用那个Grid 来处理
-func (r *DefaultDispatcher) GroupCode(messageCode uint16) int {
+func (r *DefaultDispatcher) GroupCode(messageCode int) int {
     return int(messageCode / 100)
 }
 

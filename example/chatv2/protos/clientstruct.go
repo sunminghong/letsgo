@@ -20,7 +20,7 @@ var Endian int = helper.BigEndian
 
 // IClient  
 type Client struct {
-    *lnet.DefaultClient
+    *lnet.BaseClient
 }
 
 func MakeClient (name string,transport *lnet.Transport) lnet.IClient {

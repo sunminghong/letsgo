@@ -18,15 +18,22 @@ import (
 
 // IClient  
 type GridClient struct {
-    *DefaultClient
+    *BaseClient
+
+    Process ProcessHandleFunc
 }
 
 /*
-func MakeGridClient (name string,transport *Transport,process ProcessHandleFunc) IClient {
-    log.Trace("gridclient is connect:",name)
-    return c
+func ProccessHandle(code int,msg *MessageReader,c IClient,fromCid int) {
+    fmt.Println("message is request")
 }
-*/
+
+func MakeBaseClient (name string,transport *Transport) IClient {
+    c := &BaseClient{
+        BaseClient:&BaseClient{transport,name,CLIENT_TYPE_GENERAL},
+    }
+    c.Process = ProcessHandleFunc
+}*/
 
 //对数据进行拆包
 func (c *GridClient) ProcessDPs(dps []*DataPacket) {

@@ -15,75 +15,88 @@ import (
     "time"
     goconf "github.com/hgfischer/goconf"
     //"github.com/sunminghong/letsgo/helper"
+    . "github.com/sunminghong/letsgo/net"
     "github.com/sunminghong/letsgo/log"
 )
 
 //Dispatcher
-type Dispatcher interface {
+type IDispatcher interface {
     Init()
     //Add(client Client,protocols []int)
     Add(gridID int, messageCodes string)
-    Dispatch(dp DataPacket) (gridID int, ok bool)
+    Dispatch(dp *DataPacket) (gridID int, ok bool)
     GroupCode(messageCode int) int
 }
 
 type GateServer struct {
     *Server
 
-    Name        string
-
-    datagram    Datagram
-
-    Gate        *Server
     Grids       *ClientPool
 
     Dispatcher IDispatcher
+
+    //makeclient NewGateClientFunc
 }
 
+
+/*
 //define client
-type NewGateClientFunc func(name string, transport *Transport,gate *GateServer) Client
+type NewGateClientFunc func(name string, transport *Transport,gate *GateServer) IClient
 
 
-func NewDefaultGateServer(
-    makePlayerClient NewGateClientFunc, datagram Datagram,
-    defaultMakeForwardClient NewForwardClientFunc,
+func NewGateServer(
+    makePlayerClient NewGateClientFunc, datagram IDatagram,
+    MakeGridClient NewGateClientFunc,
     dispatcher IDispatcher) *GateServer {
 
-    gs := &GateServer{}
+        //Server:&Server{Clients:NewClientMap(),datagram:datagram,boardcast_chan_num:10,read_buffer_size:1024},
+    gs := &GateServer{
+        Server:NewServer(nil,datagram),
+    }
 
-    gs.datagram = datagram
-    gs.Gate = NewServer(makePlayerClient, datagram)
-    gs.Grids = NewClientPool(defaultMakeForwardClient,datagram)
+    //gs.Clients = NewClientMap()
+    gs.makeclient = makePlayerClient
+    //gs.datagram = datagram
+    //gs.boardcast_chan_num = 10
+    //gs.read_buffer_size = 1024
+
     gs.Dispatcher = dispatcher
+
+    gs.Grids = NewClientPool(defaultMakeGridClient,datagram)
 
     return gs
 }
+*/
 
 func NewGateServer(
-    makePlayerClient NewClientFunc, datagram Datagram,
-    defaultMakeGridClient NewClientFunc,
+    makePlayerClient NewClientFunc, datagram IDatagram,
+    makeGridClient NewClientFunc,
     dispatcher IDispatcher) *GateServer {
 
-    gs := &GateServer{}
+        //Server:&Server{Clients:NewClientMap(),datagram:datagram,boardcast_chan_num:10,read_buffer_size:1024},
+    gs := &GateServer{
+        Server:NewServer(makePlayerClient,datagram),
+    }
 
-    gs.datagram = datagram
-    gs.Gate = NewServer(makePlayerClient, datagram)
-    gs.Grids = NewClientPool(defaultMakeGridClient,datagram)
+    //gs.Server = NewServer(makePlayerClient,datagram)
+
     gs.Dispatcher = dispatcher
+
+    gs.Grids = NewClientPool(makeGridClient,datagram)
 
     return gs
 }
 
 //该函数主要是接受新的连接和注册用户在transport list
 func (gs *GateServer) transportHandler(newcid int, connection net.Conn) {
-    transport := NewTransport(newcid, connection, s,s.datagram)
+    transport := NewTransport(newcid, connection, gs,gs.Datagram)
     name := "c_"+strconv.Itoa(newcid)
-    client := s.makeclient(name,transport,gs)
-    s.Clients.Add(newcid, name, client)
+    client := gs.makeclient(name,transport)
+    gs.Clients.Add(newcid, name, client)
 
     //创建go的线程 使用Goroutine
-    go s.transportSender(transport, client)
-    go s.transportReader(transport, client)
+    go gs.transportSender(transport, client)
+    go gs.transportReader(transport, client)
 
     log.Debug("has clients:",s.Clients.Len())
 }

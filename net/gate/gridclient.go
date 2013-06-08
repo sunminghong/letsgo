@@ -16,7 +16,7 @@ import (
 
 // Client  
 type GridClient struct {
-    *DefaultClient
+    *BaseClient
 
     gate *GateServer
 }
@@ -26,6 +26,15 @@ func MakeGridClient (name string,transport *Transport,gate *GateServer) Client {
 
     c := &GridClient{transport,name,&username}
     c.gate = gate
+
+    //register to grid server
+    dp := &DataPacket{
+        FromCid: fromcid,
+        Data: msg.ToBytes(),
+        Type : DATAPACKET_TYPE_GATECONNECT,
+    }
+
+    transport.SendDP(dp)
 }
 
 //对数据进行拆包

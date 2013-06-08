@@ -14,6 +14,13 @@ import (
     "net"
 )
 
+const (
+    DATAPACKET_TYPE_GENERAL = 0
+    DATAPACKET_TYPE_DELAY = 1
+    DATAPACKET_TYPE_BOARDCAST = 3
+    DATAPACKET_TYPE_GATECONNECT = 3
+)
+
 //define a struct or class of rec transport connection
 type DataPacket struct {
     Type  byte
@@ -37,11 +44,15 @@ type IDatagram interface {
     PackWrite(write WriteFunc,dp *DataPacket) []byte
 }
 
+
 //define client
+type ProcessHandleFunc func(
+    code int,msg *MessageReader,c IClient,fromCid int)
+
 type NewClientFunc func(name string, transport *Transport) IClient
 
 const (
-    CLIENT_TYPE_GENERAL = 0 
+    CLIENT_TYPE_GENERAL = 0
     CLIENT_TYPE_GATE = 1
 )
 type IClient interface {

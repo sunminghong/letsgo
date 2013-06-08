@@ -17,22 +17,24 @@ import (
 
 // Client  
 type Client struct {
-    *DefaultClient
+    *BaseClient
 
     //gate *GateServer
 
     dispatcher IDispatcher
-    grids *ClientMaps
+    grids *ClientMap
 }
 
-func MakeClient (name string,transport *Transport,gate *GateServer) Client {
+func MakeClient (name string,transport *Transport,gate *GateServer) IClient {
     log.Trace("gateclient is connect:",name)
 
-    c := &Client{transport,name,&username}
-    //c.gate = gate
+    c := &Client{
+        BaseClient:&BaseClient{Transport:transport,Name:name},
+        dispatcher : gate.Dispatcher,
+        grids : gate.Grids.Clients,
+    }
 
-    c.dispatcher = gate.Dispatcher
-    c.grids = gate.Grids.Clients
+    return c
 }
 
 //对数据进行拆包
@@ -43,14 +45,17 @@ func (c *Client) ProcessDPs(dps []*DataPacket) {
         log.Trace("msg.code:",code)
 
         //dispatch to one grid
-        gridID,ok = c.dispatcher.Dispatch(dp)
+        gridID,ok := c.dispatcher.Dispatch(dp)
         if ok {
             log.Trace("dispatch to gridID",gridID)
             gridClient := c.grids.Get(gridID)
 
-            dp := &DataPacket{Type: DATAPACKET_TYPE_DELAY, Data: data}
-            dp.FromCid = c.Cid
-            gridClient.Transport.SendDP(dp)
+            dp.Type = DATAPACKET_TYPE_DELAY
+            dp.FromCid = c.Transport.Cid
+
+            gridClient.GetTransport().SendDP(dp)
+
+            //todo: 当grid超时处理是需要返回原协议失败
         } else {
             log.Error("messageCode has not grid process:",code)
         }
