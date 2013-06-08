@@ -34,7 +34,7 @@ type LGClientPool struct {
     localport int
 
     Quit    chan bool
-    boardcastChan    chan *LGDataPacket
+    broadcastChan    chan *LGDataPacket
 
     connaddr chan string
 }
@@ -56,8 +56,8 @@ func LGNewClientPool(newclient LGNewClientFunc, datagram LGIDatagram /*,runloop 
 
 
     //创建一个管道 chan map 需要make creates slices, maps, and channels only
-    cp.boardcastChan = make(chan *LGDataPacket,1)
-    go cp.boardcastHandler(cp.boardcastChan)
+    cp.broadcastChan = make(chan *LGDataPacket,1)
+    go cp.broadcastHandler(cp.broadcastChan)
 
     return cp
 }
@@ -175,11 +175,11 @@ func (cp *LGClientPool) transportSender(transport *LGTransport) {
     }
 }
 
-func (cp *LGClientPool) boardcastHandler(boardcastChan <-chan *LGDataPacket) {
+func (cp *LGClientPool) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
     for {
         //在go里面没有while do ，for可以无限循环
-        //Log("boardcastHandler: chan Waiting for input")
-        dp := <-boardcastChan
+        //Log("broadcastHandler: chan Waiting for input")
+        dp := <-broadcastChan
         //buf := c.datagram.pack(dp)
 
         sendCid := dp.FromCid
@@ -189,12 +189,12 @@ func (cp *LGClientPool) boardcastHandler(boardcastChan <-chan *LGDataPacket) {
             }
             c.GetTransport().outgoing <- dp
         }
-        //Log("boardcastHandler: Handle end!")
+        //Log("broadcastHandler: Handle end!")
     }
 }
 
-//send boardcast message data for other object
+//send broadcast message data for other object
 func (cp *LGClientPool) SendBroadcast(transport *LGTransport, dp *LGDataPacket) {
-    cp.boardcastChan <- dp
+    cp.broadcastChan <- dp
 }
 

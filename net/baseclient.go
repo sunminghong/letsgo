@@ -72,6 +72,6 @@ func (c *LGBaseClient) SendBroadcast(fromcid int,msg LGIMessageWriter) {
         FromCid: fromcid,
     }
 
-    c.Transport.SendBoardcast(dp)
+    c.Transport.SendBroadcast(dp)
 }
 

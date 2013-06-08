@@ -50,15 +50,15 @@ func (c *Client) Closed() {
     mw.SetCode(2011,0)
     mw.WriteString(msg,0)
 
-    c.Transport.SendBoardcast(mw.ToBytes())
+    c.Transport.SendBroadcast(mw.ToBytes())
 }
 
 func (c *Client) SendMessage(msg lnet.LGIMessageWriter) {
     c.Transport.SendDP(0,msg.ToBytes())
 }
 
-func (c *Client) SendBoardcast(msg lnet.LGIMessageWriter) {
-    c.Transport.SendBoardcast(msg.ToBytes())
+func (c *Client) SendBroadcast(msg lnet.LGIMessageWriter) {
+    c.Transport.SendBroadcast(msg.ToBytes())
 }
 
 func LGNewMessageWriter(c lnet.LGIClient) *lnet.MessageWriter {

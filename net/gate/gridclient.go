@@ -22,12 +22,17 @@ type LGGridClient struct {
     gate *LGGateServer
 }
 
-func LGMakeLGGridClient (name string,transport *LGTransport,gate *LGGateServer) LGIClient {
+func LGMakeLGGridClient (name string,transport *LGTransport) LGIClient {
     LGTrace("gridclient is connect:",name)
 
     c := &LGGridClient{LGBaseClient:&LGBaseClient{Transport:transport,Name:name}}
-    c.gate = gate
 
+    c.Register()
+
+    return c
+}
+
+func (c *LGGridClient) Register() {
     //register to grid server
     dp := &LGDataPacket{
         FromCid: 0,
@@ -36,8 +41,6 @@ func LGMakeLGGridClient (name string,transport *LGTransport,gate *LGGateServer) 
     }
 
     transport.SendDP(dp)
-
-    return c
 }
 
 //对数据进行拆包

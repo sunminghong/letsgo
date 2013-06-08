@@ -17,7 +17,7 @@ import (
 )
 
 type LGServer struct {
-    boardcast_chan_num int
+    broadcast_chan_num int
     read_buffer_size   int
 
     maxConnections int
@@ -32,7 +32,7 @@ type LGServer struct {
 
     TransportNum int
 
-    boardcastChan chan *LGDataPacket
+    broadcastChan chan *LGDataPacket
 }
 
 func LGNewServer(makeclient LGNewClientFunc, datagram LGIDatagram) *LGServer {
@@ -42,7 +42,7 @@ func LGNewServer(makeclient LGNewClientFunc, datagram LGIDatagram) *LGServer {
 
     s.Datagram = datagram
 
-    s.boardcast_chan_num = 10
+    s.broadcast_chan_num = 10
     s.read_buffer_size = 1024
 
     return s
@@ -56,8 +56,8 @@ func (s *LGServer) Start(addr string, maxConnections int) {
     //addr := host + ":" + strconv.Itoa(port)
 
     //创建一个管道 chan map 需要make creates slices, maps, and channels only
-    s.boardcastChan = make(chan *LGDataPacket, s.boardcast_chan_num)
-    go s.boardcastHandler(s.boardcastChan)
+    s.broadcastChan = make(chan *LGDataPacket, s.broadcast_chan_num)
+    go s.broadcastHandler(s.broadcastChan)
 
     LGInfo("listen with :", addr)
     netListen, error := net.Listen("tcp", addr)
@@ -162,11 +162,11 @@ func (s *LGServer) transportSender(transport *LGTransport, client LGIClient) {
     }
 }
 
-func (s *LGServer) boardcastHandler(boardcastChan <-chan *LGDataPacket) {
+func (s *LGServer) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
     for {
         //在go里面没有while do ，for可以无限循环
-        LGTrace("boardcastHandler: chan Waiting for input")
-        dp := <-boardcastChan
+        LGTrace("broadcastHandler: chan Waiting for input")
+        dp := <-broadcastChan
         //buf := s.Datagram.pack(dp)
 
         fromCid := dp.FromCid
@@ -183,12 +183,12 @@ func (s *LGServer) boardcastHandler(boardcastChan <-chan *LGDataPacket) {
             }
             c.GetTransport().outgoing <- dp
         }
-        LGTrace("boardcastHandler: Handle end!")
+        LGTrace("broadcastHandler: Handle end!")
     }
 }
 
-//send boardcast message data for other object
+//send broadcast message data for other object
 func (s *LGServer) SendBroadcast(transport *LGTransport, dp *LGDataPacket) {
-    s.boardcastChan <- dp
+    s.broadcastChan <- dp
 }
 

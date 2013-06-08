@@ -45,7 +45,7 @@ func (c *Client) ProcessDPs(dps []*lnet.LGDataPacket) {
         } else {
             msg = (*c.Username) + "> "+ md
         }
-        c.Transport.SendBoardcast([]byte(msg))
+        c.Transport.SendBroadcast([]byte(msg))
     }
 }
 
@@ -64,15 +64,15 @@ func (c *Client) Close() {
 
 func (c *Client) Closed() {
     msg := "system: " + (*c.Username) + " is leave!"
-    c.Transport.SendBoardcast([]byte(msg))
+    c.Transport.SendBroadcast([]byte(msg))
 }
 
 func (c *Client) SendMessage(msg lnet.LGIMessageWriter) {
     c.Transport.SendDP(0,msg.ToBytes())
 }
 
-func (c *Client) SendBoardcast(msg lnet.LGIMessageWriter) {
-    c.Transport.SendBoardcast(msg.ToBytes())
+func (c *Client) SendBroadcast(msg lnet.LGIMessageWriter) {
+    c.Transport.SendBroadcast(msg.ToBytes())
 }
 
 func main() {

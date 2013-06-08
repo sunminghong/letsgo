@@ -55,5 +55,5 @@ func LGProcess1011(c *Client, reader *lnet.MessageReader) {
     mw := NewMessageWriter(c)
     mw.SetCode(2011, 0)
     mw.WriteString(msg, 0)
-    c.SendBoardcast(mw)
+    c.SendBroadcast(mw)
 }

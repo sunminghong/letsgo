@@ -62,7 +62,7 @@ func (c *LGTransport) SendDP(dp *LGDataPacket) {
     c.outgoing <- dp
 }
 
-func (c *LGTransport) SendBoardcast(dp *LGDataPacket) {
+func (c *LGTransport) SendBroadcast(dp *LGDataPacket) {
     c.Server.SendBroadcast(c, dp)
 }
 

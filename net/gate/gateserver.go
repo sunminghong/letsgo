@@ -51,7 +51,7 @@ func LGNewGateServer(
     MakeLGGridClient NewGateClientFunc,
     dispatcher IDispatcher) *LGGateServer {
 
-        //Server:&Server{Clients:NewLGClientMap(),datagram:datagram,boardcast_chan_num:10,read_buffer_size:1024},
+        //Server:&Server{Clients:NewLGClientMap(),datagram:datagram,broadcast_chan_num:10,read_buffer_size:1024},
     gs := &GateServer{
         Server:NewServer(nil,datagram),
     }
@@ -59,7 +59,7 @@ func LGNewGateServer(
     //gs.Clients = NewLGClientMap()
     gs.makeclient = makePlayerClient
     //gs.datagram = datagram
-    //gs.boardcast_chan_num = 10
+    //gs.broadcast_chan_num = 10
     //gs.read_buffer_size = 1024
 
     gs.Dispatcher = dispatcher
@@ -75,7 +75,7 @@ func LGNewGateServer(
     makeGridClient LGNewClientFunc,
     dispatcher LGIDispatcher) *LGGateServer {
 
-        //Server:&Server{Clients:NewLGClientMap(),datagram:datagram,boardcast_chan_num:10,read_buffer_size:1024},
+        //Server:&Server{Clients:NewLGClientMap(),datagram:datagram,broadcast_chan_num:10,read_buffer_size:1024},
     gs := &LGGateServer{
         LGServer:LGNewServer(makePlayerClient,datagram),
     }
