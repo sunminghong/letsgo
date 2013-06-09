@@ -34,13 +34,13 @@ var level = LGLevelLGTrace
 
 // LogLGLevel returns the global log level and can be used in
 // own implementations of the logger interface.
-func LGLevel() int {
+func LGGetLevel() int {
     return level
 }
 
 // SetLogLGLevel sets the global log level used by the simple
 // logger.
-func LGSetLGLevel(l int) {
+func LGSetLevel(l int) {
     level = l
 }
 

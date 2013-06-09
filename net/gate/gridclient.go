@@ -19,10 +19,11 @@ import (
 type LGGridClient struct {
     *LGBaseClient
 
-    gate *LGGateServer
+    Gate *LGGateServer
+    clients *LGClientMap
 }
-
-func LGMakeLGGridClient (name string,transport *LGTransport) LGIClient {
+/*
+func LGNewGridClient (name string,transport *LGTransport) LGIClient {
     LGTrace("gridclient is connect:",name)
 
     c := &LGGridClient{LGBaseClient:&LGBaseClient{Transport:transport,Name:name}}
@@ -31,8 +32,11 @@ func LGMakeLGGridClient (name string,transport *LGTransport) LGIClient {
 
     return c
 }
+*/
 
 func (c *LGGridClient) Register() {
+    c.clients = c.Gate.Clients
+
     //register to grid server
     dp := &LGDataPacket{
         FromCid: 0,
@@ -40,7 +44,7 @@ func (c *LGGridClient) Register() {
         Type : LGDATAPACKET_TYPE_GATECONNECT,
     }
 
-    transport.SendDP(dp)
+    c.Transport.SendDP(dp)
 }
 
 //对数据进行拆包
@@ -53,11 +57,11 @@ func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
         case LGDATAPACKET_TYPE_DELAY:
             dp.Type =LGDATAPACKET_TYPE_GENERAL
 
-            c.gate.Clients.Get(dp.FromCid).GetTransport().SendDP(dp)
+            c.clients.Get(dp.FromCid).GetTransport().SendDP(dp)
 
         case LGDATAPACKET_TYPE_BROADCAST:
             //c.gate.SendBroadcast(c.gate.Clients.Get(dp.FromCid).GetTransport(),dp)
-            c.gate.SendBroadcast(nil,dp)
+            c.Gate.SendBroadcast(nil,dp)
 
         default:
             //process msg ,eg:command line

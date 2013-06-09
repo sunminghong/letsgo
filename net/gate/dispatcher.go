@@ -20,12 +20,17 @@ type LGDefaultDispatcher struct {
     messageCodemaps map[int]int
 }
 
-func (r *LGDefaultDispatcher) Init() {
+func LGNewDispatcher() *LGDefaultDispatcher {
+    r := &LGDefaultDispatcher{make(map[int]int)}
+    return r
+}
+
+func (r *LGDefaultDispatcher)Init()  {
     r.messageCodemaps = make(map[int]int)
 }
 
-func (r *LGDefaultDispatcher) Add(gridID int, messageCodes string) {
-    codes:= strings.Split(messageCodes,",")
+func (r *LGDefaultDispatcher) Add(gridID int, messageCodes *string) {
+    codes:= strings.Split(*messageCodes,",")
     for _,p_ := range codes {
         p := strings.Trim(p_," ")
         if len(p) == 0 {

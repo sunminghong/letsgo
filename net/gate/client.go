@@ -21,11 +21,13 @@ type LGClient struct {
 
     //gate *LGGateServer
 
+    Gate *LGGateServer
     dispatcher LGIDispatcher
     grids *LGClientMap
 }
 
-func LGMakeClient (name string,transport *LGTransport,gate *LGGateServer) LGIClient {
+/*
+func LGNewClient (name string,transport *LGTransport,gate *LGGateServer) LGIClient {
     LGTrace("gateclient is connect:",name)
 
     c := &LGClient{
@@ -36,16 +38,22 @@ func LGMakeClient (name string,transport *LGTransport,gate *LGGateServer) LGICli
 
     return c
 }
+*/
+
+func (c *LGClient) Init() {
+    c.dispatcher = c.Gate.Dispatcher
+    c.grids = c.Gate.Grids.Clients
+}
 
 //对数据进行拆包
 func (c *LGClient) ProcessDPs(dps []*LGDataPacket) {
     for _, dp := range dps {
         //msg := NewMessageReader(dp.Data,c.Transport.Stream.Endian)
-        code := c.Transport.Stream.Endianer.Uint16(dp.Data)
+        code := int(c.Transport.Stream.Endianer.Uint16(dp.Data))
         LGTrace("msg.code:",code)
 
         //dispatch to one grid
-        gridID,ok := c.dispatcher.Dispatch(dp)
+        gridID,ok := c.dispatcher.Dispatch(code)
         if ok {
             LGTrace("dispatch to gridID",gridID)
             gridClient := c.grids.Get(gridID)
