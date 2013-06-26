@@ -64,7 +64,7 @@ func (d *LGDatagram) decrypt(plan []byte){
 }
 
 
-//flag1(byte)+flag2(byte)+datatype(byte)+data(datasize(int32)+body)+fromcid(int16)
+//flag1(byte)+flag2(byte)+datatype(byte)+data(datasize(int32)+body)+fromcid(int32)
 //对数据进行拆包
 func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
     dps = []*LGDataPacket{}
@@ -113,7 +113,7 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
                 if dataType == LGDATAPACKET_TYPE_GENERAL{
                     dpSize = int(_dpSize)
                 } else {
-                    dpSize = int(_dpSize) + 2
+                    dpSize = int(_dpSize) + 4
                 }
 
                 pos = cs.GetPos()
@@ -136,8 +136,8 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
             dp := &LGDataPacket{Type:dataType}
 
             if dataType != LGDATAPACKET_TYPE_GENERAL {
-                dp.FromCid = int(d.Endianer.Uint16(data[dpSize-2:]))
-                dp.Data = data[:dpSize-2]
+                dp.FromCid = int(d.Endianer.Uint32(data[dpSize-4:]))
+                dp.Data = data[:dpSize-4]
             } else {
                 dp.Data = data
             }
@@ -166,7 +166,7 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
 func (d *LGDatagram) Pack__(dp *LGDataPacket) []byte {
     ilen := len(dp.Data)
     if (dp.Type != LGDATAPACKET_TYPE_GENERAL) {
-        ilen += 2
+        ilen += 4
     }
     buf := make([]byte, ilen+7)
 
@@ -174,14 +174,14 @@ func (d *LGDatagram) Pack__(dp *LGDataPacket) []byte {
     buf[1] = byte(mask2)
     buf[2] = byte(dp.Type)
 
-    d.Endianer.PutUint32(buf[3:], uint32(ilen-2))
+    d.Endianer.PutUint32(buf[3:], uint32(ilen-4))
 
     d.encrypt(buf)
 
     copy(buf[7:], dp.Data)
 
     if (dp.Type != LGDATAPACKET_TYPE_GENERAL) {
-        d.Endianer.PutUint16(buf[5+ilen:], uint16(dp.FromCid))
+        d.Endianer.PutUint32(buf[3+ilen:], uint32(dp.FromCid))
     }
     return buf
 }
@@ -204,8 +204,8 @@ func (d *LGDatagram) PackWrite(write LGWriteFunc,dp *LGDataPacket) []byte {
     write(dp.Data)
 
     if (dp.Type == LGDATAPACKET_TYPE_DELAY) {
-        cid := make([]byte,2)
-        d.Endianer.PutUint16(cid, uint16(dp.FromCid))
+        cid := make([]byte,4)
+        d.Endianer.PutUint32(cid, uint32(dp.FromCid))
         write(cid)
     }
 

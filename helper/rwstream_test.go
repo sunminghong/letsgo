@@ -22,8 +22,8 @@ import (
 func LGTest_NewLGRWStream(t *testing.T){
     bys :=[]byte{1,2,3,4,5,6,7,8,9,10}
 
-    b := NewLGRWStream(bys,BigEndian)
-    if b.Endian != BigEndian{
+    b := LGNewRWStream(bys,LGBigEndian)
+    if b.Endian != LGBigEndian{
         t.Error("NewLGRWStream error:BigEndian is error",b.Endian)
     }
 
@@ -38,7 +38,7 @@ func LGTest_NewLGRWStream(t *testing.T){
 func LGTest_Init(t *testing.T) {
     bytes :=[]byte{1,2,3,4,5,6,7,8,9,10}
 
-    b := NewLGRWStream(bytes,BigEndian)
+    b := LGNewRWStream(bytes,LGBigEndian)
     b.Init()
 
     if (b.last !=0) || (b.end != 0) || (b.off !=0) {
@@ -49,7 +49,7 @@ func LGTest_Init(t *testing.T) {
 func LGTest_RW(t *testing.T) {
     bytes :=[]byte{1,2,3,4,5,6,7,8,9,10}
 
-    b := NewLGRWStream(bytes,BigEndian)
+    b := LGNewRWStream(bytes,LGBigEndian)
     //fmt.Println("b.buf Len(),off,end,last=",b.Len(),b.off,b.end,b.last)
     b.Init()
     //fmt.Println("b.buf Len(),off,end,last=",b.Len(),b.off,b.end,b.last)

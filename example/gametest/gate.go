@@ -1,11 +1,11 @@
 /*=============================================================================
 #     FileName: gate.go
-#         Desc: game server
+#         Desc: game gate server
 #       Author: sunminghong
 #        Email: allen.fantasy@gmail.com
 #     HomePage: http://weibo.com/5d13
 #      Version: 0.0.1
-#   LastChange: 2013-06-08 17:16:13
+#   LastChange: 2013-06-09 10:09:28
 #      History:
 =============================================================================*/
 package main
@@ -52,6 +52,7 @@ func newGridClient (name string,transport *LGTransport) LGIClient {
 }
 
 func newGateServer() *LGGateServer {
+    //todo: server endian
     datagram := LGNewDatagram(endian)
     gs := LGNewGateServer(
         newPlayerClient,datagram,newGridClient,LGNewDispatcher())

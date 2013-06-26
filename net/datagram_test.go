@@ -14,7 +14,7 @@ import (
     //"encoding/binary"
     "testing"
     "bytes"
-    "fmt"
+    . "github.com/sunminghong/letsgo/helper"
 )
 
 /*
@@ -27,11 +27,11 @@ type LGIDatagram interface {
 */
 
 func LGTest_Pack(t *testing.T) {
-    datagram := NewDatagram(BigEndian)
+    datagram := LGNewDatagram(LGBigEndian)
 
     data := []byte("1234567890")
     dp := &LGDataPacket{Type:1,Data:data}
-    data2 := datagram.Pack(dp)
+    data2 := datagram.Pack__(dp)
 
     _data := [17]byte{0x59 ^ 0x37,0x7a ^ 0x37,1 ^ 0x37,0 ^ 0x37,0 ^ 0x37,0 ^ 0x37,10 ^ 0x37}
     copy(_data[7:],data)
@@ -50,31 +50,26 @@ func LGTest_Fetch(t *testing.T) {
     }
     */
 
-    datagram := NewDatagram(BigEndian)
-    trans := NewTransport(1,nil,nil)
+    datagram := LGNewDatagram(LGBigEndian)
+    trans := LGNewTransport(1,nil,nil,datagram)
 
     for ii:=0;ii<3;ii++ {
         if ii ==2 {
             trans.InitBuff()
         }
 
-    fmt.Println("buff1:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
     buff := []byte{0x59 ^ 0x37,0x7a ^ 0x37,1 ^ 0x37,0 ^ 0x37,0 ^ 0x37,0 ^ 0x37,10 ^ 0x37}
     trans.BuffAppend(buff)
 
-    fmt.Println("buff1:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
     data0 := []byte("1234567890")
     trans.BuffAppend(data0)
 
-    fmt.Println("buff2:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
     data := trans.Stream.Bytes()
     trans.BuffAppend(data)
     trans.BuffAppend(data)
-    fmt.Println("buff3:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
     trans.BuffAppend(data)
     trans.BuffAppend(data)
     
-    fmt.Println("buff0:",trans.Stream.Bytes(),trans.Stream.GetPos(),trans.Stream.last)
 
     n,dps := datagram.Fetch(trans)
     if n != 5 || len(dps)!= 5 {

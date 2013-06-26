@@ -5,15 +5,15 @@
 #        Email: allen.fantasy@gmail.com
 #     HomePage: http://weibo.com/5d13
 #      Version: 0.0.1
-#   LastChange: 2013-05-17 18:43:13
+#   LastChange: 2013-06-09 10:40:02
 #      History:
 =============================================================================*/
 package protos
 
 import (
     //"fmt"
-    "github.com/sunminghong/letsgo/log"
-    lnet "github.com/sunminghong/letsgo/net"
+    . "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/net"
     "strconv"
 )
 
@@ -21,8 +21,8 @@ func init() {
     Handlers[1011] = Process1011
 }
 
-func Process1011(c *Client, reader *lnet.MessageReader) {
-    log.LGTrace("process 1011 is called")
+func Process1011(code int,reader LGIMessageReader,c LGIClient,fromCid int) {
+    LGTrace("process 1011 is called")
 
     md := reader.ReadString()
 
@@ -34,7 +34,7 @@ func Process1011(c *Client, reader *lnet.MessageReader) {
         _max := md[8:]
         max, err := strconv.Atoi(_max)
         if err != nil {
-            log.Warn("setmax is error:",err)
+            LGWarn("setmax is error:",err)
             return
         }
         c.GetTransport().Server.SetMaxConnections(max)
@@ -50,10 +50,12 @@ func Process1011(c *Client, reader *lnet.MessageReader) {
         msg = (*c.Username) + "> " + md
     }
 
-    log.Debug("1011 write out:", msg)
+    LGDebug("1011 write out:", msg)
 
-    mw := NewMessageWriter(c)
+    mw := newMessageWriter(c)
     mw.SetCode(2011, 0)
     mw.WriteString(msg, 0)
-    c.SendBroadcast(mw)
+
+    c.SendBroadcast(fromCid,mw)
 }
+

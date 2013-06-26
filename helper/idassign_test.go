@@ -18,7 +18,7 @@ import (
 )
 
 var maxid = 1 << 16
-var ida *LGIDAssign = NewLGIDAssign(maxid)
+var ida *LGIDAssign = LGNewIDAssign(maxid)
 
 
 func log(v ...interface{}) {

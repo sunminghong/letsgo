@@ -5,7 +5,7 @@
 #        Email: allen.fantasy@gmail.com
 #     HomePage: http://weibo.com/5d13
 #      Version: 0.0.1
-#   LastChange: 2013-05-23 15:42:14
+#   LastChange: 2013-06-09 10:09:20
 #      History:
 =============================================================================*/
 package gate
@@ -85,6 +85,7 @@ func LGNewGateServer(
 
     return gs
 }
+
 /*
 //该函数主要是接受新的连接和注册用户在transport list
 func (gs *LGGateServer) transportHandler(newcid int, connection net.Conn) {
@@ -100,6 +101,15 @@ func (gs *LGGateServer) transportHandler(newcid int, connection net.Conn) {
     LGDebug("has clients:",s.Clients.Len())
 }
 */
+
+func (gs *LGGateServer) AllocTransportid() int {
+    cid := gs.LGServer.AllocTransportid()
+    if cid == 0 {
+        return cid
+    }
+
+    return LGGenerateID(cid)
+}
 
 func (gs *LGGateServer) Start(gateconfigfile *string,gridsconfigfile *string) {
     //parse config ini file

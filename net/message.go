@@ -92,6 +92,7 @@ func (msg *LGMessageWriter) writeMeta(datatype int) {
 func (msg *LGMessageWriter) WriteUint16(x int, wind int) {
     msg.preWrite(wind)
 
+    //todo:if x=0 then dont't write
     msg.buf.WriteUint16(uint16(x))
     msg.writeMeta(TY_UINT16)
     msg.wind++

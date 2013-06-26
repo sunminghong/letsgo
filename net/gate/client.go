@@ -26,20 +26,6 @@ type LGClient struct {
     grids *LGClientMap
 }
 
-/*
-func LGNewClient (name string,transport *LGTransport,gate *LGGateServer) LGIClient {
-    LGTrace("gateclient is connect:",name)
-
-    c := &LGClient{
-        LGBaseClient:&LGBaseClient{Transport:transport,Name:name},
-        dispatcher : gate.Dispatcher,
-        grids : gate.Grids.Clients,
-    }
-
-    return c
-}
-*/
-
 func (c *LGClient) Init() {
     c.dispatcher = c.Gate.Dispatcher
     c.grids = c.Gate.Grids.Clients

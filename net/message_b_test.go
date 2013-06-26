@@ -13,6 +13,7 @@ package net
 import (
     "testing"
     "fmt"
+    . "github.com/sunminghong/letsgo/helper"
 )
 
 func LGBenchmark_MessageWrite(t *testing.B) {
@@ -22,7 +23,7 @@ func LGBenchmark_MessageWrite(t *testing.B) {
 }
 
 func test() {
-    msgw := NewMessageWriter(BigEndian)
+    msgw := LGNewMessageWriter(LGBigEndian)
 
     a1 := 989887834
     a2 := 243
@@ -36,7 +37,7 @@ func test() {
     b2 :=uint(42323499)
     b3 :="bsdbbbb"
 
-    b4 := NewMessageListWriter(BigEndian) 
+    b4 := LGNewMessageListWriter(LGBigEndian) 
     for i:=0;i<5;i++ {
         b4.WriteStartTag()
         
@@ -59,7 +60,7 @@ func test() {
     msgw.SetCode(2,0)
     data := msgw.ToBytes()
 
-    msg := NewMessageReader(data,BigEndian)
+    msg := LGNewMessageReader(data,LGBigEndian)
 
     v1 := msg.ReadInt() 
     if v1!= a1 {

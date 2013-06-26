@@ -13,11 +13,11 @@ package net
 import (
     "testing"
     "fmt"
+    . "github.com/sunminghong/letsgo/helper"
 )
 
 func LGTest_MessageWrite(t *testing.T) {
-    msgw := NewMessageWriter(BigEndian)
-
+    msgw := LGNewMessageWriter(LGBigEndian)
     a1 := 989887834
     a2 := 243
     a3 := 3298374
@@ -30,10 +30,11 @@ func LGTest_MessageWrite(t *testing.T) {
     b2 :=uint(42323499)
     b3 :="bsdbbbb"
 
-    b4 := NewMessageListWriter(BigEndian) 
+    //编码/写数据
+    b4 := LGNewMessageListWriter(LGBigEndian)
     for i:=0;i<5;i++ {
         b4.WriteStartTag()
-        
+
         b4.WriteUint(i,0)
         b4.WriteUint(i+1,0)
         b4.WriteUint(i+2,0)
@@ -53,7 +54,8 @@ func LGTest_MessageWrite(t *testing.T) {
     msgw.SetCode(1,1)
     data := msgw.ToBytes()
 
-    msg := NewMessageReader(data,BigEndian)
+    //解码/读数据
+    msg := LGNewMessageReader(data,LGBigEndian)
 
     v1 := msg.ReadInt() 
     if v1!= a1 {

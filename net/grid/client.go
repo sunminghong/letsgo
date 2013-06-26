@@ -37,11 +37,13 @@ func LGMakeLGBaseClient (name string,transport *LGTransport) LGIClient {
 
 //对数据进行拆包
 func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
+    stream := c.Transport.Stream
+    endianer := stream.Endianer
     for _, dp := range dps {
-        code := int(c.Transport.Stream.Endianer.Uint16(dp.Data))
+        code := int(endianer.Uint16(dp.Data))
         LGTrace("msg.code:",code,len(dp.Data))
 
-        msg := LGNewMessageReader(dp.Data,c.Transport.Stream.Endian)
+        msg := LGNewMessageReader(dp.Data,stream.Endian)
 
         switch dp.Type {
         case LGDATAPACKET_TYPE_DELAY:

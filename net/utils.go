@@ -1,18 +1,23 @@
 package net
 
 import (
-    //"fmt"
-    //"bytes"
-    "encoding/binary"
+    "math/rand"
 )
 
-func LGInt32ToBytes(i int32) []byte {
-    var buf = make([]byte, 8)
-    binary.BigEndian.PutUint32(buf, uint32(i))
-    return buf
+
+//add check code to old id
+func LGGenerateID(oldid int) int {
+    code := rand.Intn(1024)
+    return oldid << 10 | int(code)
 }
 
+func LGCombineID(oldid int,code int) int {
+    return oldid << 10 | code
+}
 
-func LGBytesToInt32(buf []byte) int32 {
-    return int32(binary.BigEndian.Uint32(buf))
+func LGParseID(id int) (oldid int,checkcode int) {
+    //return fromCid >> 10,fromCid & 3ff
+    oldid = id >> 10
+    checkcode = id - oldid
+    return
 }

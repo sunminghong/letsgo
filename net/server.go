@@ -77,7 +77,7 @@ func (s *LGServer) Start(addr string, maxConnections int) {
             if error != nil {
                 LGError("Transport error: ", error)
             } else {
-                newcid := s.allocTransportid()
+                newcid := s.AllocTransportid()
                 if newcid == 0 {
                     LGWarn("connection num is more than ",s.maxConnections)
                 } else {
@@ -96,7 +96,7 @@ func (s *LGServer) removeClient(cid int) {
     s.Clients.Remove(cid)
 }
 
-func (s *LGServer) allocTransportid() int {
+func (s *LGServer) AllocTransportid() int {
     if (s.Clients.Len() >= s.maxConnections) {
         return 0
     }

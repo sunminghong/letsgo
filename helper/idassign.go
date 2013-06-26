@@ -20,9 +20,9 @@ import (
 var (
     MaxID int = 32768
     bitsPerByte int = 8
-    bytesPerUint int = int(unsafe.Sizeof(uint(1)))
+    bytesPerUint int = int(unsafe.Sizeof(int(1)))
     colMask int = int(bitsPerByte * bytesPerUint -1)
-    //lineMask uint = uint(bytesPerUint + 1)
+    //lineMask int = int(bytesPerUint + 1)
     lineMask uint = 6
 )
 
@@ -35,7 +35,7 @@ type LGIDAssign struct {
     lastid int
 
     //map页，用于指示某个ID是否分配
-    page []uint
+    page []int
 
     free int
 
@@ -67,7 +67,7 @@ func LGNewIDAssign(maxid ...int) *LGIDAssign {
 
     go func() {
         for {
-            offset := <- ia.freeChan
+            offset := <-ia.freeChan
             ia.free_(offset)
         }
     }()
@@ -83,14 +83,13 @@ func (ia *LGIDAssign) Init() {
     ia.free = ia.maxid
     ia.bitsPerPageMask = ia.maxid -1
     ia.first = true
-    ia.page = make([]uint,int((ia.maxid)/bytesPerUint)+1)[:]
+    ia.page = make([]int,int((ia.maxid)/bytesPerUint)+1)[:]
 }
 
 //分配一个ID，如果没有可分配的ID 了，就返回0
 func (ia *LGIDAssign) GetFree() int {
-    
     select {
-    case _id := <- ia.idChan:
+    case _id := <-ia.idChan:
         return _id
     case <- time.After(1 * time.Second):
         return 0
@@ -109,10 +108,10 @@ func (ia *LGIDAssign) getFreeChan() (chan int) {
     go func() {
         for {
             var _id int
-            _id = ia.getFree() 
+            _id = ia.getFree()
             for _id ==0 {
                 time.Sleep(200*time.Millisecond)
-                _id = ia.getFree() 
+                _id = ia.getFree()
             }
 
             out <- _id
@@ -127,6 +126,9 @@ func (ia *LGIDAssign) free_(offset int) {
         return
     }
     ia.setBit(offset,0)
+    //if offset > 0 {
+    //    ia.lastid = offset -1
+    //}
     ia.free ++
 }
 
@@ -178,16 +180,16 @@ func (ia *LGIDAssign) getFree() int {
         return 0
     }
 
-    if ia.first {
-        ia.lastid ++
-        if ia.lastid <= ia.maxid {
-            ia.setBit(ia.lastid,1)
-            ia.free --
-            return ia.lastid
-        }
-        ia.lastid = 0
-        ia.first = false
-    }
+    //if ia.first {
+    //    ia.lastid ++
+    //    if ia.lastid <= ia.maxid {
+    //        ia.setBit(ia.lastid,1)
+    //        ia.free --
+    //        return ia.lastid
+    //    }
+    //    ia.lastid = 0
+    //    ia.first = false
+    //}
 
     //fmt.Println("lastid:",ia.lastid,ia.bitsPerPageMask)
     lid := ia.lastid + 1
