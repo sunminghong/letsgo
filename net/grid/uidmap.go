@@ -28,11 +28,13 @@ type LGUidMap struct {
     uidMap *LGMap
 }
 
-func NewLGUidMap() {
+func NewLGUidMap() *LGUidMap {
     c := &LGUidMap{}
 
     c.uidMap = NewLGMap()
     //LGTrace("kidMask", unsafe.Sizeof(int(1))<<3-1)
+
+    return c
 }
 
 func (self *LGUidMap) GetUid(fromCid int, cid int) int {
@@ -67,7 +69,7 @@ func (self *LGUidMap) GetUid(fromCid int, cid int) int {
     return 0
 }
 
-func (self *LGUidMap) RecordUid(fromCid int, cid int, uid int) {
+func (self *LGUidMap) SaveUid(fromCid int, cid int, uid int) {
     var kid int
 
     if fromCid > 0 {

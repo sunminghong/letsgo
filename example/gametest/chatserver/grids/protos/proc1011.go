@@ -17,14 +17,10 @@ import (
     "strconv"
 )
 
-func init() {
-    Handlers[1011] = Process1011
-}
-
-func Process1011(code int,reader LGIMessageReader,c LGIClient,fromCid int) {
+func Process1011(msgReader LGIMessageReader,c LGIClient,fromCid int,session *Session) {
     LGTrace("process 1011 is called")
 
-    md := reader.ReadString()
+    md := msgReader.ReadString()
 
     switch {
     case md == "/quit":
@@ -42,12 +38,18 @@ func Process1011(code int,reader LGIMessageReader,c LGIClient,fromCid int) {
     }
 
     var msg string
-    if *c.Username == "someone" {
-        c.Username = &md
+    if session == nil {
+        //this user is not register
+        session = &Session{&md}
+
+        cid := c.GetTransport().Cid
+        uid := (fromCid << 5) + cid
+        Uidmap.SaveUid(fromCid,cid,uid)
+        SetSession(uid,session)
 
         msg = "system: welcome to " + md + "!"
     } else {
-        msg = (*c.Username) + "> " + md
+        msg = (*session.Username) + "> " + md
     }
 
     LGDebug("1011 write out:", msg)

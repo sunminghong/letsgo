@@ -31,11 +31,11 @@ func LGNewGridClient (name string,transport *LGTransport) LGIClient {
     c.Register()
 
     return c
-}
-*/
+}*/
 
 func (c *LGGridClient) Register() {
-    c.clients = c.Gate.Clients
+    aa := c.Gate.Clients
+    c.clients = aa
 
     //register to grid server
     dp := &LGDataPacket{
@@ -51,7 +51,7 @@ func (c *LGGridClient) Register() {
 func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
     for _, dp := range dps {
         code := c.Transport.Stream.Endianer.Uint16(dp.Data)
-        LGTrace("msg.code:",code)
+        LGTrace("gridclient's processdps() \nmsg.code:",code)
 
         switch dp.Type {
         case LGDATAPACKET_TYPE_DELAY:

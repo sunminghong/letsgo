@@ -18,7 +18,7 @@ const (
     LGDATAPACKET_TYPE_GENERAL = 0
     LGDATAPACKET_TYPE_DELAY = 1
     LGDATAPACKET_TYPE_BROADCAST = 3
-    LGDATAPACKET_TYPE_GATECONNECT = 3
+    LGDATAPACKET_TYPE_GATECONNECT = 4
 )
 
 //define a struct or class of rec transport connection
@@ -41,13 +41,13 @@ type LGIDatagram interface {
     SetEndian(endian int)
     Fetch(c *LGTransport) (n int, dps []*LGDataPacket)
     //Pack(dp *LGDataPacket) []byte
-    PackWrite(write LGWriteFunc,dp *LGDataPacket) []byte
+    PackWrite(write LGWriteFunc,dp *LGDataPacket)
 }
 
 
 //define client
 type LGProcessHandleFunc func(
-    code int,msg LGIMessageReader,c LGIClient,fromCid int)
+    msg LGIMessageReader,c LGIClient,fromCid int)
 
 type LGNewClientFunc func(name string, transport *LGTransport) LGIClient
 
@@ -106,6 +106,7 @@ type LGIMessageWriter interface {
 ///////////////////////////////////////////////////////////////////////////////
 
 type LGIMessageReader interface {
+    ReadCode() int
     ReadUint() int
     ReadInt() int
     ReadUint32() int
@@ -114,7 +115,7 @@ type LGIMessageReader interface {
     //ReadList() *MessageListReader
 }
 
-type LGILGIDAssign interface {
+type LGIIDAssign interface {
     GetFree() int
     Free(id int)
 }

@@ -12,12 +12,11 @@ package protos
 
 import (
     . "github.com/sunminghong/letsgo/helper"
-    . "github.com/sunminghong/letsgo/net"
+    . "github.com/sunminghong/letsgo/net/grid"
 )
 
-const (
-    kidMask = 1 << 31
-)
+
+var Uidmap *LGUidMap = NewLGUidMap()
 
 type Session struct {
     Username *string

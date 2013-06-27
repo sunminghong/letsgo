@@ -39,17 +39,10 @@ type LGClientPool struct {
     connaddr chan string
 }
 
-func LGNewClientPool(newclient LGNewClientFunc, datagram LGIDatagram /*,runloop IRunLoop*/) *LGClientPool {
+func LGNewClientPool(newclient LGNewClientFunc, datagram LGIDatagram ) *LGClientPool {
     cp := &LGClientPool{Clients: LGNewClientMap()}
     cp.newclient = newclient
     cp.datagram = datagram
-    /*
-       if runloop != nil {
-           c.runloop = runloop
-       } else {
-           c.runloop = NewRunLoop()
-       }
-    */
 
     cp.Quit = make(chan bool)
     cp.read_buffer_size = 1024
@@ -144,9 +137,9 @@ func (cp *LGClientPool) transportReader(transport *LGTransport, client LGIClient
         //Log("read to buff:", bytesRead)
         transport.BuffAppend(buffer[0:bytesRead])
 
-        //Log("transport.Buff", transport.Stream.Bytes())
-        n, dps := cp.datagram.Fetch(transport)
-        //Log("fetch message number", n)
+        LGTrace("gridclient transport.Buff", transport.Stream.Bytes())
+        n, dps := transport.Fetch()
+        LGTrace("fetch message number", n)
         if n > 0 {
             client.ProcessDPs(dps)
         }
@@ -162,7 +155,7 @@ func (cp *LGClientPool) transportSender(transport *LGTransport) {
             //buf := cp.datagram.Pack(dp)
             //transport.Conn.Write(buf)
 
-            cp.datagram.PackWrite(transport.Conn.Write,dp)
+            transport.PackWrite(dp)
         case <-transport.Quit:
             //Log("Transport ", transport.Cid, " quitting")
             transport.Conn.Close()

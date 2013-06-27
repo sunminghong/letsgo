@@ -13,7 +13,7 @@ package gate
 import (
     "strconv"
     "time"
-    //"net"
+    "net"
     goconf "github.com/sunminghong/goconf"
     . "github.com/sunminghong/letsgo/net"
     . "github.com/sunminghong/letsgo/log"
@@ -40,36 +40,6 @@ type LGGateServer struct {
     //makeclient NewGateClientFunc
 }
 
-
-/*
-//define client
-type LGNewGateClientFunc func(name string, transport *LGTransport,gate *LGGateServer) LGIClient
-
-
-func LGNewGateServer(
-    makePlayerClient NewGateClientFunc, datagram LGIDatagram,
-    MakeLGGridClient NewGateClientFunc,
-    dispatcher IDispatcher) *LGGateServer {
-
-        //Server:&Server{Clients:NewLGClientMap(),datagram:datagram,broadcast_chan_num:10,read_buffer_size:1024},
-    gs := &GateServer{
-        Server:NewServer(nil,datagram),
-    }
-
-    //gs.Clients = NewLGClientMap()
-    gs.makeclient = makePlayerClient
-    //gs.datagram = datagram
-    //gs.broadcast_chan_num = 10
-    //gs.read_buffer_size = 1024
-
-    gs.Dispatcher = dispatcher
-
-    gs.Grids = NewClientPool(defaultMakeLGGridClient,datagram)
-
-    return gs
-}
-*/
-
 func LGNewGateServer(
     newPlayerClient LGNewClientFunc, datagram LGIDatagram,
     newGridClient LGNewClientFunc,
@@ -84,6 +54,23 @@ func LGNewGateServer(
     gs.Grids = LGNewClientPool(newGridClient,datagram)
 
     return gs
+}
+
+func (gs *LGGateServer) AllocTransportid() int {
+    cid := gs.Allocid()
+    if cid == 0 {
+        return cid
+    }
+
+    LGTrace("gateserver's alloctransportid is run")
+    return LGGenerateID(cid)
+}
+
+func (gs *LGGateServer) NewTransport(
+    newcid int, conn net.Conn) *LGTransport {
+
+    LGTrace("gateserver's newtransport is run")
+    return LGNewTransport(newcid, conn, gs,gs.Datagram)
 }
 
 /*
@@ -101,15 +88,6 @@ func (gs *LGGateServer) transportHandler(newcid int, connection net.Conn) {
     LGDebug("has clients:",s.Clients.Len())
 }
 */
-
-func (gs *LGGateServer) AllocTransportid() int {
-    cid := gs.LGServer.AllocTransportid()
-    if cid == 0 {
-        return cid
-    }
-
-    return LGGenerateID(cid)
-}
 
 func (gs *LGGateServer) Start(gateconfigfile *string,gridsconfigfile *string) {
     //parse config ini file
@@ -196,6 +174,7 @@ func (gs *LGGateServer) startGate(configfile *string) {
 
     gs.Name = gatename
 
+    //gs.LGServer.Start(gatehost,maxConnections)
     gs.LGServer.Start(gatehost,maxConnections)
 }
 
@@ -203,8 +182,9 @@ func (gs *LGGateServer) ConnectGrid(name string,host string,messageCodes *string
 
         pool := gs.Grids
         go pool.Start(name, host, datagram)
-        time.Sleep(1)
+        time.Sleep(2*time.Second)
 
+        LGTrace("clientpool:",pool.Clients.All())
         //if Pool don't find it ,then that is no success!
         c := pool.Clients.GetByName(name)
         if c == nil {

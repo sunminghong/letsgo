@@ -43,7 +43,7 @@ func (c *LGDefaultClient) ProcessDPs(dps []*LGDataPacket) {
 
         msgReader := LGNewMessageReader(dp.Data,c.Transport.Stream.Endian)
 
-        c.Process(code, msgReader,c,0)
+        c.Process(msgReader,c,0)
     }
 }
 

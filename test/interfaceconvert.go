@@ -61,5 +61,5 @@ func main() {
 
     m1(a)
     m2(b)
-    
 }
+

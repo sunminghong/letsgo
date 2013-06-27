@@ -26,38 +26,30 @@ const (
     endian = LGLittleEndian
 )
 
-var gateserver *LGGateServer
+var gateserver *LGGateServer=&LGGateServer{}
 
-
-func newPlayerClient (name string,transport *LGTransport) LGIClient {
-    LGTrace("gateclient is connect:",name)
-
-    c := &LGClient{
-        LGBaseClient:&LGBaseClient{Transport:transport,Name:name},
-        Gate : gateserver,
-    }
-
-    c.Init()
-    return c
-}
-
+//
+//func newPlayerClient (name string,transport *LGTransport) LGIClient {
+//    LGTrace("gateclient is connect:",name)
+//
+//    c := &LGClient{
+//        LGBaseClient:&LGBaseClient{Transport:transport,Name:name},
+//        Gate : gateserver,
+//    }
+//
+//    c.Init()
+//    return c
+//}
+//
 func newGridClient (name string,transport *LGTransport) LGIClient {
     LGTrace("gridclient is connect:",name)
 
     c := &LGGridClient{LGBaseClient:&LGBaseClient{Transport:transport,Name:name}}
     c.Gate = gateserver
+
     c.Register()
 
     return c
-}
-
-func newGateServer() *LGGateServer {
-    //todo: server endian
-    datagram := LGNewDatagram(endian)
-    gs := LGNewGateServer(
-        newPlayerClient,datagram,newGridClient,LGNewDispatcher())
-
-   return gs
 }
 
 
@@ -70,9 +62,21 @@ var (
 func main() {
     flag.Parse()
 
-    gateserver = newGateServer()
+    //todo: server endian
+    datagram := LGNewDatagram(endian)
+    //gateserver := LGNewGateServer(
+    //    LGNewClient,datagram,newGridClient,LGNewDispatcher())
+
+
+    gateserver.LGServer = LGNewServer(LGNewClient,datagram)
+
+    gateserver.Dispatcher = LGNewDispatcher()
+
+    gateserver.Grids = LGNewClientPool(newGridClient,datagram)
 
     LGSetLevel(*loglevel)
+
+    gateserver.SetParent(gateserver)
 
     gateserver.Start(gateconf,gridsconf)
 

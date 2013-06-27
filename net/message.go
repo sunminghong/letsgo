@@ -481,3 +481,8 @@ func (msg *LGMessageReader) ReadList() *LGMessageListReader {
     msg.wind++
     return list
 }
+
+func (msg *LGMessageReader) ReadCode() int {
+    return msg.Code
+}
+

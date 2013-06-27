@@ -56,6 +56,7 @@ func (c *LGBaseClient) Closed() {
 }
 
 func (c *LGBaseClient) SendMessage(fromcid int,msg LGIMessageWriter) {
+    LGTrace("sendmessage:fromcid",fromcid)
     dp := &LGDataPacket{
         Type: LGDATAPACKET_TYPE_GENERAL,
         FromCid: fromcid,
@@ -66,6 +67,7 @@ func (c *LGBaseClient) SendMessage(fromcid int,msg LGIMessageWriter) {
 }
 
 func (c *LGBaseClient) SendBroadcast(fromcid int,msg LGIMessageWriter) {
+    LGTrace("broadcast:fromcid",fromcid)
     dp := &LGDataPacket{
         Type: LGDATAPACKET_TYPE_BROADCAST,
         Data: msg.ToBytes(),

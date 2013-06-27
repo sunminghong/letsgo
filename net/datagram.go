@@ -12,6 +12,7 @@ package net
 import (
     "encoding/binary"
     . "github.com/sunminghong/letsgo/helper"
+    . "github.com/sunminghong/letsgo/log"
 )
 
 const (
@@ -52,12 +53,14 @@ func (d *LGDatagram) SetEndian(endian int) {
 }
 
 func (d *LGDatagram) encrypt(plan []byte){
+    return
     for i,_ := range plan {
         plan[i] ^= 0x37
     }
 }
 
 func (d *LGDatagram) decrypt(plan []byte){
+    return
     for i,_ := range plan {
         plan[i] ^= 0x37
     }
@@ -100,9 +103,11 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
             cs.SetPos(-7)
             m1,_ = cs.ReadByte()
             m2,_ = cs.ReadByte()
+            LGTrace("m1,m2",m1,m2)
             if m1==mask1 && m2==mask2 {
                 dataType,_ = cs.ReadByte()
                 _dpSize,err := cs.ReadUint32()
+                LGTrace("dataType,dpSize,endian",dataType,_dpSize,cs.Endian)
                 if err != nil {
                     c.InitBuff()
                     c.DPSize = 0
@@ -110,10 +115,11 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
                     return 0,nil
                 }
 
-                if dataType == LGDATAPACKET_TYPE_GENERAL{
-                    dpSize = int(_dpSize)
-                } else {
+                switch dataType {
+                case LGDATAPACKET_TYPE_DELAY,LGDATAPACKET_TYPE_BROADCAST:
                     dpSize = int(_dpSize) + 4
+                default:
+                    dpSize = int(_dpSize)
                 }
 
                 pos = cs.GetPos()
@@ -135,10 +141,11 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
         if size > 0 {
             dp := &LGDataPacket{Type:dataType}
 
-            if dataType != LGDATAPACKET_TYPE_GENERAL {
+            switch dataType {
+            case LGDATAPACKET_TYPE_DELAY,LGDATAPACKET_TYPE_BROADCAST:
                 dp.FromCid = int(d.Endianer.Uint32(data[dpSize-4:]))
                 dp.Data = data[:dpSize-4]
-            } else {
+            default:
                 dp.Data = data
             }
 
@@ -188,7 +195,7 @@ func (d *LGDatagram) Pack__(dp *LGDataPacket) []byte {
 
 
 //对数据进行封包
-func (d *LGDatagram) PackWrite(write LGWriteFunc,dp *LGDataPacket) []byte {
+func (d *LGDatagram) PackWrite(write LGWriteFunc,dp *LGDataPacket) {
     buf := make([]byte,7)
 
     buf[0] = byte(mask1)
@@ -208,7 +215,5 @@ func (d *LGDatagram) PackWrite(write LGWriteFunc,dp *LGDataPacket) []byte {
         d.Endianer.PutUint32(cid, uint32(dp.FromCid))
         write(cid)
     }
-
-    return buf
 }
 

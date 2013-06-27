@@ -12,20 +12,20 @@ package protos
 
 import (
     "fmt"
-
-    lnet "github.com/sunminghong/letsgo/net"
-    "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/net"
+    . "github.com/sunminghong/letsgo/log"
 )
 
 
-func init() {
-    Handlers[2011] = Process2011
-}
+//func init() {
+//Handlers[2011] = Process2011
+//}
 
-func Process2011(code int,msg LGIMessageReader,c LGIClient,fromCid int) {
-    log.LGTrace("process 2011 is called")
+func Process2011(msgReader LGIMessageReader,c LGIClient,fromCid int) {
+    LGTrace("process 2011 is called")
 
-    md := reader.ReadString()
+    md := msgReader.ReadString()
+
     fmt.Println()
     fmt.Println(md)
     fmt.Print("you> ")

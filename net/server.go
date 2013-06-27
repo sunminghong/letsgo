@@ -11,6 +11,7 @@
 package net
 
 import (
+    "reflect"
     "net"
     "strconv"
     . "github.com/sunminghong/letsgo/helper"
@@ -18,6 +19,10 @@ import (
 )
 
 type LGServer struct {
+    Parent interface{}
+    parentMethodsMap map[string]reflect.Value
+
+
     broadcast_chan_num int
     read_buffer_size   int
 
@@ -77,6 +82,8 @@ func (s *LGServer) Start(addr string, maxConnections int) {
             if error != nil {
                 LGError("Transport error: ", error)
             } else {
+                LGDebug(connection.RemoteAddr()," is connection!")
+
                 newcid := s.AllocTransportid()
                 if newcid == 0 {
                     LGWarn("connection num is more than ",s.maxConnections)
@@ -94,9 +101,16 @@ func (s *LGServer) SetMaxConnections(max int) {
 
 func (s *LGServer) removeClient(cid int) {
     s.Clients.Remove(cid)
+    s.Freeid()
 }
 
-func (s *LGServer) AllocTransportid() int {
+func (s *LGServer) Freeid(cid int) {
+    asdf
+    //todo: .....
+    s.idassign.Free(cid)
+}
+
+func (s *LGServer) Allocid() int {
     if (s.Clients.Len() >= s.maxConnections) {
         return 0
     }
@@ -104,9 +118,51 @@ func (s *LGServer) AllocTransportid() int {
     return s.idassign.GetFree()
 }
 
+func (s *LGServer) SetParent(p interface{}) {
+    s.Parent = p
+    methods := []string{"AllocTransportid","NewTransport"}
+
+    methodmap := make(map[string]reflect.Value)
+    parent := reflect.ValueOf(s.Parent)
+    for _,mname := range methods {
+        method := parent.MethodByName(mname)
+        if method.IsValid() {
+            methodmap[mname] = method
+        }
+    }
+    s.parentMethodsMap = methodmap
+}
+
+func (s *LGServer) AllocTransportid() int {
+    if method,ok := s.parentMethodsMap["AllocTransportid"]; ok {
+        id := method.Call(nil)[0].Int()
+        return int(id)
+    }
+
+    return s.Allocid()
+}
+
+
+//for override write by sub struct
+func (s *LGServer) NewTransport(newcid int, conn net.Conn) *LGTransport {
+    if method,ok := s.parentMethodsMap["NewTransport"]; ok {
+        args := []reflect.Value{
+            reflect.ValueOf(newcid),
+            reflect.ValueOf(conn),
+        }
+
+        trans := method.Call(args)[0].Interface().(*LGTransport)
+        return trans
+    }
+
+
+    return LGNewTransport(newcid, conn, s,s.Datagram)
+
+}
+
 //该函数主要是接受新的连接和注册用户在transport list
 func (s *LGServer) transportHandler(newcid int, connection net.Conn) {
-    transport := LGNewTransport(newcid, connection, s,s.Datagram)
+    transport := s.NewTransport(newcid, connection)
     name := "c_"+strconv.Itoa(newcid)
     client := s.makeclient(name,transport)
     s.Clients.Add(newcid, name, client)
@@ -138,7 +194,7 @@ func (s *LGServer) transportReader(transport *LGTransport, client LGIClient) {
         transport.BuffAppend(buffer[0:bytesRead])
 
         LGTrace("transport.Buff", transport.Stream.Bytes())
-        n, dps := s.Datagram.Fetch(transport)
+        n, dps := transport.Fetch()
         LGTrace("fetch message number", n)
         if n > 0 {
             client.ProcessDPs(dps)
@@ -155,7 +211,7 @@ func (s *LGServer) transportSender(transport *LGTransport, client LGIClient) {
             //buf := s.Datagram.Pack(dp)
             //transport.Conn.Write(buf)
 
-            s.Datagram.PackWrite(transport.Conn.Write,dp)
+            transport.PackWrite(dp)
         case <-transport.Quit:
             LGDebug("Transport ", transport.Cid, " quitting")
 

@@ -58,6 +58,10 @@ func (c *LGTransport) Fetch() (n int, dps []*LGDataPacket) {
     return c.datagram.Fetch(c)
 }
 
+func (c *LGTransport) PackWrite(dp *LGDataPacket) {
+    c.datagram.PackWrite(c.Conn.Write,dp)
+}
+
 func (c *LGTransport) SendDP(dp *LGDataPacket) {
     c.outgoing <- dp
 }

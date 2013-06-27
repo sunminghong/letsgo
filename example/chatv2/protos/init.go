@@ -14,11 +14,10 @@ import (
     lnet "github.com/sunminghong/letsgo/net"
 )
 
-type processHandler func(c *Client,reader *lnet.MessageReader)
+var Handlers map[int]processHandler = make(map[int]LGProcessHandleFunc)
 
-var Handlers map[int]processHandler = make(map[int]processHandler)
 
-func LGHandl(code int,c *Client,reader *lnet.MessageReader) {
+func processHandleFunc(code int,msg LGIMessageReader,c LGIClient,fromCid int) {
     h, ok := Handlers[code]
     if ok {
         h(c,reader)

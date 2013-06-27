@@ -23,37 +23,26 @@ type LGGridClient struct {
     Process LGProcessHandleFunc
 }
 
-/*
-func LGProccessHandle(code int,msg *MessageReader,c LGIClient,fromCid int) {
-    fmt.Println("message is request")
-}
-
-func LGMakeLGBaseClient (name string,transport *LGTransport) LGIClient {
-    c := &LGBaseClient{
-        LGBaseClient:&LGBaseClient{transport,name,LGCLIENT_TYPE_GENERAL},
-    }
-    c.Process = LGProcessHandleFunc
-}*/
-
 //对数据进行拆包
 func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
     stream := c.Transport.Stream
     endianer := stream.Endianer
     for _, dp := range dps {
-        code := int(endianer.Uint16(dp.Data))
-        LGTrace("msg.code:",code,len(dp.Data))
-
-        msg := LGNewMessageReader(dp.Data,stream.Endian)
 
         switch dp.Type {
         case LGDATAPACKET_TYPE_DELAY:
-            c.Process(code,msg,c,dp.FromCid)
+            LGTrace("msg.code(delay):",int(endianer.Uint16(dp.Data)),len(dp.Data))
+            msg := LGNewMessageReader(dp.Data,stream.Endian)
+            c.Process(msg,c,dp.FromCid)
+
+        case LGDATAPACKET_TYPE_GENERAL:
+            LGTrace("msg.code:",int(endianer.Uint16(dp.Data)),len(dp.Data))
+            msg := LGNewMessageReader(dp.Data,stream.Endian)
+            c.Process(msg,c,0)
 
         case LGDATAPACKET_TYPE_GATECONNECT:
             c.SetType(LGCLIENT_TYPE_GATE)
-
-        case LGDATAPACKET_TYPE_GENERAL:
-            c.Process(code,msg,c,0)
+            LGInfo(c.GetTransport().Conn.RemoteAddr()," is register to gate!")
         }
     }
 }
