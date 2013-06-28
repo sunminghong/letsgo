@@ -70,12 +70,12 @@ func main() {
 
     gateserver.LGServer = LGNewServer(name,serverid,LGNewClient,datagram)
 
-    gateserver.Dispatcher = LGNewDispatcher()
 
     gateserver.Grids = LGNewClientPool(newGridClient,datagram)
 
     LGSetLevel(*loglevel)
 
+    gateserver.Dispatcher = LGNewDispatcher()
     gateserver.SetParent(gateserver)
 
     gateserver.Start(gateconf,gridsconf)

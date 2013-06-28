@@ -22,24 +22,22 @@ import (
     "./grids"
 )
 
-const (
-    endian = LGLittleEndian
-)
-
 var serv *LGServer
 
 var (
     loglevel = flag.Int("loglevel", 0, "log level")
-    addr     = flag.String("add", ":12001", "grid server addr")
+    conf = flag.String("conf","grid1.conf","grid server config file")
 )
 func main() {
     flag.Parse()
 
     LGSetLevel(*loglevel)
 
-    datagram := LGNewDatagram(endian)
-    serv = LGNewServer(grids.NewClient, datagram)
+    datagram := LGNewDatagram(LGLittleEndian)
 
-    serv.Start(*addr, 2)
+    serv = &LGGridServer{}
+    serv.InitFromConfig(conf,grids.NewClient, datagram)
+
+    serv.Start()
 }
 

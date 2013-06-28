@@ -23,6 +23,7 @@ type LGServer struct {
     Parent interface{}
     Name string
     Serverid int
+    Addr string
 
     parentMethodsMap map[string]reflect.Value
 
@@ -48,13 +49,15 @@ type LGServer struct {
 }
 
 func LGNewServer(
-    name string,serverid int,
+    name string,serverid int,addr string, maxConnections int,
     makeclient LGNewClientFunc, datagram LGIDatagram) *LGServer {
 
     serverid += rand.Intn(1024) * 10000
     s := &LGServer{
         Name:name,
         Serverid:serverid,
+        Addr : addr
+        maxConnections : maxConnections,
         Clients: LGNewClientMap(),
     }
 
@@ -85,10 +88,9 @@ func (s *LGServer) SetParent(p interface{}) {
     s.parentMethodsMap = methodmap
 }
 
-func (s *LGServer) Start(addr string, maxConnections int) {
+func (s *LGServer) Start() {
     LGInfo("Hello Server!")
 
-    s.maxConnections = maxConnections
     //todo: maxConnections don't proccess
     //addr := host + ":" + strconv.Itoa(port)
 
@@ -96,8 +98,8 @@ func (s *LGServer) Start(addr string, maxConnections int) {
     s.broadcastChan = make(chan *LGDataPacket, s.broadcast_chan_num)
     go s.broadcastHandler(s.broadcastChan)
 
-    LGInfo("listen with :", addr)
-    netListen, error := net.Listen("tcp", addr)
+    LGInfo("listen with :", s.Addr)
+    netListen, error := net.Listen("tcp", s.Addr)
     if error != nil {
         LGError(error)
     } else {

@@ -21,6 +21,8 @@ type LGGridClient struct {
     *LGBaseClient
 
     Process LGProcessHandleFunc
+
+    Grid *LGGridServer
 }
 
 //对数据进行拆包
@@ -42,8 +44,16 @@ func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
 
         case LGDATAPACKET_TYPE_GATECONNECT:
             gatename,gateid := cmd.UnRegister(dp.Data)
-            c.Server.
             c.SetType(LGCLIENT_TYPE_GATE)
+
+            LGTrace("transport.server type is ",reflect.TypeOf(c.Transport.Server))
+            if grid,ok := c.Transport.Server.(*LGGridServer) ;ok {
+                c.Grid = grid
+            } else {
+                LGError("gridserver client init error:transport.Server is not GridServer type")
+            }
+            c.Grid.RegisterGate(gatename,gateid,c)
+
             LGInfo(c.GetTransport().Conn.RemoteAddr()," is register to gate!")
         }
     }

@@ -8,7 +8,7 @@
 #   LastChange: 2013-06-28 19:39:02
 #      History:
 =============================================================================*/
-package gate
+package grid
 
 import (
     "strconv"
@@ -30,106 +30,39 @@ type LGIDispatcher interface {
 
 type LGGridServer struct {
     *LGServer
-    
-    Gates
+    GateMap map[int][]int
+
+    AllowDirectConnection bool
 
     Dispatcher LGIDispatcher
 
     //makeclient NewGridClientFunc
 }
-/*
-func LGNewGridServer(
-    name string,gateid int,
-    newPlayerClient LGNewClientFunc, datagram LGIDatagram,
-    newGridClient LGNewClientFunc,
-    dispatcher LGIDispatcher) *LGGridServer {
 
-    gs := &LGGridServer{
-        LGServer:LGNewServer(name,gateid,newPlayerClient,datagram),
-    }
+func (gs *LGGridServer) InitFromConfig (
+    configfile string, newGridClient LGNewClientFunc, datagram LGIDatagram) *LGGridServer {
 
-    gs.Dispatcher = LGNewDispatcher()
-
-    gs.Grids = LGNewClientPool(newGridClient,datagram)
-
-    return gs
-}
-*/
-
-func (gs *LGGridServer) NewTransport(
-    newcid int, conn net.Conn) *LGTransport {
-
-    LGTrace("gateserver's newtransport is run")
-    return LGNewTransport(newcid, conn, gs,gs.Datagram)
-}
-
-func (gs *LGGridServer) Start(gateconfigfile *string,gridsconfigfile *string) {
-    //parse config ini file
-    gs.connectGrids(gridsconfigfile)
-    gs.startGrid(gateconfigfile)
-}
-
-func (gs *LGGridServer) connectGrids(configfile *string) {
     c, err := goconf.ReadConfigFile(*configfile)
     if err != nil {
         LGError(err.Error())
         return
     }
 
-    //make some connection to game server
-    for i:=1; i<50; i++ {
-        section := "GridServer" + strconv.Itoa(i)
-        if !c.HasSection(section) {
-            continue
-        }
-        gname, err := c.GetString(section,"name")
-        if err != nil {
-            //if err.Reason == goconf.SectionNotFound {
-            //    break
-            //} else {
-                LGError(err.Error())
-            //    continue
-            //}
-            break
-        }
-
-        host, err := c.GetString(section,"host")
-        if err != nil {
-            continue
-        }
-
-        messageCodes, err := c.GetString(section,"messageCodes")
-        if err != nil {
-            messageCodes = ""
-        }
-
-        endian, err := c.GetInt(section,"endian")
-        if err == nil {
-            da := gs.Datagram.Clone(endian)
-            gs.ConnectGrid(gname, host, &messageCodes,da)
-        } else {
-            gs.ConnectGrid(gname, host, &messageCodes,nil)
-        }
-
-    }
-}
-
-func (gs *LGGridServer) startGrid(configfile *string) {
-    c, err := goconf.ReadConfigFile(*configfile)
+    section := "Default"
+    //start grid service
+    name, err := c.GetString(section,"name")
     if err != nil {
         LGError(err.Error())
         return
     }
 
-    section := "GridServer"
-    //start gate service
-    gatename, err := c.GetString(section,"name")
+    host, err := c.GetString(section,"host")
     if err != nil {
         LGError(err.Error())
         return
     }
 
-    gatehost, err := c.GetString(section,"host")
+    serverid, err := c.GetString(section,"serverid")
     if err != nil {
         LGError(err.Error())
         return
@@ -137,37 +70,98 @@ func (gs *LGGridServer) startGrid(configfile *string) {
 
     maxConnections, err := c.GetInt(section,"maxConnections")
     if err != nil {
-        LGError(err.Error())
-        return
+        maxConnections = 1000
+    }
+
+    allowDirectConnection, err := c.GetBool(section,"allowDirectConnection")
+    if err != nil {
+        allowDirectConnection = 0
     }
 
     endian, err := c.GetInt(section,"endian")
     if err == nil {
-        gs.Datagram.SetEndian(endian)
+        datagram.SetEndian(endian)
+    } else {
+        datagram.SetEndian(LGLittleEndian)
     }
 
-    gs.Name = gatename
-
-    //gs.LGServer.Start(gatehost,maxConnections)
-    gs.LGServer.Start(gatehost,maxConnections)
+    gs.Init( name,serverid,allwDirectConnection,host,maxConnections,
+        newGridClient,datagram)
 }
 
-func (gs *LGGridServer) ConnectGrid(name string,host string,messageCodes *string,datagram LGIDatagram) {
+func (gs *LGGridServer) Init(
+    name string,gridid int,allowDirectConnection bool,host string, maxConnections int,
+    newGridClient LGNewClientFunc, datagram LGIDatagram) *LGGridServer {
 
-        pool := gs.Grids
-        go pool.Start(name, host, datagram)
-        time.Sleep(2*time.Second)
 
-        LGTrace("clientpool:",pool.Clients.All())
-        //if Pool don't find it ,then that is no success!
-        c := pool.Clients.GetByName(name)
-        if c == nil {
-            LGError(host + " can't connect")
-            return
+    gs := &LGGridServer{
+        LGServer:LGNewServer(name,gridid,host,maxConnections,newPlayerClient,datagram),
+    }
+
+    gs.GridMap = make(map[int][]int)
+
+    gs.AllowDirectConnection = allowDirectConnection
+
+    gs.SetParent(gs)
+}
+
+func (gs *LGGridServer) RegisterGate(gridname string,gridid int,c *LGIClient) {
+    if cs,ok := gs.GateMap[gridid]; ok {
+        cs = append(cs,gridid)
+
+        gs.GateMap[gridid] = cs
+    } else {
+        gs.GateMap[gridid] = []int {c.GetTransport().Cid}
+    }
+}
+
+func (gs *LGGridServer) NewTransport(
+    newcid int, conn net.Conn) *LGTransport {
+
+    LGTrace("gridserver's newtransport is run")
+    return LGNewTransport(newcid, conn, gs,gs.Datagram)
+}
+
+func (gs *LGGridServer) NewTransport(
+    newcid int, conn net.Conn) *LGTransport {
+
+    LGTrace("gridserver's newtransport is run")
+    return LGNewTransport(newcid, conn, gs,gs.Datagram)
+}
+
+func (gs *LGGridServer) BroadcastHandler(broadcastChan <-chan *LGDataPacket) {
+    for {
+        //在go里面没有while do ，for可以无限循环
+        LGTrace("broadcastHandler: chan Waiting for input")
+        dp := <-broadcastChan
+
+        //fromCid := dp.FromCid
+        dp0 := &LGDataPacket{
+            Type: LGDATAPACKET_TYPE_GENERAL,
+            FromCid: 0,
+            Data: dp.Data,
         }
 
-        //add dispatche
-        gridID := c.GetTransport().Cid
-        gs.Dispatcher.Add(gridID,messageCodes)
+        if gs.AllowDirectConnection {
+            for _, c := range s.Clients.All() {
+                //if fromCid == Cid {
+                //    continue
+                //}
+                if c.GetType() == LGCLIENT_TYPE_GATE {
+                    continue
+                }
+                c.GetTransport().outgoing <- dp0
+            }
+        }
+
+        //broadcast to grid server
+        for _, cs := range gs.GateMap {
+            LGTrace("broadcastHandler: client.type",c.GetType())
+
+            cid := cs[0]
+            s.Clients.Get(cid).GetTransport().outgoing <- dp
+        }
+        LGTrace("broadcastHandler: Handle end!")
+    }
 }
 

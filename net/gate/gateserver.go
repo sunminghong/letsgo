@@ -41,8 +41,7 @@ type LGGateServer struct {
 func LGNewGateServer(
     name string,gateid int,
     newPlayerClient LGNewClientFunc, datagram LGIDatagram,
-    newGridClient LGNewClientFunc,
-    dispatcher LGIDispatcher) *LGGateServer {
+    newGridClient LGNewClientFunc, dispatcher LGIDispatcher) *LGGateServer {
 
     gs := &LGGateServer{
         LGServer:LGNewServer(name,gateid,newPlayerClient,datagram),
@@ -56,6 +55,70 @@ func LGNewGateServer(
 }
 */
 
+func (gs *LGGateServer) InitFromConfig (
+    configfile string,
+    newGridClient LGNewClientFunc, datagram LGIDatagram,
+    newGridClient LGNewClientFunc, dispatcher LGIDispatcher) *LGGateServer {
+
+    c, err := goconf.ReadConfigFile(*configfile)
+    if err != nil {
+        LGError(err.Error())
+        return
+    }
+
+    section := "Default"
+    //start grid service
+    name, err := c.GetString(section,"name")
+    if err != nil {
+        LGError(err.Error())
+        return
+    }
+
+    host, err := c.GetString(section,"host")
+    if err != nil {
+        LGError(err.Error())
+        return
+    }
+
+    serverid, err := c.GetString(section,"serverid")
+    if err != nil {
+        LGError(err.Error())
+        return
+    }
+
+    maxConnections, err := c.GetInt(section,"maxConnections")
+    if err != nil {
+        maxConnections = 1000
+    }
+
+    endian, err := c.GetInt(section,"endian")
+    if err == nil {
+        datagram.SetEndian(endian)
+    } else {
+        datagram.SetEndian(LGLittleEndian)
+    }
+
+    gs.Init( name,serverid,host,maxConnections,
+        newGridClient,datagram,newGridClient,dispatcher)
+
+}
+
+func (gs *LGGridServer) Init(
+    name string,gridid int, host string, maxConnections int,
+    newGridClient LGNewClientFunc, datagram LGIDatagram,
+    newGridClient LGNewClientFunc, dispatcher LGIDispatcher) *LGGateServer {
+
+
+    gs := &LGGridServer{
+        LGServer:LGNewServer(name,gridid,host,maxConnections,newPlayerClient,datagram),
+    }
+
+
+    gs.Dispatcher = LGNewDispatcher()
+
+    gs.SetParent(gs)
+}
+
 func (gs *LGGateServer) NewTransport(
     newcid int, conn net.Conn) *LGTransport {
 
@@ -66,7 +129,7 @@ func (gs *LGGateServer) NewTransport(
 func (gs *LGGateServer) Start(gateconfigfile *string,gridsconfigfile *string) {
     //parse config ini file
     gs.connectGrids(gridsconfigfile)
-    gs.startGate(gateconfigfile)
+    gs.LGServer.Start()
 }
 
 func (gs *LGGateServer) connectGrids(configfile *string) {
@@ -114,45 +177,8 @@ func (gs *LGGateServer) connectGrids(configfile *string) {
     }
 }
 
-func (gs *LGGateServer) startGate(configfile *string) {
-    c, err := goconf.ReadConfigFile(*configfile)
-    if err != nil {
-        LGError(err.Error())
-        return
-    }
-
-    section := "GateServer"
-    //start gate service
-    gatename, err := c.GetString(section,"name")
-    if err != nil {
-        LGError(err.Error())
-        return
-    }
-
-    gatehost, err := c.GetString(section,"host")
-    if err != nil {
-        LGError(err.Error())
-        return
-    }
-
-    maxConnections, err := c.GetInt(section,"maxConnections")
-    if err != nil {
-        LGError(err.Error())
-        return
-    }
-
-    endian, err := c.GetInt(section,"endian")
-    if err == nil {
-        gs.Datagram.SetEndian(endian)
-    }
-
-    gs.Name = gatename
-
-    //gs.LGServer.Start(gatehost,maxConnections)
-    gs.LGServer.Start(gatehost,maxConnections)
-}
-
-func (gs *LGGateServer) ConnectGrid(name string,host string,messageCodes *string,datagram LGIDatagram) {
+func (gs *LGGateServer) ConnectGrid(
+    name string,host string,messageCodes *string,datagram LGIDatagram) {
 
         pool := gs.Grids
         go pool.Start(name, host, datagram)
