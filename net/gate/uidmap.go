@@ -8,7 +8,7 @@
 #   LastChange: 2013-06-09 18:03:17
 #      History:
 =============================================================================*/
-package grid
+package gate
 
 import (
     //. "github.com/sunminghong/letsgo/log"

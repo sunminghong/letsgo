@@ -8,7 +8,7 @@
 #   LastChange: 2013-06-07 10:40:26
 #      History:
 =============================================================================*/
-package grid
+package gate
 
 import (
     . "github.com/sunminghong/letsgo/log"
@@ -41,7 +41,8 @@ func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
             c.Process(msg,c,0)
 
         case LGDATAPACKET_TYPE_GATECONNECT:
-            gatename,gateid := LGCmd.UnRegister(dp.Data)
+            gatename,gateid := cmd.UnRegister(dp.Data)
+            c.Server.
             c.SetType(LGCLIENT_TYPE_GATE)
             LGInfo(c.GetTransport().Conn.RemoteAddr()," is register to gate!")
         }
