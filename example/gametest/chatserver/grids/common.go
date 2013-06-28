@@ -88,6 +88,7 @@ func ProccessHandle(msg LGIMessageReader,c LGIClient,fromCid int) {
     h, ok := Handlers[code]
     if ok {
         uid := p.Uidmap.GetUid(fromCid,c.GetTransport().Cid)
+        LGTrace("processHandle():fromcid,cid,uid",fromCid,c.GetTransport().Cid,uid)
         if uid == 0 {
             h(msg,c,fromCid,nil)
         } else {
@@ -96,7 +97,6 @@ func ProccessHandle(msg LGIMessageReader,c LGIClient,fromCid int) {
         }
     }
 }
-
 
 func init() {
     //uidmap = NewLGUidMap()

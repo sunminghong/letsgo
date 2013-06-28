@@ -80,7 +80,8 @@ func LGNewTransport(newcid int, conn net.Conn, server LGIServer,datagram LGIData
         Conn:     conn,
         datagram: datagram,
         Server:   server,
-        outgoing: make(chan *LGDataPacket, 10),
+        outgoing: make(chan *LGDataPacket, 1),
+        outgoingBytes: make(chan []byte),
         Quit:     make(chan bool),
         Stream:   LGNewRWStream(1024,datagram.GetEndian()),
     }

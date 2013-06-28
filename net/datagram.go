@@ -192,7 +192,6 @@ func (d *LGDatagram) Pack(dp *LGDataPacket) []byte {
     return buf
 }
 
-
 //对数据进行封包
 func (d *LGDatagram) PackWrite(write LGWriteFunc,dp *LGDataPacket) {
     buf := make([]byte,7)

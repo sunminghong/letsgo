@@ -6,18 +6,19 @@ import (
 
 
 //add check code to old id
+//oldid max value = 2097151 = 0x1fffff
 func LGGenerateID(oldid int) int {
     code := rand.Intn(1024)
-    return oldid << 10 | int(code)
+    return oldid | int(code) << 21
 }
 
 func LGCombineID(oldid int,code int) int {
-    return oldid << 10 | code
+    return oldid | code << 21
 }
 
 func LGParseID(id int) (oldid int,checkcode int) {
     //return fromCid >> 10,fromCid & 3ff
-    oldid = id >> 10
-    checkcode = id - oldid
+    oldid = id & 0x1fffff  //(1 << 21 -1)
+    checkcode = id >> 21
     return
 }

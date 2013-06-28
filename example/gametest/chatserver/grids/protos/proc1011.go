@@ -47,6 +47,8 @@ func Process1011(msgReader LGIMessageReader,c LGIClient,fromCid int,session *Ses
         Uidmap.SaveUid(fromCid,cid,uid)
         SetSession(uid,session)
 
+        LGTrace("1011p():fromcid,cid,uid",fromCid,cid,uid)
+
         msg = "system: welcome to " + md + "!"
     } else {
         msg = (*session.Username) + "> " + md

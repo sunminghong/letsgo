@@ -222,6 +222,7 @@ func (s *LGServer) transportSender(transport *LGTransport, client LGIClient) {
     }
 }
 
+/*
 func (s *LGServer) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
     for {
         //在go里面没有while do ，for可以无限循环
@@ -244,6 +245,34 @@ func (s *LGServer) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
                 c.GetTransport().outgoingBytes <- data
             } else {
                 c.GetTransport().outgoingBytes <- data0
+            }
+        }
+        LGTrace("broadcastHandler: Handle end!")
+    }
+}
+*/
+
+func (s *LGServer) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
+    for {
+        //在go里面没有while do ，for可以无限循环
+        LGTrace("broadcastHandler: chan Waiting for input")
+        dp := <-broadcastChan
+
+        //fromCid := dp.FromCid
+        dp0 := &LGDataPacket{
+            Type: LGDATAPACKET_TYPE_GENERAL,
+            FromCid: 0,
+            Data: dp.Data,
+        }
+        for _, c := range s.Clients.All() {
+            LGTrace("broadcastHandler: client.type",c.GetType())
+            //if fromCid == Cid {
+            //    continue
+            //}
+            if c.GetType() == LGCLIENT_TYPE_GATE {
+                c.GetTransport().outgoing <- dp
+            } else {
+                c.GetTransport().outgoing <- dp0
             }
         }
         LGTrace("broadcastHandler: Handle end!")

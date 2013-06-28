@@ -168,7 +168,7 @@ func (cp *LGClientPool) transportSender(transport *LGTransport) {
     }
 }
 
-func (cp *LGClientPool) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
+func (cp *LGClientPool) broadcastHandler(broadcastChan chan *LGDataPacket) {
     for {
         //在go里面没有while do ，for可以无限循环
         //Log("broadcastHandler: chan Waiting for input")

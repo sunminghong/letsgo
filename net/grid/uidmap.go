@@ -51,16 +51,17 @@ func (self *LGUidMap) GetUid(fromCid int, cid int) int {
     }
 
     if v, ok := self.uidMap.Get(kid); ok {
-        if v2, ok := v.(int); ok {
+        if v2, ok := v.([]int); ok {
             if fromCid > 0 {
-                uid, co := LGParseID(v2)
+                //uid, co := LGParseID(v2)
+                uid ,co := v2[0],v2[1]
                 if co == checkcode {
                     return uid
                 } else {
                     return 0
                 }
             } else {
-                return v2
+                return v2[0]
             }
         } else {
             return 0
@@ -70,16 +71,17 @@ func (self *LGUidMap) GetUid(fromCid int, cid int) int {
 }
 
 func (self *LGUidMap) SaveUid(fromCid int, cid int, uid int) {
-    var kid int
+    var kid,checkcode int
 
     if fromCid > 0 {
         //为了防止一个gate服务器不同的玩家分配到同样的socketid（cid==fromcid），必须加上checkcode验证
-        kid , checkcode := LGParseID(fromCid)
+        kid , checkcode = LGParseID(fromCid)
         kid = 0 - kid
-        uid = LGCombineID(uid, checkcode)
+
+        //uid = LGCombineID(uid, checkcode)
     } else {
         kid = cid
     }
+    self.uidMap.Set(kid, []int{uid,checkcode})
 
-    self.uidMap.Set(kid, uid)
 }
