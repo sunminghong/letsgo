@@ -22,7 +22,7 @@ type LGTransport struct {
     DPSize  int
 
     datagram LGIDatagram
-    Server LGIServer
+    Server LGIServ
     Conn   net.Conn
 }
 
@@ -74,7 +74,7 @@ func (c *LGTransport) SendBroadcast(dp *LGDataPacket) {
 }
 
 // new Transport object
-func LGNewTransport(newcid int, conn net.Conn, server LGIServer,datagram LGIDatagram) *LGTransport {
+func LGNewTransport(newcid int, conn net.Conn, server LGIServ,datagram LGIDatagram) *LGTransport {
     c := &LGTransport{
         Cid:      newcid,
         Conn:     conn,

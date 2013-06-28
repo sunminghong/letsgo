@@ -74,12 +74,16 @@ type LGIClient interface {
     */
 }
 
-type LGIServer interface {
+type LGIServ interface {
     SetMaxConnections(max int)
-
-    //SendDP(t *LGTransport, dp *LGDataPacket)
-
     SendBroadcast(t *LGTransport, dp *LGDataPacket)
+}
+
+type LGIServer interface {
+    GetName() string
+    GetServerid() int
+
+    LGIServ
 }
 
 type LGnewTransportFunc func(

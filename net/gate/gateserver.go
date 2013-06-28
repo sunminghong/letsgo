@@ -35,18 +35,17 @@ type LGGateServer struct {
 
     Dispatcher LGIDispatcher
 
-    Name string
-
     //makeclient NewGateClientFunc
 }
-
+/*
 func LGNewGateServer(
+    name string,gateid int,
     newPlayerClient LGNewClientFunc, datagram LGIDatagram,
     newGridClient LGNewClientFunc,
     dispatcher LGIDispatcher) *LGGateServer {
 
     gs := &LGGateServer{
-        LGServer:LGNewServer(newPlayerClient,datagram),
+        LGServer:LGNewServer(name,gateid,newPlayerClient,datagram),
     }
 
     gs.Dispatcher = LGNewDispatcher()
@@ -55,6 +54,7 @@ func LGNewGateServer(
 
     return gs
 }
+*/
 
 func (gs *LGGateServer) NewTransport(
     newcid int, conn net.Conn) *LGTransport {

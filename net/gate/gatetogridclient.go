@@ -1,11 +1,11 @@
 /*=============================================================================
-#     FileName: gridclient.go
+#     FileName: gatetogridclient.go
 #         Desc: default client of gate server receive grid server(process gridserver connection return data)
 #       Author: sunminghong
 #        Email: allen.fantasy@gmail.com
 #     HomePage: http://weibo.com/5d13
 #      Version: 0.0.1
-#   LastChange: 2013-06-07 14:51:54
+#   LastChange: 2013-06-28 18:40:35
 #      History:
 =============================================================================*/
 package gate
@@ -16,31 +16,31 @@ import (
 )
 
 // Client  
-type LGGridClient struct {
+type LGGateToGridClient struct {
     *LGBaseClient
 
     Gate *LGGateServer
     clients *LGClientMap
 }
 /*
-func LGNewGridClient (name string,transport *LGTransport) LGIClient {
+func LGNewGateToGridClient (name string,transport *LGTransport) LGIClient {
     LGTrace("gridclient is connect:",name)
 
-    c := &LGGridClient{LGBaseClient:&LGBaseClient{Transport:transport,Name:name}}
+    c := &LGGateToGridClient{LGBaseClient:&LGBaseClient{Transport:transport,Name:name}}
 
     c.Register()
 
     return c
 }*/
 
-func (c *LGGridClient) Register() {
-    aa := c.Gate.Clients
-    c.clients = aa
+func (c *LGGateToGridClient) Register() {
+    c.clients = c.Gate.Clients
 
+    line := cmd.Register(c.Gate.Name,c.Gate.Serverid)
     //register to grid server
     dp := &LGDataPacket{
         FromCid: 0,
-        Data: []byte{1},
+        Data: line,
         Type : LGDATAPACKET_TYPE_GATECONNECT,
     }
 
@@ -48,7 +48,7 @@ func (c *LGGridClient) Register() {
 }
 
 //对数据进行拆包
-func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
+func (c *LGGateToGridClient) ProcessDPs(dps []*LGDataPacket) {
     for _, dp := range dps {
         code := c.Transport.Stream.Endianer.Uint16(dp.Data)
         LGTrace("gridclient's processdps() \nmsg.code:",code)

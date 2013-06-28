@@ -13,6 +13,7 @@ package net
 import (
     "reflect"
     "net"
+    "math/rand"
     "strconv"
     . "github.com/sunminghong/letsgo/helper"
     . "github.com/sunminghong/letsgo/log"
@@ -20,6 +21,9 @@ import (
 
 type LGServer struct {
     Parent interface{}
+    Name string
+    Serverid int
+
     parentMethodsMap map[string]reflect.Value
 
 
@@ -43,8 +47,16 @@ type LGServer struct {
     idassign *LGIDAssign
 }
 
-func LGNewServer(makeclient LGNewClientFunc, datagram LGIDatagram) *LGServer {
-    s := &LGServer{Clients: LGNewClientMap()}
+func LGNewServer(
+    name string,serverid int,
+    makeclient LGNewClientFunc, datagram LGIDatagram) *LGServer {
+
+    serverid += rand.Intn(1024) * 10000
+    s := &LGServer{
+        Name:name,
+        Serverid:serverid,
+        Clients: LGNewClientMap(),
+    }
 
     s.makeclient = makeclient
 

@@ -44,7 +44,7 @@ var gateserver *LGGateServer=&LGGateServer{}
 func newGridClient (name string,transport *LGTransport) LGIClient {
     LGTrace("gridclient is connect:",name)
 
-    c := &LGGridClient{LGBaseClient:&LGBaseClient{Transport:transport,Name:name}}
+    c := &LGGateToGridClient{LGBaseClient:&LGBaseClient{Transport:transport,Name:name}}
     c.Gate = gateserver
 
     c.Register()
@@ -68,7 +68,7 @@ func main() {
     //    LGNewClient,datagram,newGridClient,LGNewDispatcher())
 
 
-    gateserver.LGServer = LGNewServer(LGNewClient,datagram)
+    gateserver.LGServer = LGNewServer(name,serverid,LGNewClient,datagram)
 
     gateserver.Dispatcher = LGNewDispatcher()
 

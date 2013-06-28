@@ -41,6 +41,7 @@ func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
             c.Process(msg,c,0)
 
         case LGDATAPACKET_TYPE_GATECONNECT:
+            gatename,gateid := LGCmd.UnRegister(dp.Data)
             c.SetType(LGCLIENT_TYPE_GATE)
             LGInfo(c.GetTransport().Conn.RemoteAddr()," is register to gate!")
         }

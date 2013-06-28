@@ -1,0 +1,27 @@
+/*=============================================================================
+#     FileName: command
+#         Desc: gate command
+#       Author: sunminghong
+#        Email: allen.fantasy@gmail.com
+#     HomePage: http://weibo.com/5d13
+#      Version: 0.0.1
+#   LastChange: 2013-06-28 18:20:23
+#      History:
+=============================================================================*/
+package gate
+
+import (
+    . "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/net"
+)
+
+type Cmd struct {
+}
+
+func (c Cmd Pack(line string) []byte {
+        return []byte(line)
+}
+
+func (c Cmd) Register(serverid int) []byte {
+
+}
