@@ -10,10 +10,10 @@ type LGTransport struct {
     Cid  int
 
     //需要输出的数据包的channel
-    outgoing chan *LGDataPacket
+    Outgoing chan *LGDataPacket
 
     //需要输出的数据流 的channel
-    outgoingBytes chan []byte
+    OutgoingBytes chan []byte
 
     Quit chan bool
 
@@ -66,7 +66,7 @@ func (c *LGTransport) PackWrite(dp *LGDataPacket) {
 }
 
 func (c *LGTransport) SendDP(dp *LGDataPacket) {
-    c.outgoing <- dp
+    c.Outgoing <- dp
 }
 
 func (c *LGTransport) SendBroadcast(dp *LGDataPacket) {
@@ -80,8 +80,8 @@ func LGNewTransport(newcid int, conn net.Conn, server LGIServ,datagram LGIDatagr
         Conn:     conn,
         datagram: datagram,
         Server:   server,
-        outgoing: make(chan *LGDataPacket, 1),
-        outgoingBytes: make(chan []byte),
+        Outgoing: make(chan *LGDataPacket, 1),
+        OutgoingBytes: make(chan []byte),
         Quit:     make(chan bool),
         Stream:   LGNewRWStream(1024,datagram.GetEndian()),
     }

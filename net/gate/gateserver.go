@@ -16,6 +16,7 @@ import (
     "net"
     goconf "github.com/sunminghong/goconf"
     . "github.com/sunminghong/letsgo/net"
+    . "github.com/sunminghong/letsgo/helper"
     . "github.com/sunminghong/letsgo/log"
 )
 
@@ -37,30 +38,13 @@ type LGGateServer struct {
 
     //makeclient NewGateClientFunc
 }
-/*
-func LGNewGateServer(
-    name string,gateid int,
-    newPlayerClient LGNewClientFunc, datagram LGIDatagram,
-    newGridClient LGNewClientFunc, dispatcher LGIDispatcher) *LGGateServer {
-
-    gs := &LGGateServer{
-        LGServer:LGNewServer(name,gateid,newPlayerClient,datagram),
-    }
-
-    gs.Dispatcher = LGNewDispatcher()
-
-    gs.Grids = LGNewClientPool(newGridClient,datagram)
-
-    return gs
-}
-*/
 
 func (gs *LGGateServer) InitFromConfig (
     configfile string,
-    newGridClient LGNewClientFunc, datagram LGIDatagram,
-    newGridClient LGNewClientFunc, dispatcher LGIDispatcher) *LGGateServer {
+    newPlayerClient LGNewClientFunc, datagram LGIDatagram,
+    newGridClient LGNewClientFunc, dispatcher LGIDispatcher) {
 
-    c, err := goconf.ReadConfigFile(*configfile)
+    c, err := goconf.ReadConfigFile(configfile)
     if err != nil {
         LGError(err.Error())
         return
@@ -80,7 +64,7 @@ func (gs *LGGateServer) InitFromConfig (
         return
     }
 
-    serverid, err := c.GetString(section,"serverid")
+    serverid, err := c.GetInt(section,"serverid")
     if err != nil {
         LGError(err.Error())
         return
@@ -99,20 +83,18 @@ func (gs *LGGateServer) InitFromConfig (
     }
 
     gs.Init( name,serverid,host,maxConnections,
-        newGridClient,datagram,newGridClient,dispatcher)
+    newPlayerClient,datagram,newGridClient,dispatcher)
 
 }
 
-func (gs *LGGridServer) Init(
+func (gs *LGGateServer) Init(
     name string,gridid int, host string, maxConnections int,
-    newGridClient LGNewClientFunc, datagram LGIDatagram,
-    newGridClient LGNewClientFunc, dispatcher LGIDispatcher) *LGGateServer {
+    newPlayerClient LGNewClientFunc, datagram LGIDatagram,
+    newGridClient LGNewClientFunc, dispatcher LGIDispatcher) {
 
+    gs.LGServer = LGNewServer(name,gridid,host,maxConnections,newPlayerClient,datagram)
 
-    gs := &LGGridServer{
-        LGServer:LGNewServer(name,gridid,host,maxConnections,newPlayerClient,datagram),
-    }
-
+    gs.Grids = LGNewClientPool(newGridClient,datagram)
 
     gs.Dispatcher = LGNewDispatcher()
 

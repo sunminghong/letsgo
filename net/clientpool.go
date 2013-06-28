@@ -150,7 +150,7 @@ func (cp *LGClientPool) transportReader(transport *LGTransport, client LGIClient
 func (cp *LGClientPool) transportSender(transport *LGTransport) {
     for {
         select {
-        case dp := <-transport.outgoing:
+        case dp := <-transport.Outgoing:
             LGTrace("clientpool transportSender:",dp.Type, dp.Data)
             //buf := cp.datagram.Pack(dp)
             //transport.Conn.Write(buf)
@@ -180,7 +180,7 @@ func (cp *LGClientPool) broadcastHandler(broadcastChan chan *LGDataPacket) {
             if sendCid == Cid {
                 continue
             }
-            c.GetTransport().outgoing <- dp
+            c.GetTransport().Outgoing <- dp
         }
         //Log("broadcastHandler: Handle end!")
     }

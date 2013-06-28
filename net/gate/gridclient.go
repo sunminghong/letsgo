@@ -11,6 +11,7 @@
 package gate
 
 import (
+    "reflect"
     . "github.com/sunminghong/letsgo/log"
     . "github.com/sunminghong/letsgo/net"
 )

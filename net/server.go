@@ -56,7 +56,7 @@ func LGNewServer(
     s := &LGServer{
         Name:name,
         Serverid:serverid,
-        Addr : addr
+        Addr : addr,
         maxConnections : maxConnections,
         Clients: LGNewClientMap(),
     }
@@ -216,12 +216,12 @@ func (s *LGServer) transportReader(transport *LGTransport, client LGIClient) {
 func (s *LGServer) transportSender(transport *LGTransport, client LGIClient) {
     for {
         select {
-        case dp := <-transport.outgoing:
-            LGTrace("transportSender outgoing:",dp.Type, len(dp.Data))
+        case dp := <-transport.Outgoing:
+            LGTrace("transportSender Outgoing:",dp.Type, len(dp.Data))
             transport.PackWrite(dp)
 
-        case data := <-transport.outgoingBytes:
-            LGTrace("transportSender outgoingBytes:",len(data))
+        case data := <-transport.OutgoingBytes:
+            LGTrace("transportSender OutgoingBytes:",len(data))
             //buf := s.Datagram.Pack(dp)
             transport.Conn.Write(data)
 
@@ -256,9 +256,9 @@ func (s *LGServer) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
             //    continue
             //}
             if c.GetType() == LGCLIENT_TYPE_GATE {
-                c.GetTransport().outgoingBytes <- data
+                c.GetTransport().OutgoingBytes <- data
             } else {
-                c.GetTransport().outgoingBytes <- data0
+                c.GetTransport().OutgoingBytes <- data0
             }
         }
         LGTrace("broadcastHandler: Handle end!")
@@ -284,9 +284,9 @@ func (s *LGServer) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
             //    continue
             //}
             if c.GetType() == LGCLIENT_TYPE_GATE {
-                c.GetTransport().outgoing <- dp
+                c.GetTransport().Outgoing <- dp
             } else {
-                c.GetTransport().outgoing <- dp0
+                c.GetTransport().Outgoing <- dp0
             }
         }
         LGTrace("broadcastHandler: Handle end!")
