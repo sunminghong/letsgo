@@ -53,18 +53,23 @@ func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
         code := c.Transport.Stream.Endianer.Uint16(dp.Data)
         LGTrace("gridclient's processdps() \nmsg.code:",code)
 
+        LGTrace("dp.type",dp.Type)
+        LGTrace("c.clients",c.clients)
         switch dp.Type {
         case LGDATAPACKET_TYPE_DELAY:
-            dp.Type =LGDATAPACKET_TYPE_GENERAL
+            LGTrace("delay")
 
+            dp.Type = LGDATAPACKET_TYPE_GENERAL
             c.clients.Get(dp.FromCid).GetTransport().SendDP(dp)
 
         case LGDATAPACKET_TYPE_BROADCAST:
+            LGTrace("broadcast")
             //c.gate.SendBroadcast(c.gate.Clients.Get(dp.FromCid).GetTransport(),dp)
             c.Gate.SendBroadcast(nil,dp)
 
         default:
             //process msg ,eg:command line
+            c.clients.Get(dp.FromCid).GetTransport().SendDP(dp)
         }
     }
 }

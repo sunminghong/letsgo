@@ -58,6 +58,21 @@ func LGNewServer(makeclient LGNewClientFunc, datagram LGIDatagram) *LGServer {
     return s
 }
 
+func (s *LGServer) SetParent(p interface{}) {
+    s.Parent = p
+    methods := []string{"NewTransport"}
+
+    methodmap := make(map[string]reflect.Value)
+    parent := reflect.ValueOf(s.Parent)
+    for _,mname := range methods {
+        method := parent.MethodByName(mname)
+        if method.IsValid() {
+            methodmap[mname] = method
+        }
+    }
+    s.parentMethodsMap = methodmap
+}
+
 func (s *LGServer) Start(addr string, maxConnections int) {
     LGInfo("Hello Server!")
 
@@ -88,6 +103,7 @@ func (s *LGServer) Start(addr string, maxConnections int) {
                 if newcid == 0 {
                     LGWarn("connection num is more than ",s.maxConnections)
                 } else {
+                    newcid = LGGenerateID(newcid)
                     go s.transportHandler(newcid, connection)
                 }
             }
@@ -99,47 +115,29 @@ func (s *LGServer) SetMaxConnections(max int) {
     s.maxConnections = max
 }
 
-func (s *LGServer) removeClient(cid int) {
-    s.Clients.Remove(cid)
-    s.Freeid()
-}
+func (s *LGServer) RemoveClient(cid int) {
+    //if method,ok := s.parentMethodsMap["RemoveClient"]; ok {
+    //    args := []reflect.Value{
+    //        reflect.ValueOf(cid),
+    //    }
 
-func (s *LGServer) Freeid(cid int) {
-    asdf
-    //todo: .....
+    //    method.Call(args)
+    //    return
+    //}
+
+    s.Clients.Remove(cid)
+
+    //release id assign
+    cid,_= LGParseID(cid)
     s.idassign.Free(cid)
 }
 
-func (s *LGServer) Allocid() int {
+func (s *LGServer) AllocTransportid() int {
     if (s.Clients.Len() >= s.maxConnections) {
         return 0
     }
 
     return s.idassign.GetFree()
-}
-
-func (s *LGServer) SetParent(p interface{}) {
-    s.Parent = p
-    methods := []string{"AllocTransportid","NewTransport"}
-
-    methodmap := make(map[string]reflect.Value)
-    parent := reflect.ValueOf(s.Parent)
-    for _,mname := range methods {
-        method := parent.MethodByName(mname)
-        if method.IsValid() {
-            methodmap[mname] = method
-        }
-    }
-    s.parentMethodsMap = methodmap
-}
-
-func (s *LGServer) AllocTransportid() int {
-    if method,ok := s.parentMethodsMap["AllocTransportid"]; ok {
-        id := method.Call(nil)[0].Int()
-        return int(id)
-    }
-
-    return s.Allocid()
 }
 
 
@@ -155,9 +153,7 @@ func (s *LGServer) NewTransport(newcid int, conn net.Conn) *LGTransport {
         return trans
     }
 
-
     return LGNewTransport(newcid, conn, s,s.Datagram)
-
 }
 
 //该函数主要是接受新的连接和注册用户在transport list
@@ -185,7 +181,7 @@ func (s *LGServer) transportReader(transport *LGTransport, client LGIClient) {
             client.Closed()
             transport.Closed()
             transport.Conn.Close()
-            s.removeClient(transport.Cid)
+            s.RemoveClient(transport.Cid)
             LGError(err)
             break
         }
@@ -217,7 +213,7 @@ func (s *LGServer) transportSender(transport *LGTransport, client LGIClient) {
 
             transport.Closed()
             transport.Conn.Close()
-            s.removeClient(transport.Cid)
+            s.RemoveClient(transport.Cid)
             break
         }
     }
@@ -228,21 +224,23 @@ func (s *LGServer) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
         //在go里面没有while do ，for可以无限循环
         LGTrace("broadcastHandler: chan Waiting for input")
         dp := <-broadcastChan
-        //buf := s.Datagram.pack(dp)
 
-        fromCid := dp.FromCid
+        //fromCid := dp.FromCid
+        dp0 := &LGDataPacket{
+            Type: LGDATAPACKET_TYPE_GENERAL,
+            FromCid: 0,
+            Data: dp.Data,
+        }
         for _, c := range s.Clients.All() {
+            LGTrace("broadcastHandler: client.type",c.GetType())
             //if fromCid == Cid {
             //    continue
             //}
-            if c.GetType() != LGCLIENT_TYPE_GATE {
-                dp.FromCid = 0
-                dp.Type = LGDATAPACKET_TYPE_GENERAL
+            if c.GetType() == LGCLIENT_TYPE_GATE {
+                c.GetTransport().outgoing <- dp
             } else {
-                dp.FromCid = fromCid
-                dp.Type = LGDATAPACKET_TYPE_BROADCAST
+                c.GetTransport().outgoing <- dp0
             }
-            c.GetTransport().outgoing <- dp
         }
         LGTrace("broadcastHandler: Handle end!")
     }

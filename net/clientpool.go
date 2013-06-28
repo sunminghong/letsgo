@@ -134,10 +134,10 @@ func (cp *LGClientPool) transportReader(transport *LGTransport, client LGIClient
             break
         }
 
-        //Log("read to buff:", bytesRead)
+        LGTrace("read to buff:", bytesRead)
         transport.BuffAppend(buffer[0:bytesRead])
 
-        LGTrace("gridclient transport.Buff", transport.Stream.Bytes())
+        LGTrace("clientpool transport.Buff",len(transport.Stream.Bytes()), transport.Stream.Bytes())
         n, dps := transport.Fetch()
         LGTrace("fetch message number", n)
         if n > 0 {

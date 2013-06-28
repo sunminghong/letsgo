@@ -148,9 +148,12 @@ func main() {
 
     //client.Start("", 4444)
 
-    running :=1
-    for running==1 {
-        time.Sleep(3*1e3)
-    }
+    quit := make(chan bool)
+    <- quit
+    
+    //running :=1
+    //for running==1 {
+    //    time.Sleep(3*time.Second)
+    //}
 }
 

@@ -56,38 +56,12 @@ func LGNewGateServer(
     return gs
 }
 
-func (gs *LGGateServer) AllocTransportid() int {
-    cid := gs.Allocid()
-    if cid == 0 {
-        return cid
-    }
-
-    LGTrace("gateserver's alloctransportid is run")
-    return LGGenerateID(cid)
-}
-
 func (gs *LGGateServer) NewTransport(
     newcid int, conn net.Conn) *LGTransport {
 
     LGTrace("gateserver's newtransport is run")
     return LGNewTransport(newcid, conn, gs,gs.Datagram)
 }
-
-/*
-//该函数主要是接受新的连接和注册用户在transport list
-func (gs *LGGateServer) transportHandler(newcid int, connection net.Conn) {
-    transport := LGNewTransport(newcid, connection, gs,gs.Datagram)
-    name := "c_"+strconv.Itoa(newcid)
-    client := gs.makeclient(name,transport)
-    gs.Clients.Add(newcid, name, client)
-
-    //创建go的线程 使用Goroutine
-    go gs.transportSender(transport, client)
-    go gs.transportReader(transport, client)
-
-    LGDebug("has clients:",s.Clients.Len())
-}
-*/
 
 func (gs *LGGateServer) Start(gateconfigfile *string,gridsconfigfile *string) {
     //parse config ini file
