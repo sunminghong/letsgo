@@ -169,7 +169,7 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
 }
 
 //对数据进行封包
-func (d *LGDatagram) Pack__(dp *LGDataPacket) []byte {
+func (d *LGDatagram) Pack(dp *LGDataPacket) []byte {
     ilen := len(dp.Data)
     if dp.Type == LGDATAPACKET_TYPE_DELAY || dp.Type == LGDATAPACKET_TYPE_BROADCAST {
         ilen += 4

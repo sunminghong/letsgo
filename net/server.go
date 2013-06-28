@@ -204,10 +204,13 @@ func (s *LGServer) transportSender(transport *LGTransport, client LGIClient) {
         select {
         case dp := <-transport.outgoing:
             LGTrace("transportSender outgoing:",dp.Type, len(dp.Data))
-            //buf := s.Datagram.Pack(dp)
-            //transport.Conn.Write(buf)
-
             transport.PackWrite(dp)
+
+        case data := <-transport.outgoingBytes:
+            LGTrace("transportSender outgoingBytes:",len(data))
+            //buf := s.Datagram.Pack(dp)
+            transport.Conn.Write(data)
+
         case <-transport.Quit:
             LGDebug("Transport ", transport.Cid, " quitting")
 
@@ -224,22 +227,23 @@ func (s *LGServer) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
         //在go里面没有while do ，for可以无限循环
         LGTrace("broadcastHandler: chan Waiting for input")
         dp := <-broadcastChan
+        data := s.Datagram.Pack(dp)
 
         //fromCid := dp.FromCid
-        dp0 := &LGDataPacket{
+        data0 := s.Datagram.Pack(&LGDataPacket{
             Type: LGDATAPACKET_TYPE_GENERAL,
             FromCid: 0,
             Data: dp.Data,
-        }
+        })
         for _, c := range s.Clients.All() {
             LGTrace("broadcastHandler: client.type",c.GetType())
             //if fromCid == Cid {
             //    continue
             //}
             if c.GetType() == LGCLIENT_TYPE_GATE {
-                c.GetTransport().outgoing <- dp
+                c.GetTransport().outgoingBytes <- data
             } else {
-                c.GetTransport().outgoing <- dp0
+                c.GetTransport().outgoingBytes <- data0
             }
         }
         LGTrace("broadcastHandler: Handle end!")

@@ -9,8 +9,11 @@ type LGTransport struct {
     //transport connection 唯一 id
     Cid  int
 
-    //需要输出的数据(protocolcode+body) 的channel
+    //需要输出的数据包的channel
     outgoing chan *LGDataPacket
+
+    //需要输出的数据流 的channel
+    outgoingBytes chan []byte
 
     Quit chan bool
 

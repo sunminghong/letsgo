@@ -40,7 +40,7 @@ type LGIDatagram interface {
     GetEndian() int
     SetEndian(endian int)
     Fetch(c *LGTransport) (n int, dps []*LGDataPacket)
-    //Pack(dp *LGDataPacket) []byte
+    Pack(dp *LGDataPacket) []byte
     PackWrite(write LGWriteFunc,dp *LGDataPacket)
 }
 
