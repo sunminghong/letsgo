@@ -47,11 +47,13 @@ func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
             gatename,gateid := cmd.UnRegister(dp.Data)
             c.SetType(LGCLIENT_TYPE_GATE)
 
-            LGTrace("transport.server type is ",reflect.TypeOf(c.Transport.Server))
-            if grid,ok := c.Transport.Server.(*LGGridServer) ;ok {
-                c.Grid = grid
-            } else {
-                LGError("gridserver client init error:transport.Server is not GridServer type")
+            if c.Grid == nil {
+                LGTrace("transport.server type is ",reflect.TypeOf(c.Transport.Server))
+                if grid,ok := c.Transport.Server.(*LGGridServer) ;ok {
+                    c.Grid = grid
+                } else {
+                    LGError("gridserver client init error:transport.Server is not GridServer type")
+                }
             }
             c.Grid.RegisterGate(gatename,gateid,c)
 

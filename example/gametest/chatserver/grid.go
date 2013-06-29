@@ -19,10 +19,11 @@ import (
     . "github.com/sunminghong/letsgo/helper"
     . "github.com/sunminghong/letsgo/log"
     . "github.com/sunminghong/letsgo/net"
+    . "github.com/sunminghong/letsgo/net/gate"
     "./grids"
 )
 
-var serv *LGServer
+var serv *LGGridServer
 
 var (
     loglevel = flag.Int("loglevel", 0, "log level")
@@ -36,7 +37,7 @@ func main() {
     datagram := LGNewDatagram(LGLittleEndian)
 
     serv = &LGGridServer{}
-    serv.InitFromConfig(conf,grids.NewClient, datagram)
+    serv.InitFromConfig(*conf,grids.NewClient, datagram)
 
     serv.Start()
 }

@@ -14,7 +14,7 @@ import (
     //"reflect"
     . "github.com/sunminghong/letsgo/log"
     . "github.com/sunminghong/letsgo/net"
-    . "github.com/sunminghong/letsgo/net/grid"
+    . "github.com/sunminghong/letsgo/net/gate"
     p "./protos"
 )
 
@@ -68,8 +68,8 @@ func (c *Client) Closed() {
 
 func NewClient(name string,transport *LGTransport) LGIClient {
     cg := &LGGridClient{
-        &LGBaseClient{Transport:transport,Name:name},
-        ProccessHandle,
+        LGBaseClient:&LGBaseClient{Transport:transport,Name:name},
+        Process:ProccessHandle,
     }
 
     c := &Client{ cg }

@@ -76,12 +76,18 @@ func (gs *LGGridServer) InitFromConfig (
         datagram.SetEndian(LGLittleEndian)
     }
 
+    loglevel, err := c.GetInt(section,"logLevel")
+    if err != nil {
+        loglevel = 0
+    }
+    LGSetLevel(loglevel)
+
     gs.Init( name,serverid,allowDirectConnection,host,maxConnections,
         newGridClient,datagram)
 }
 
 func (gs *LGGridServer) Init(
-    name string,gridid int,allowDirectConnection bool,host string, 
+    name string,gridid int,allowDirectConnection bool,host string,
     maxConnections int,
     newGridClient LGNewClientFunc, datagram LGIDatagram) {
 

@@ -82,6 +82,13 @@ func (gs *LGGateServer) InitFromConfig (
         datagram.SetEndian(LGLittleEndian)
     }
 
+
+    loglevel, err := c.GetInt(section,"logLevel")
+    if err != nil {
+        loglevel = 0
+    }
+    LGSetLevel(loglevel)
+
     gs.Init( name,serverid,host,maxConnections,
     newPlayerClient,datagram,newGridClient,dispatcher)
 
@@ -108,7 +115,7 @@ func (gs *LGGateServer) NewTransport(
     return LGNewTransport(newcid, conn, gs,gs.Datagram)
 }
 
-func (gs *LGGateServer) Start(gateconfigfile *string,gridsconfigfile *string) {
+func (gs *LGGateServer) Start(gridsconfigfile *string) {
     //parse config ini file
     gs.connectGrids(gridsconfigfile)
     gs.LGServer.Start()

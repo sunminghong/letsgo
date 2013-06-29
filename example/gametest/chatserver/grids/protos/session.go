@@ -12,7 +12,7 @@ package protos
 
 import (
     . "github.com/sunminghong/letsgo/helper"
-    . "github.com/sunminghong/letsgo/net/grid"
+    . "github.com/sunminghong/letsgo/net/gate"
 )
 
 
