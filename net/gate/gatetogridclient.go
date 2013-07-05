@@ -33,6 +33,9 @@ func LGNewGateToGridClient (name string,transport *LGTransport) LGIClient {
     return c
 }*/
 
+func (c *LGGateToGridClient) Closed() {
+}
+
 func (c *LGGateToGridClient) Register() {
     c.clients = c.Gate.Clients
 
@@ -65,7 +68,7 @@ func (c *LGGateToGridClient) ProcessDPs(dps []*LGDataPacket) {
         case LGDATAPACKET_TYPE_BROADCAST:
             LGTrace("broadcast")
             //c.gate.SendBroadcast(c.gate.Clients.Get(dp.FromCid).GetTransport(),dp)
-            c.Gate.SendBroadcast(nil,dp)
+            c.Gate.SendBroadcast(dp)
 
         default:
             //process msg ,eg:command line

@@ -187,7 +187,7 @@ func (cp *LGClientPool) broadcastHandler(broadcastChan chan *LGDataPacket) {
 }
 
 //send broadcast message data for other object
-func (cp *LGClientPool) SendBroadcast(transport *LGTransport, dp *LGDataPacket) {
+func (cp *LGClientPool) SendBroadcast(dp *LGDataPacket) {
     cp.broadcastChan <- dp
 }
 

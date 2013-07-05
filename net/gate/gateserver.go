@@ -1,5 +1,5 @@
 /*=============================================================================
-#     FileName: gateserver.go
+#     FileName: gs.go
 #         Desc: server base 
 #       Author: sunminghong
 #        Email: allen.fantasy@gmail.com
@@ -14,6 +14,10 @@ import (
     "strconv"
     "time"
     "net"
+    "bufio"
+    "os"
+    "fmt"
+    "strings"
     goconf "github.com/sunminghong/goconf"
     . "github.com/sunminghong/letsgo/net"
     . "github.com/sunminghong/letsgo/helper"
@@ -29,6 +33,21 @@ type LGIDispatcher interface {
     GroupCode(messageCode int) int
 }
 
+const (
+    CONNECTION_STATE_FREE = 0
+    CONNECTION_STATE_CONNECTTING = 1
+)
+
+type gridConf struct {
+    name string
+    host string
+    messageCodes string
+    endian int
+    state int
+    datagram LGIDatagram
+}
+
+
 type LGGateServer struct {
     *LGServer
 
@@ -37,6 +56,7 @@ type LGGateServer struct {
     Dispatcher LGIDispatcher
 
     //makeclient NewGateClientFunc
+    gridConfs map[string]*gridConf
 }
 
 func (gs *LGGateServer) InitFromConfig (
@@ -101,6 +121,7 @@ func (gs *LGGateServer) Init(
 
     gs.LGServer = LGNewServer(name,gridid,host,maxConnections,newPlayerClient,datagram)
 
+    gs.gridConfs = make(map[string]*gridConf)
     gs.Grids = LGNewClientPool(newGridClient,datagram)
 
     gs.Dispatcher = LGNewDispatcher()
@@ -111,17 +132,32 @@ func (gs *LGGateServer) Init(
 func (gs *LGGateServer) NewTransport(
     newcid int, conn net.Conn) *LGTransport {
 
-    LGTrace("gateserver's newtransport is run")
+    LGTrace("gs's newtransport is run")
     return LGNewTransport(newcid, conn, gs,gs.Datagram)
 }
 
+/*
 func (gs *LGGateServer) Start(gridsconfigfile *string) {
     //parse config ini file
     gs.connectGrids(gridsconfigfile)
     gs.LGServer.Start()
 }
+*/
 
-func (gs *LGGateServer) connectGrids(configfile *string) {
+
+func(gs *LGGateServer) ReConnectGrids() {
+    for name,v := range gs.gridConfs {
+        LGTrace("ps is name:", name,v.state)
+        if v.state != CONNECTION_STATE_FREE {
+            continue
+        }
+
+        gs.ConnectGrid(name, v.host, &v.messageCodes,v.datagram)
+
+    }
+}
+
+func (gs *LGGateServer) ConnectGrids(configfile *string) {
     c, err := goconf.ReadConfigFile(*configfile)
     if err != nil {
         LGError(err.Error())
@@ -156,13 +192,16 @@ func (gs *LGGateServer) connectGrids(configfile *string) {
         }
 
         endian, err := c.GetInt(section,"endian")
+
+        gs.gridConfs[gname] = &gridConf{gname,host,messageCodes,endian,CONNECTION_STATE_FREE,nil}
+
         if err == nil {
             da := gs.Datagram.Clone(endian)
+            gs.gridConfs[gname].datagram = da
             gs.ConnectGrid(gname, host, &messageCodes,da)
         } else {
             gs.ConnectGrid(gname, host, &messageCodes,nil)
         }
-
     }
 }
 
@@ -181,8 +220,65 @@ func (gs *LGGateServer) ConnectGrid(
             return
         }
 
+        gs.gridConfs[name].state = CONNECTION_STATE_CONNECTTING
         //add dispatche
         gridID := c.GetTransport().Cid
         gs.Dispatcher.Add(gridID,messageCodes)
 }
 
+func (gs *LGGateServer) StartConsole(quit chan bool) {
+    reader := bufio.NewReader(os.Stdin)
+    for {
+        fmt.Print(gs.Name+"> ")
+        input, _ := reader.ReadBytes('\n')
+        cmd := string(input[:len(input)-1])
+
+        cmds := strings.Split(cmd," ")
+        switch cmds[0]{
+        case "sendtoall":
+            ///conn s1 :12001 0
+            if len(cmds)> 1{
+                msg := cmds[1]
+
+                mw := LGNewMessageWriter(gs.Datagram.GetEndian())
+                mw.SetCode(2011, 0)
+                mw.WriteString(msg, 0)
+
+                dp := &LGDataPacket{
+                    Type: LGDATAPACKET_TYPE_BROADCAST,
+                    Data: mw.ToBytes(),
+                    FromCid: 0,
+                }
+
+                gs.SendBroadcast(dp)
+            }
+
+        case "setmax":
+            if len(cmds)>1 {
+                max, err := strconv.Atoi(cmds[1])
+                if err != nil {
+                    fmt.Println("setmax is error:",err)
+                    continue
+                }
+                gs.SetMaxConnections(max)
+            } else {
+                fmt.Println("please input number of max connections")
+            }
+
+        case "restart":
+            gs.Stop()
+            gs.Start()
+        case "startServer":
+            gs.Start()
+        case "stop":
+            gs.Stop()
+        case "reconn":
+            gs.ReConnectGrids()
+
+        case "exit":
+            fmt.Println("this gateserver is exit")
+            quit <- true
+        default:
+        }
+    }
+}

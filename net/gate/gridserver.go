@@ -131,6 +131,7 @@ func (gs *LGGridServer) BroadcastHandler(broadcastChan <-chan *LGDataPacket) {
             Data: dp.Data,
         }
 
+        //broadcast to dplayer client of irect connect to this server 
         if gs.AllowDirectConnection {
             for _, c := range gs.Clients.All() {
                 //if fromCid == Cid {
