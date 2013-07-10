@@ -133,11 +133,6 @@ func NewA1A2() (a1,a2 *A) {
     return a1,a2
 }
 
-func NewSerialize() LGISerialize {
-    return LGGobSerialize{}
-}
-
-
 func Test_gob_serialize(t *testing.T) {
     //fmt.Println("////////////////////////test serialize //////////////////////////////")
     gs := &LGGobSerialize{}
