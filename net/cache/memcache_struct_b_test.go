@@ -45,6 +45,19 @@ func Benchmark_Get(t *testing.B) {
     }
 }
 
+func Benchmark_GetString(t *testing.B) {
+    Init()
+
+    c.Set("Hello", "sldfhjsakljdhflkasbdhjfalisdhfliasbdfkjasbdfuasfd", 0, 0)
+    for i:=0;i<t.N;i++ {
+        _,_, _ =c.GetRaw("Hello")
+        //if !ok {
+        //    t.Errorf("Get: %v", ok)
+        //    return
+        //}
+    }
+}
+
 func Benchmark_Gets(t *testing.B) {
     Init()
     a1,a2 := NewA1A2()

@@ -27,6 +27,19 @@ func LGNewMemcache( serialize LGISerialize) *LGMemcache {
     return &LGMemcache{serialize:serialize}
 }
 
+func (self *LGMemcache) GetRaw(key string) (val []byte, flag uint16,ok bool) {
+	if self.c == nil {
+		self.c = self.connectInit()
+	}
+	val, flag, err := self.c.Get(key)
+	if err != nil {
+        ok = false
+        return
+	}
+    ok = true
+    return
+}
+
 func (self *LGMemcache) Get(key string,val interface{}) (flag uint16,ok bool) {
 	if self.c == nil {
 		self.c = self.connectInit()
@@ -98,6 +111,22 @@ func (self *LGMemcache) Set(
     }
 
 	stored, err := self.c.Set(key, flag, uint64(timeout), v)
+	if err != nil {
+        return err
+    }
+    if  stored == false {
+		return errors.New("stored fail")
+	}
+	return nil
+}
+
+func (self *LGMemcache) SetRaw(
+    key string, val []byte,flag uint16, timeout int64) error {
+	if self.c == nil {
+		self.c = self.connectInit()
+	}
+
+	stored, err := self.c.Set(key, flag, uint64(timeout), val)
 	if err != nil {
         return err
     }

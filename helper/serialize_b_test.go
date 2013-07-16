@@ -18,6 +18,8 @@ import (
 
 func Benchmark_SerializeGob(t *testing.B) {
     //fmt.Println("////////////////////////test serialize b //////////////////////////////")
+    bl := 0
+    gs := &LGGobSerialize{}
     for i := 0; i < t.N; i++ {
         test()
     }
@@ -26,8 +28,6 @@ func Benchmark_SerializeGob(t *testing.B) {
 }
 
 func test() int {
-    bl := 0
-    gs := &LGGobSerialize{}
 
     v1 := 23422
     v2 := -1

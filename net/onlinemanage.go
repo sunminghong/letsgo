@@ -14,13 +14,12 @@ import (
     //. "github.com/sunminghong/letsgo/log"
     . "github.com/sunminghong/letsgo/net"
     . "github.com/sunminghong/letsgo/helper"
-    mc "code.google.com/p/vitess/go/memcache"
+    . "github.com/sunminghong/letsgo/net/cache"
 //    "unsafe"
 )
 
 
 type LGOnlineManager {
-    mc.Connection
 }
 
 func (self *LGOnlineManager) Online() bool {
