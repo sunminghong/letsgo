@@ -32,15 +32,15 @@ func TestRedis(t *testing.T) {
 
     //c, err =Connect("/tmp/vtocc_cache.sock")
     //
-    c := LGNewRedis()
-    count, err := c.Connect("192.168.18.18:6379")
-    if count == 0 || err != nil {
+    c := LGNewRedis("192.168.18.18:6379")
+    _, err := c.Connect(0)
+    if err != nil {
         t.Errorf("Connect: %v", err)
         return
     }
 
     // Set
-    err =c.Set("Hello", "world", 0)
+    err =c.Set("Hello", "world")
     if err != nil {
         t.Errorf("Set: %v", err)
         return
@@ -48,12 +48,17 @@ func TestRedis(t *testing.T) {
     expectRedis("Set",t, c, "Hello", "world")
 
 
-	// Delete
-	err =c.Delete("Hello")
+	// Del
+    ok,err :=c.Del("Hello")
 	if err != nil {
-		t.Errorf("Delete: %v", err)
+		t.Errorf("Del: %v", err)
 	}
 	//expectRedis("Delete", t, c, "Hello", "")
+
+    ok,err = c.Exists("Hello")
+    if ok {
+		t.Errorf("Delete is error!")
+    }
 
 
 	//// timeout
@@ -91,7 +96,7 @@ func TestRedis(t *testing.T) {
 
 	//FlushAll
 	// Set
-	err = c.Set("Flush", ("Test"), 0)
+	err = c.Set("Flush", "Test")
 	if err != nil {
 		t.Errorf("Set: %v", err)
 	}
@@ -103,7 +108,8 @@ func TestRedis(t *testing.T) {
 		return
 	}
 
-    b := c.Get("Flush")
+    b := ""
+    b,err = c.Get("Flush")
 	if b == "Test" {
 		t.Errorf("FlushAll failed")
 		return
@@ -113,7 +119,10 @@ func TestRedis(t *testing.T) {
 
 func expectRedis(cmd string, t *testing.T, c *LGRedis, key, value string) {
     //fmt.Println(cmd,"...")
-    b :=c.Get(key)
+    b,err :=c.Get(key)
+    if err != nil {
+		t.Errorf("Expecting %s, Received %s", err)
+    }
 	if string(b) != value {
         //fmt.Println(cmd,"///.")
 		t.Errorf("Expecting %s, Received %s", value, b)

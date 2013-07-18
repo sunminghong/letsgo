@@ -15,9 +15,65 @@ import (
     //"os/exec"
     //. "github.com/sunminghong/letsgo/helper"
     "testing"
-    "time"
-    //"fmt"
+    . "strconv"
+    "fmt"
 )
+
+type C struct {
+    I1 int
+    I2 int
+    I3 int
+    I4 int
+    I5 int
+    I6 int
+    I7 int
+    I8 int
+    I9 int
+    I10 int
+    I11 int
+    I12 int
+    I13 int
+    I14 int
+    I15 int
+
+    Str1 string
+}
+
+func (a1 *C) Eq(a2 *C) bool {
+    if a1.I1 != a2.I1 {
+        return false
+    }
+    if a1.Str1 != a2.Str1 {
+        return false
+    }
+
+    return true
+}
+
+func NewC() (a1 *C) {
+    a1 = &C{
+        I1:1,
+        I2:12,
+        I3:13,
+        I4:1234,
+        I5:1342,
+        I6:123423,
+        I7:123,
+        I8:2341,
+        I9:452234,
+        I10:690,
+        I11:2342,
+        I12:56878,
+        I13:213134,
+        I14:2352,
+        I15:234,
+
+        Str1:"abc",
+    }
+
+    return a1
+}
+
 
 func TestRedis3(t *testing.T) {
     //fmt.Println("////////////////////////test 3 //////////////////////////////")
@@ -33,119 +89,75 @@ func TestRedis3(t *testing.T) {
 
     //c, err =Connect("/tmp/vtocc_cache.sock")
     //
-    c := LGNewRedis()
-    count, err := c.Connect("192.168.18.18:6379")
-    if count == 0 || err != nil {
+    c := LGNewRedis("192.168.18.18:6379")
+    _, err := c.Connect(0)
+    if err != nil {
         t.Errorf("Connect: %v", err)
         return
     }
 
-    a1,a2 := NewA1A2()
+    a1:= NewC()
 
     // Set
-    err =c.SetH("Hello", a1)
+    err =c.Hmset("Hello", a1)
     if err != nil {
         t.Errorf("Set: %v", err)
         return
     }
-    expectRedis3("Set",t, c, "Hello", a1)
 
-
-	// Delete
-	err =c.Delete("Hello")
-	if err != nil {
-		t.Errorf("Delete: %v", err)
-	}
-	//expectRedis3("Delete", t, c, "Hello",nil) 
-
-	// Flags
-	err = c.Set("Hello", a1, 0xFF3F, 0)
-	if err != nil {
-		t.Errorf("Set: %v", err)
-		return
-	}
-    var b A
-    var f uint16
+    var b C
     var ok bool
 
-	f, ok =c.Get("Hello",&b)
-	if !ok {
+	err=c.Hgetall("Hello",&b)
+	if err != nil {
 		t.Errorf("Get: %v", ok)
 		return
 	}
-	if f != 0xFF3F {
-		t.Errorf("Expecting 0xFF3F, Received %x", f)
-        return
-	}
-	expectRedis3("Flags", t, c, "Hello", a1)
 
-	// timeout
-    //fmt.Println("timeout...")
-	err = c.Set("Lost", a1, 0, 1)
-	if err != nil {
-		t.Errorf("Set: %v", err)
+    if !b.Eq(a1) {
+		t.Errorf("Get: %v", ok)
 		return
-	}
-	expectRedis3("timeout",t, c, "Lost", a1)
-	time.Sleep(2 * time.Second)
-
-    b = A{}
-	_, ok =c.Get("Lost",&b)
-    ////fmt.Printf("timeout get is ",ok,b)
-    if ok {
-        t.Errorf("timeout : %v", ok)
-		return
-    } else if b.Eq(a1) {
-        t.Errorf("timeout : value is read out", err)
-        return
     }
-    //fmt.Printf("timeout2 ....")
 
-	// cas
-	err = c.Set("Data", a1, 0, 0)
+    i1,err := c.Hget("Hello","I1")
 	if err != nil {
-		t.Errorf("Set: %v", err)
-		return
+		t.Errorf("hget : %v", err)
 	}
-	expectRedis3("cas1",t, c, "Data", a1)
 
-    b = A{}
-    var cas uint64
-	cas,f,ok =c.Gets("Data",&b)
-	if !ok {
-		t.Errorf("Gets: %v", err)
-		return
-	}
-	if cas == 0 {
-		t.Errorf("Expecting non-zero for cas")
-	}
-	err = c.Cas("Data",a2, 12345,0 ,0)
-	if err == nil {
-		t.Errorf("Cas: %v", err)
-		return
-	}
-	expectRedis3("cas2", t, c, "Data", a1)
+    if ii,err:=Atoi(string(i1)); err!=nil || ii!=a1.I1 {
+		t.Errorf("Hget hello.i1: %v",a1.I1,i1)
+    }
 
-	err = c.Cas("Data", a2, cas, 0, 0)
+    //test HGet
+    vals,err := c.Hmget("Hello","I1","I2","Str1")
 	if err != nil {
-		t.Errorf("Set: %v", err)
-		return
+		t.Errorf("hget : %v", err)
 	}
-	expectRedis3("cas3",t, c, "Data", a2)
+    
+    ii1,ok := vals["I1"]
+    if !ok || Itoa(a1.I1)!=ii1 {
+        fmt.Println("ad:"+ii1)
+		t.Errorf("Hget hello.i1: %d%v",a1.I1, vals)
+    }
+    ii2,ok := vals["I2"]
+    if !ok || Itoa(a1.I2)!=ii2 {
+		t.Errorf("Hget hello.i1: %v",vals)
+    }
+    ii3,ok := vals["Str1"]
+    if !ok || a1.Str1!=ii3 {
+		t.Errorf("Hget hello.i1: %v",vals)
+    }
 
-	err = c.Set("Data",a1, 0, 0)
+	// Delete
+	ok,err =c.Del("Hello")
 	if err != nil {
-		t.Errorf("Set: %v", err)
-		return
+		t.Errorf("Delete: %v", err)
 	}
-	expectRedis3("cas4", t, c, "Data", a1)
 
-	// stats
-	_, err = c.Stats("")
-	if err != nil {
-		t.Errorf("Stats: %v", err)
-		return
-	}
+    ok,err = c.Exists("Hello")
+    if ok {
+		t.Errorf("Delete is error!")
+    }
 
     /*
     //var slabs [] byte
@@ -159,11 +171,10 @@ func TestRedis3(t *testing.T) {
 
 	//FlushAll
 	// Set
-	err = c.Set("Flush", a2, 0, 0)
+	err = c.Set("Flush", "sdflsadf")
 	if err != nil {
 		t.Errorf("Set: %v", err)
 	}
-	expectRedis3("FlushAll1",t, c, "Flush", a2)
 
 	err = c.FlushAll()
 	if err != nil {
@@ -171,32 +182,11 @@ func TestRedis3(t *testing.T) {
 		return
 	}
 
-    b = *a1
-	f, ok = c.Get("Flush",&b)
-	if ok {
-		t.Errorf("Get: %v after FlushAll", ok)
-		return
-	}
-	if b.Eq(a2) {
-		t.Errorf("FlushAll failed")
+    _,err = c.Get("Flush")
+	if err == nil {
+		t.Errorf("Get: %v after FlushAll", err)
 		return
 	}
     //fmt.Println("FlushAll2 ...")
     //fmt.Println("////////////////////////test 3 //////////////////////////////")
 }
-
-func expectRedis3(cmd string, t *testing.T, c *LGMemcache, key string, value *A) {
-    //fmt.Println(cmd,"。。。")
-    var b A
-    _, ok :=c.Get(key,&b)
-	if !ok {
-        //fmt.Println(cmd,"///")
-		t.Errorf("Get: %v", ok)
-		return
-	}
-	if !b.Eq(value) {
-        //fmt.Println(cmd,"///.")
-		t.Errorf("Expecting %s, Received %s", value, b)
-	}
-}
-
