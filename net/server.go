@@ -45,6 +45,8 @@ type LGServer struct {
 
     broadcastChan chan *LGDataPacket
 
+    exitChan chan bool
+
     idassign *LGIDAssign
 }
 
@@ -59,6 +61,7 @@ func LGNewServer(
         Addr : addr,
         maxConnections : maxConnections,
         Clients: LGNewClientMap(),
+        exitChan: make(chan bool),
     }
 
     s.makeclient = makeclient
@@ -108,6 +111,10 @@ func (s *LGServer) Start() {
         for {
             LGTrace("Waiting for connection")
             connection, error := netListen.Accept()
+            if <-s.exitChan {
+                continue
+            }
+
             if error != nil {
                 LGError("Transport error: ", error)
             } else {
@@ -294,7 +301,11 @@ func (s *LGServer) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
 }
 
 //send broadcast message data for other object
-func (s *LGServer) SendBroadcast(transport *LGTransport, dp *LGDataPacket) {
+func (s *LGServer) SendBroadcast(dp *LGDataPacket) {
     s.broadcastChan <- dp
+}
+
+func (s *LGServer) Stop() {
+    s.exitChan <- true
 }
 

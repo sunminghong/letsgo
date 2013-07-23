@@ -70,7 +70,7 @@ func (c *LGTransport) SendDP(dp *LGDataPacket) {
 }
 
 func (c *LGTransport) SendBroadcast(dp *LGDataPacket) {
-    c.Server.SendBroadcast(c, dp)
+    c.Server.SendBroadcast(dp)
 }
 
 // new Transport object

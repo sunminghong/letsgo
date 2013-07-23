@@ -76,7 +76,7 @@ type LGIClient interface {
 
 type LGIServ interface {
     SetMaxConnections(max int)
-    SendBroadcast(t *LGTransport, dp *LGDataPacket)
+    SendBroadcast(dp *LGDataPacket)
 }
 
 type LGIServer interface {

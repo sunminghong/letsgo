@@ -56,8 +56,10 @@ func newGridClient (name string,transport *LGTransport) LGIClient {
 var (
     loglevel = flag.Int("loglevel",0,"log level")
     gateconf = flag.String("gateconf","gate.conf","gate server config file")
-    gridsconf = flag.String("gridconf","grids.conf","grid server config file")
+    gridsconf = flag.String("gridconf","gate.conf","grid server config file")
 )
+
+
 
 func main() {
     flag.Parse()
@@ -68,11 +70,17 @@ func main() {
     //    LGNewClient,datagram,newGridClient,LGNewDispatcher())
 
 
+
     gateserver.InitFromConfig(
         *gateconf,LGNewClient,datagram,newGridClient,LGNewDispatcher())
 
     LGSetLevel(*loglevel)
 
-    gateserver.Start(gridsconf)
+    quit := make(chan bool)
+    go gateserver.StartConsole(quit)
 
+    gateserver.ConnectGrids(gridsconf)
+    go gateserver.Start()
+
+    <-quit
 }
