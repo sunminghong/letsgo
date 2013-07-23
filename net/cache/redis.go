@@ -13,7 +13,6 @@ package cache
 import (
     "runtime"
     "net"
-
     "github.com/sunminghong/redis"
 )
 
