@@ -69,7 +69,7 @@ func (r *LGDefaultDispatcher) addDisp(gridID int, code int) {
 }
 
 func (r *LGDefaultDispatcher) Dispatch(messageCode int) (gridID int,ok bool) {
-    gcode := r.GroupCode(messageCode)
+    gcode := r.groupCode(messageCode)
 
     gridIDArr,ok := r.messageCodemaps[gcode]
     LGTrace("gridIDArr,gcode:",gridIDArr,gcode)
@@ -118,7 +118,7 @@ func (r *LGDefaultDispatcher) Dispatch(messageCode int) (gridID int,ok bool) {
 }
 
 //将协议编号分组以供Dispatch决策用那个Grid 来处理
-func (r *LGDefaultDispatcher) GroupCode(messageCode int) int {
+func (r *LGDefaultDispatcher) groupCode(messageCode int) int {
     return int(messageCode / 100)
 }
 

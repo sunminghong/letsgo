@@ -32,7 +32,6 @@ type LGIDispatcher interface {
     Remove(gridID int)
 
     Dispatch(messageCode int) (gridID int, ok bool)
-    GroupCode(messageCode int) int
 }
 
 const (
