@@ -34,6 +34,8 @@ func LGNewGateToGridClient (name string,transport *LGTransport) LGIClient {
 }*/
 
 func (c *LGGateToGridClient) Closed() {
+    gridID := c.GetTransport().Cid
+    c.Gate.Dispatcher.Remove(gridID)
 }
 
 func (c *LGGateToGridClient) Register() {

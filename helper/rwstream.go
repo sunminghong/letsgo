@@ -11,7 +11,6 @@
 package helper
 
 import (
-    "fmt"
     "encoding/binary"
     "errors"
 )
@@ -154,7 +153,6 @@ func (b *LGRWStream) GetPos() int {
 }
 
 func (b *LGRWStream) SetPos(pos int) {
-    fmt.Println("last,off,pos",b.last,b.off,pos)
     if pos < 0 {
         b.last += pos
         if b.last < b.off {

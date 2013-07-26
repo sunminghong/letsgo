@@ -46,6 +46,7 @@ type LGServer struct {
     broadcastChan chan *LGDataPacket
 
     exitChan chan bool
+    stop bool
 
     idassign *LGIDAssign
 }
@@ -61,6 +62,7 @@ func LGNewServer(
         Addr : addr,
         maxConnections : maxConnections,
         Clients: LGNewClientMap(),
+        stop: false,
         exitChan: make(chan bool),
     }
 
@@ -76,9 +78,11 @@ func LGNewServer(
     return s
 }
 
-func (s *LGServer) SetParent(p interface{}) {
+func (s *LGServer) SetParent(p interface{},methods ...string) {
     s.Parent = p
-    methods := []string{"NewTransport"}
+    if len(methods) == 0 {
+        methods = []string{"NewTransport"}
+    }
 
     methodmap := make(map[string]reflect.Value)
     parent := reflect.ValueOf(s.Parent)
@@ -92,8 +96,9 @@ func (s *LGServer) SetParent(p interface{}) {
 }
 
 func (s *LGServer) Start() {
-    LGInfo("Hello Server!")
+    LGInfo(s.Name +" is starting...")
 
+    s.stop=false
     //todo: maxConnections don't proccess
     //addr := host + ":" + strconv.Itoa(port)
 
@@ -101,17 +106,19 @@ func (s *LGServer) Start() {
     s.broadcastChan = make(chan *LGDataPacket, s.broadcast_chan_num)
     go s.broadcastHandler(s.broadcastChan)
 
-    LGInfo("listen with :", s.Addr)
     netListen, error := net.Listen("tcp", s.Addr)
     if error != nil {
         LGError(error)
     } else {
+        LGInfo("listen with :", s.Addr)
+        LGInfo(s.Name +" is started !!!")
+
         //defer函数退出时执行
         defer netListen.Close()
         for {
             LGTrace("Waiting for connection")
             connection, error := netListen.Accept()
-            if <-s.exitChan {
+            if s.stop {
                 continue
             }
 
@@ -306,6 +313,6 @@ func (s *LGServer) SendBroadcast(dp *LGDataPacket) {
 }
 
 func (s *LGServer) Stop() {
-    s.exitChan <- true
+    s.stop = true
 }
 

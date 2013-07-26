@@ -29,6 +29,8 @@ type LGIDispatcher interface {
     Init()
     //Add(client Client,protocols []int)
     Add(gridID int, messageCodes *string)
+    Remove(gridID int)
+
     Dispatch(messageCode int) (gridID int, ok bool)
     GroupCode(messageCode int) int
 }
@@ -148,8 +150,14 @@ func (gs *LGGateServer) Start(gridsconfigfile *string) {
 func(gs *LGGateServer) ReConnectGrids() {
     for name,v := range gs.gridConfs {
         LGTrace("ps is name:", name,v.state)
-        if v.state != CONNECTION_STATE_FREE {
+
+        c := gs.Grids.Clients.GetByName(name)
+        if c != nil {
             continue
+        }
+
+        if v.state != CONNECTION_STATE_FREE {
+            //continue
         }
 
         gs.ConnectGrid(name, v.host, &v.messageCodes,v.datagram)
@@ -170,6 +178,12 @@ func (gs *LGGateServer) ConnectGrids(configfile *string) {
         if !c.HasSection(section) {
             continue
         }
+
+        enabled, err := c.GetBool(section,"enabled")
+        if err == nil &&  !enabled {
+            continue
+        }
+
         gname, err := c.GetString(section,"name")
         if err != nil {
             //if err.Reason == goconf.SectionNotFound {
@@ -191,6 +205,7 @@ func (gs *LGGateServer) ConnectGrids(configfile *string) {
             messageCodes = ""
         }
 
+
         endian, err := c.GetInt(section,"endian")
 
         gs.gridConfs[gname] = &gridConf{gname,host,messageCodes,endian,CONNECTION_STATE_FREE,nil}
@@ -208,6 +223,8 @@ func (gs *LGGateServer) ConnectGrids(configfile *string) {
 func (gs *LGGateServer) ConnectGrid(
     name string,host string,messageCodes *string,datagram LGIDatagram) {
 
+        LGInfo("connect to grid:",name)
+
         pool := gs.Grids
         go pool.Start(name, host, datagram)
         time.Sleep(2*time.Second)
@@ -224,6 +241,8 @@ func (gs *LGGateServer) ConnectGrid(
         //add dispatche
         gridID := c.GetTransport().Cid
         gs.Dispatcher.Add(gridID,messageCodes)
+
+        LGInfo("be connected to grid ",name)
 }
 
 func (gs *LGGateServer) StartConsole(quit chan bool) {
@@ -238,7 +257,7 @@ func (gs *LGGateServer) StartConsole(quit chan bool) {
         case "sendtoall":
             ///conn s1 :12001 0
             if len(cmds)> 1{
-                msg := cmds[1]
+                msg := strings.Join(cmds[1:]," ")
 
                 mw := LGNewMessageWriter(gs.Datagram.GetEndian())
                 mw.SetCode(2011, 0)
@@ -264,7 +283,6 @@ func (gs *LGGateServer) StartConsole(quit chan bool) {
             } else {
                 fmt.Println("please input number of max connections")
             }
-
         case "restart":
             gs.Stop()
             gs.Start()

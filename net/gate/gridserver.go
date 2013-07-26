@@ -120,7 +120,6 @@ func (gs *LGGridServer) NewTransport(newcid int, conn net.Conn) *LGTransport {
 
 func (gs *LGGridServer) BroadcastHandler(broadcastChan <-chan *LGDataPacket) {
     for {
-        //在go里面没有while do ，for可以无限循环
         LGTrace("broadcastHandler: chan Waiting for input")
         dp := <-broadcastChan
 

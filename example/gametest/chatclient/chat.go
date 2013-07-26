@@ -43,36 +43,39 @@ func clientsender(cid *int,client *LGClientPool) {
         if cmd[0] == '/' {
             cmds := strings.Split(cmd," ")
             switch cmds[0]{
-            case "/conn":
+            case "/","/conn":
                 ///conn s1 :12001 0
                 var name,addr string
-                if len(cmds)>2 {
-                    name = cmds[1]
-                    addr = cmds[2]
-                }else {
-                    name = "c_" + strconv.Itoa(*cid)
-                    addr = cmds[1]
-                }
+                var endian int
 
-                p := client.Clients.GetByName(name)
-                if p != nil {
-                    fmt.Println(name," is exists !")
-                    continue
+                if cmds[0] == "/" {
+                    name= "s1"
+                    addr=":12000"
+                    endian=1
+                } else {
+
+                    if len(cmds)>2 {
+                        name = cmds[1]
+                        addr = cmds[2]
+                    }else {
+                        name = "c_" + strconv.Itoa(*cid)
+                        addr = cmds[1]
+                    }
+
+                    p := client.Clients.GetByName(name)
+                    if p != nil {
+                        fmt.Println(name," is exists !")
+                        continue
+                    }
                 }
 
                 if len(cmds)>3 {
-                    endian,err := strconv.Atoi(cmds[3])
-
-                    if err ==nil && (endian == 0 || endian == 1) {
-                        LGDebug("connect to server use endian:",endian)
-                        datagram := LGNewDatagram(endian)
-                        go client.Start(name,addr,datagram)
-                    } else {
-                        go client.Start(name,addr,nil)
-                    }
-                } else {
-                    go client.Start(name,addr,nil)
+                    endian,_= strconv.Atoi(cmds[3])
                 }
+
+                LGDebug("connect to server use endian:",endian)
+                datagram := LGNewDatagram(endian)
+                go client.Start(name,addr,datagram)
 
 
                 fmt.Print("please input your name:")
@@ -89,7 +92,10 @@ func clientsender(cid *int,client *LGClientPool) {
                 }
 
                 text = string(input)
-
+            case "/setlog":
+                if lv,err := strconv.Atoi(cmds[1]); err == nil {
+                    LGSetLevel(lv)
+                }
             case "/change":
                 name := cmds[1]
                 change(cid,client,name)

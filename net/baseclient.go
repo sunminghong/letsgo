@@ -50,9 +50,7 @@ func (c *LGBaseClient) Close() {
 }
 
 func (c *LGBaseClient) Closed() {
-    LGTrace("this client is closed!")
-    //todo: override write by sub object
-    panic("Closed need override write by sub object")
+    panic("LGpanic:Closed need override write by sub object")
 }
 
 func (c *LGBaseClient) SendMessage(fromcid int,msg LGIMessageWriter) {

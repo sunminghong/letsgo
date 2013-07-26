@@ -48,9 +48,20 @@ func LGNewClient (name string,transport *LGTransport) LGIClient {
     return c
 }
 
+func (c *LGClient) Closed() {
+    LGTrace("this client is closed!")
+}
+
 //对数据进行拆包
 func (c *LGClient) ProcessDPs(dps []*LGDataPacket) {
+    defer func() {
+        if r:=recover(); r!=nil {
+            LGError("grid 服务出错：",r)
+        }
+    }()
+
     for _, dp := range dps {
+
         //msg := NewMessageReader(dp.Data,c.Transport.Stream.Endian)
         code := int(c.Transport.Stream.Endianer.Uint16(dp.Data))
         LGTrace("msg.code:",code)
@@ -60,13 +71,18 @@ func (c *LGClient) ProcessDPs(dps []*LGDataPacket) {
         if ok {
             LGTrace("dispatch to gridID",gridID)
             gridClient := c.grids.Get(gridID)
+            if gridClient != nil {
 
-            dp.Type = LGDATAPACKET_TYPE_DELAY
-            dp.FromCid = c.Transport.Cid
+                dp.Type = LGDATAPACKET_TYPE_DELAY
+                dp.FromCid = c.Transport.Cid
 
-            gridClient.GetTransport().SendDP(dp)
+                gridClient.GetTransport().SendDP(dp)
 
-            //todo: 当grid超时处理是需要返回原协议失败
+                //todo: 当grid超时处理是需要返回原协议失败
+            } else {
+                //todo: 是否需要缓存没有处理的数据包
+                LGError("分配的grid 服务器不存在:",code)
+            }
         } else {
             LGError("messageCode has not grid process:",code)
         }

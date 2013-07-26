@@ -18,16 +18,17 @@ import (
 
 func Benchmark_SerializeGob(t *testing.B) {
     //fmt.Println("////////////////////////test serialize b //////////////////////////////")
-    bl := 0
     gs := &LGGobSerialize{}
     for i := 0; i < t.N; i++ {
-        test()
+        test(gs)
     }
-    bytelength := test()
+    bytelength := test(gs)
     fmt.Println("bytelengthGob=",bytelength)
 }
 
-func test() int {
+func test(gs LGISerialize) int {
+
+    bl := 0
 
     v1 := 23422
     v2 := -1

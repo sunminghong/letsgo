@@ -29,7 +29,7 @@ func logs(v ...interface{}) {
     fmt.Print(v[0])
 }
 
-func LGTestFree(t *testing.T) {
+func TestFree(t *testing.T) {
     log("colMask,lineMask:",colMask,lineMask)
 
     ida.setBit(30,1)
