@@ -71,7 +71,7 @@ func (self *LGMemcache) Gets(key string,val interface{}) (cas uint64, flag uint1
 }
 
 func (self *LGMemcache) Cas(
-    key string, val interface{},cas uint64, timeout int64, flag uint16) error {
+    key string, val interface{},cas uint64, flag uint16, timeout int64) error {
 	if self.c == nil {
 		self.c = self.connectInit()
 	}

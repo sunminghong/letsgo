@@ -72,32 +72,47 @@ func TestUidmap(t *testing.T) {
 
     cas = 0
     uidmap := LGNewUidMap(c)
-    err = uidmap.SaveUid(gateid,fromcid,cid,uid,cas)
-    fmt.Println("/////////////////////",err)
+    uidmap.SaveUid(gateid,fromcid,cid,uid)
+    fmt.Println("/////////////////////")
 
-    uid,cas = uidmap.GetUid(gateid,fromcid,cid)
+    uid = uidmap.GetUid(gateid,fromcid,cid)
     if uid!=12345 {
         t.Errorf("uid read error:%d,%d",12345,uid)
     }
     fmt.Println("cas==",cas)
 
-    uidmap.Clear()
 
+    //uidmap.Clear()
 
-    uid,cas = uidmap.GetUid(gateid,fromcid,cid)
-    if uid!=12345 {
+    gateid_,fromcid_,cid_,cas := uidmap.CheckUid(uid)
+    if gateid_!=gateid || fromcid_ !=fromcid || cid_!=cid {
         t.Errorf("uid read error:%d,%d",12345,uid)
     }
-    fmt.Println("cas=2=",cas)
+    fmt.Println("cas=2=",gateid_,fromcid_,cid_,cas)
 
 
-    err = uidmap.SaveUid(gateid,fromcid,cid,2345235,32234)
+    err = uidmap.CasUid(gateid,fromcid,cid,2345235,32234)
     fmt.Println(err)
-    uid,cas = uidmap.GetUid(gateid,fromcid,cid)
+    uid = uidmap.GetUid(gateid,fromcid,cid)
 
     if uid!=12345 {
         t.Errorf("uid read error:",12345,uid)
     }
     fmt.Println("cas==",cas)
+
+    err = uidmap.CasUid(23423,fromcid,cid,2345235,cas)
+    fmt.Println(err)
+    uid = uidmap.GetUid(gateid,fromcid,cid)
+
+    if uid==2345235{
+        t.Errorf("uid read error:",12345,uid)
+    }
+
+    fmt.Println("cas==",cas)
+    gateid_,fromcid_,cid_,cas = uidmap.CheckUid(uid)
+    if gateid_!=23423 || fromcid_ !=fromcid || cid_!=cid {
+        t.Errorf("uid read error:%d,%d",12345,uid)
+    }
+    fmt.Println("cas=2=",gateid_,fromcid_,cid_,cas)
 }
 
