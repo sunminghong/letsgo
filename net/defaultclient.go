@@ -14,6 +14,10 @@ import (
     . "github.com/sunminghong/letsgo/log"
 )
 
+type LGProcessHandleFunc func(
+    msg LGIMessageReader,c LGIClient,fromCid int)
+
+
 // Client  
 type LGDefaultClient struct {
     *LGBaseClient

@@ -13,6 +13,7 @@ package cache
 import (
     "runtime"
     "net"
+    . "github.com/sunminghong/letsgo/log"
     "github.com/sunminghong/redis"
 )
 
@@ -31,6 +32,7 @@ func (self *LGRedis) Connect(db int) (c net.Conn, err error){
 
     c, err = net.Dial("tcp", self.Addr)
     if err != nil {
+        LGError("connect to redis is error:",err)
         c.Close()
         return
     }

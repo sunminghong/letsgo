@@ -65,8 +65,8 @@ func TestMemcache2(t *testing.T) {
     var f uint16
     var ok bool
 
-	f, ok =c.Get("Hello",&b)
-	if !ok {
+	f, err =c.Get("Hello",&b)
+	if err!=nil {
 		t.Errorf("Get: %v", ok)
 		return
 	}
@@ -87,9 +87,9 @@ func TestMemcache2(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
     b = 0
-	_, ok =c.Get("Lost",&b)
+	_, err =c.Get("Lost",&b)
     ////fmt.Printf("timeout get is ",ok,b)
-    if ok {
+    if err == nil {
         t.Errorf("timeout : %v", ok)
 		return
     } else if b == 4567 {
@@ -108,8 +108,8 @@ func TestMemcache2(t *testing.T) {
 
     b =0
     var cas uint64
-	cas,f,ok =c.Gets("Data",&b)
-	if !ok {
+	cas,f,err =c.Gets("Data",&b)
+	if err!=nil {
 		t.Errorf("Gets: %v", err)
 		return
 	}
@@ -169,8 +169,8 @@ func TestMemcache2(t *testing.T) {
 	}
 
     b = 0
-	f, ok = c.Get("Flush",&b)
-	if ok {
+	f, err = c.Get("Flush",&b)
+	if err==nil {
 		t.Errorf("Get: %v after FlushAll", ok)
 		return
 	}
@@ -184,10 +184,11 @@ func TestMemcache2(t *testing.T) {
 func expect2(cmd string, t *testing.T, c *LGMemcache, key string, value int) {
     //fmt.Println(cmd,"。。。")
     var b int
-    _, ok :=c.Get(key,&b)
-	if !ok {
+    var err error
+    _, err =c.Get(key,&b)
+	if err!=nil {
         //fmt.Println(cmd,"///")
-		t.Errorf("Get: %v", ok)
+		t.Errorf("Get: %v", err)
 		return
 	}
 	if b != value {

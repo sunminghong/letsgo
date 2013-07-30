@@ -15,73 +15,112 @@ import (
     . "github.com/sunminghong/letsgo/net"
     . "github.com/sunminghong/letsgo/helper"
 //    "unsafe"
+    "strconv"
+    //"fmt"
 )
 
-//const (
-    //kidMask = 1 << 31
-    //kidMask = 1 << (unsafe.Sizeof(int(1))<<3 - 1)
-//)
+type iCache interface {
+    Gets(key string,val interface{}) (cas uint64, flag uint16,err error)
+
+    Cas(
+        key string, val interface{},cas uint64, timeout int64, flag uint16) error
+}
 
 // map fromcid,cid to uid
 // find uid by fromcid or cid
 type LGUidMap struct {
     uidMap *LGMap
+    casCache iCache
 }
 
-func NewLGUidMap() *LGUidMap {
-    c := &LGUidMap{}
+func LGNewUidMap(cache iCache) *LGUidMap {
+    c := &LGUidMap{casCache:cache}
 
     c.uidMap = NewLGMap()
-    //LGTrace("kidMask", unsafe.Sizeof(int(1))<<3-1)
 
     return c
 }
 
-func (self *LGUidMap) GetUid(fromCid int, cid int) int {
+func (self *LGUidMap) GetUid(gateid, fromCid, cid int) (uid int,cas uint64) {
     var kid int
     var checkcode int
 
     if fromCid > 0 {
         //fromcid = gate-to-grid-clientid + checkcode
         kid, checkcode = LGParseID(fromCid)
-        //kid = fromcid | kidMask
+        kid = LGCombineID(kid, gateid)
         kid = 0 - kid
     } else {
         kid = cid
     }
 
-    if v, ok := self.uidMap.Get(kid); ok {
-        if v2, ok := v.([]int); ok {
-            if fromCid > 0 {
-                //uid, co := LGParseID(v2)
-                uid ,co := v2[0],v2[1]
-                if co == checkcode {
-                    return uid
-                } else {
-                    return 0
-                }
-            } else {
-                return v2[0]
-            }
-        } else {
-            return 0
+    var v2 []uint64
+    var ok bool
+    var err error
+    var v interface{}
+    if v, ok = self.uidMap.Get(kid); !ok {
+        //if not exists in local map object ,then read from cache read
+        cas,_,err = self.casCache.Gets(
+            "uid_" + strconv.Itoa(kid), &v2)
+
+        if err == nil {
+            ok = true
         }
+        //fmt.Println("v2,err:",v2,err,cas)
+    } else {
+        //fmt.Println("has key,v,ok:",v,ok)
+        v2, ok = v.([]uint64)
     }
-    return 0
+
+    if !ok {
+        return
+    }
+
+    if cas > 0 {
+        v2 = append(v2,cas)
+        self.uidMap.Set(kid, v2)
+    }
+
+    uid_ ,co,cas := v2[0],v2[1],v2[2]
+    //fmt.Println("co,checkcode:",co,checkcode,v2)
+    if fromCid != 0 {
+        if co == uint64(checkcode) {
+            return int(uid_),cas
+        } else {
+            return 0,0
+        }
+    } else {
+        return int(uid_),cas
+    }
 }
 
-func (self *LGUidMap) SaveUid(fromCid int, cid int, uid int) {
+func (self *LGUidMap) SaveUid(gateid, fromCid, cid, uid int,cas uint64) error {
     var kid,checkcode int
 
     if fromCid > 0 {
-        //为了防止一个gate服务器不同的玩家分配到同样的socketid（cid==fromcid），必须加上checkcode验证
+
+        //下面是我独特设计，~_~
+        //1.为了防止同一个gate服务器分配到同样的cid（cid==fromcid）的玩家身份
+        //混淆，必须加上checkcode验证
+        //2.将checkcode剥离出来用cid 作为key，就可以将uidmap的数据项控制在
+        //65536（32768）个以内，因此几乎可以不用清理uidmap数据项
+
         kid , checkcode = LGParseID(fromCid)
+        kid = LGCombineID(kid, gateid)
         kid = 0 - kid
 
-        //uid = LGCombineID(uid, checkcode)
     } else {
         kid = cid
     }
-    self.uidMap.Set(kid, []int{uid,checkcode})
 
+    v2 := []int{uid,checkcode}
+    self.uidMap.Delete(kid)
+
+    //set to cache
+    return self.casCache.Cas("uid_" + strconv.Itoa(kid),
+        v2, cas, 0,0)
+}
+
+func (self *LGUidMap) Clear() {
+    self.uidMap.Clear()
 }

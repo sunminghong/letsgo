@@ -27,53 +27,46 @@ func LGNewMemcache( serialize LGISerialize) *LGMemcache {
     return &LGMemcache{serialize:serialize}
 }
 
-func (self *LGMemcache) GetRaw(key string) (val []byte, flag uint16,ok bool) {
+func (self *LGMemcache) GetRaw(key string) (val []byte, flag uint16,err error) {
 	if self.c == nil {
 		self.c = self.connectInit()
 	}
-	val, flag, err := self.c.Get(key)
+
+	val, flag, err = self.c.Get(key)
 	if err != nil {
-        ok = false
         return
 	}
-    ok = true
     return
 }
 
-func (self *LGMemcache) Get(key string,val interface{}) (flag uint16,ok bool) {
+func (self *LGMemcache) Get(key string,val interface{}) (flag uint16,err error) {
 	if self.c == nil {
 		self.c = self.connectInit()
 	}
 	v, flag, err := self.c.Get(key)
 	if err != nil {
-        ok = false
         return
 	}
 
     err = self.serialize.Deserialize(v,val)
     if err != nil {
-        ok = false
         return
     }
-    ok = true
     return
 }
 
-func (self *LGMemcache) Gets(key string,val interface{}) (cas uint64, flag uint16,ok bool) {
+func (self *LGMemcache) Gets(key string,val interface{}) (cas uint64, flag uint16,err error) {
 	if self.c == nil {
 		self.c = self.connectInit()
 	}
 	v, flag, cas, err := self.c.Gets(key)
 	if err != nil {
-        ok = false
 		return
 	}
     err = self.serialize.Deserialize(v,val)
     if err != nil {
-        ok = false
         return
     }
-    ok = true
 	return
 }
 

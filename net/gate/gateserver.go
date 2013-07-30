@@ -199,22 +199,22 @@ func (gs *LGGateServer) ConnectGrids(configfile *string) {
             continue
         }
 
-        messageCodes, err := c.GetString(section,"messageCodes")
+        gCodes, err := c.GetString(section,"process")
         if err != nil {
-            messageCodes = ""
+            gCodes= ""
         }
 
 
         endian, err := c.GetInt(section,"endian")
 
-        gs.gridConfs[gname] = &gridConf{gname,host,messageCodes,endian,CONNECTION_STATE_FREE,nil}
+        gs.gridConfs[gname] = &gridConf{gname,host,gCodes,endian,CONNECTION_STATE_FREE,nil}
 
         if err == nil {
             da := gs.Datagram.Clone(endian)
             gs.gridConfs[gname].datagram = da
-            gs.ConnectGrid(gname, host, &messageCodes,da)
+            gs.ConnectGrid(gname, host, &gCodes,da)
         } else {
-            gs.ConnectGrid(gname, host, &messageCodes,nil)
+            gs.ConnectGrid(gname, host, &gCodes,nil)
         }
     }
 }

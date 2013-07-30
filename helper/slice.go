@@ -12,6 +12,17 @@ package helper
 
 type LGSliceInt []int
 
+func (self *LGSliceInt) RemoveValue(val int) (ok bool) {
+    n := LGSliceInt{}
+    for _,v := range *self {
+        if v != val {
+            n=append(n,v)
+        }
+    }
+    *self = n
+    return true
+}
+
 func (self *LGSliceInt) RemoveAtIndex(index int) (ok bool) {
     ok = true
 

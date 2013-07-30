@@ -32,8 +32,8 @@ func (r *LGDefaultDispatcher)Init() {
     r.messageCodemaps = make(map[int]LGSliceInt)
 }
 
-func (r *LGDefaultDispatcher) Add(gridID int, messageCodes *string) {
-    cs := strings.Replace(*messageCodes," ","",-1)
+func (r *LGDefaultDispatcher) Add(gridID int, gcodes *string) {
+    cs := strings.Replace(*gcodes," ","",-1)
     if len(cs) ==0 {
         r.addDisp(gridID,0)
     }
@@ -45,27 +45,27 @@ func (r *LGDefaultDispatcher) Add(gridID int, messageCodes *string) {
         if len(p) == 0 {
             continue
         }
-        pmessageCode, err := strconv.Atoi(p)
+        gcode, err := strconv.Atoi(p)
         if err ==nil {
-            r.addDisp(gridID,pmessageCode)
+            r.addDisp(gridID,gcode)
         }
     }
     LGTrace("messagecodemaps1:",r.messageCodemaps)
 }
 
 func (r *LGDefaultDispatcher) Remove(gridID int) {
-    LGTrace("removegrids:",r.removeGrids)
     r.removeGrids[gridID] = 1
+    LGTrace("removegrids:",r.removeGrids)
 }
 
-func (r *LGDefaultDispatcher) addDisp(gridID int, code int) {
-    dises,ok := r.messageCodemaps[code]
+func (r *LGDefaultDispatcher) addDisp(gridID int, gcode int) {
+    dises,ok := r.messageCodemaps[gcode]
     if ok {
-        r.messageCodemaps[code] = append(dises,gridID)
+        r.messageCodemaps[gcode] = append(dises,gridID)
         return
     }
 
-    r.messageCodemaps[code] = LGSliceInt{gridID}
+    r.messageCodemaps[gcode] = LGSliceInt{gridID}
 }
 
 func (r *LGDefaultDispatcher) Dispatch(messageCode int) (gridID int,ok bool) {

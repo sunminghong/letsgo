@@ -20,11 +20,11 @@ import (
 
 type LGGridServer struct {
     *LGServer
-    GateMap map[int][]int
+    GateMap map[int]LGSliceInt
 
     AllowDirectConnection bool
 
-    Dispatcher LGIDispatcher
+    //Dispatcher LGIDispatcher
 
     //makeclient NewGridClientFunc
 }
@@ -95,7 +95,7 @@ func (gs *LGGridServer) Init(
     gs.LGServer = LGNewServer(
         name,gridid,host,maxConnections,newGridClient,datagram)
 
-    gs.GateMap = make(map[int][]int)
+    gs.GateMap = make(map[int]LGSliceInt)
 
     gs.AllowDirectConnection = allowDirectConnection
 
@@ -108,7 +108,20 @@ func (gs *LGGridServer) RegisterGate(gridname string,gridid int,c LGIClient) {
 
         gs.GateMap[gridid] = cs
     } else {
-        gs.GateMap[gridid] = []int {c.GetTransport().Cid}
+        gs.GateMap[gridid] = LGSliceInt {c.GetTransport().Cid}
+    }
+}
+
+func (gs *LGGridServer) RemoveGate(gridid ,cid int) {
+    LGTrace("RemoveGate")
+    if cs,ok := gs.GateMap[gridid]; ok {
+
+        cs.RemoveValue(cid)
+        if len(cs) > 0 {
+            gs.GateMap[gridid] = cs
+        } else {
+            delete(gs.GateMap,gridid)
+        }
     }
 }
 

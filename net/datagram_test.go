@@ -31,7 +31,7 @@ func LGTest_Pack(t *testing.T) {
 
     data := []byte("1234567890")
     dp := &LGDataPacket{Type:1,Data:data}
-    data2 := datagram.Pack__(dp)
+    data2 := datagram.Pack(dp)
 
     _data := [17]byte{0x59 ^ 0x37,0x7a ^ 0x37,1 ^ 0x37,0 ^ 0x37,0 ^ 0x37,0 ^ 0x37,10 ^ 0x37}
     copy(_data[7:],data)
@@ -69,7 +69,6 @@ func LGTest_Fetch(t *testing.T) {
     trans.BuffAppend(data)
     trans.BuffAppend(data)
     trans.BuffAppend(data)
-    
 
     n,dps := datagram.Fetch(trans)
     if n != 5 || len(dps)!= 5 {

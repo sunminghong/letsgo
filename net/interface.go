@@ -44,11 +44,6 @@ type LGIDatagram interface {
     PackWrite(write LGWriteFunc,dp *LGDataPacket)
 }
 
-
-//define client
-type LGProcessHandleFunc func(
-    msg LGIMessageReader,c LGIClient,fromCid int)
-
 type LGNewClientFunc func(name string, transport *LGTransport) LGIClient
 
 const (

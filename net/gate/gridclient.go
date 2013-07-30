@@ -11,19 +11,29 @@
 package gate
 
 import (
-    "reflect"
+//    "reflect"
     . "github.com/sunminghong/letsgo/log"
     . "github.com/sunminghong/letsgo/net"
 )
+
+
+//define client
+type LGGridProcessHandleFunc func(
+    msg LGIMessageReader,c *LGGridClient,fromCid int)
 
 
 // LGIClient  
 type LGGridClient struct {
     *LGBaseClient
 
-    Process LGProcessHandleFunc
+    Process LGGridProcessHandleFunc
 
+    Gateid int
     Grid *LGGridServer
+}
+
+func (c *LGGridClient) Closed() {
+    c.Grid.RemoveGate(c.Gateid,c.GetTransport().Cid)
 }
 
 //对数据进行拆包
@@ -48,13 +58,14 @@ func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
             c.SetType(LGCLIENT_TYPE_GATE)
 
             if c.Grid == nil {
-                LGTrace("transport.server type is ",reflect.TypeOf(c.Transport.Server))
+                //LGTrace("transport.server type is ",reflect.TypeOf(c.Transport.Server))
                 if grid,ok := c.Transport.Server.(*LGGridServer) ;ok {
                     c.Grid = grid
                 } else {
                     LGError("gridserver client init error:transport.Server is not GridServer type")
                 }
             }
+            c.Gateid = gateid
             c.Grid.RegisterGate(gatename,gateid,c)
 
             LGInfo(c.GetTransport().Conn.RemoteAddr()," is register to gate!")

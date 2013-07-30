@@ -11,7 +11,6 @@
 package gate
 
 import (
-    "reflect"
     . "github.com/sunminghong/letsgo/log"
     . "github.com/sunminghong/letsgo/net"
 )
@@ -36,7 +35,6 @@ func LGNewClient (name string,transport *LGTransport) LGIClient {
         LGBaseClient:&LGBaseClient{Transport:transport,Name:name},
     }
 
-    LGTrace("transport.server type is ",reflect.TypeOf(c.Transport.Server))
     if gate,ok := c.Transport.Server.(*LGGateServer) ;ok {
         c.Gate = gate
         c.grids = c.Gate.Grids.Clients

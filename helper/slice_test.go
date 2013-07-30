@@ -13,6 +13,28 @@ package helper
 import "testing"
 
 
+func TestRemoveValue(t *testing.T) {
+    a1 := LGSliceInt{0,1,2,3,4,5,6,7,8}
+    a1 = a1[:]
+
+    a1.RemoveValue(3)
+    b1 := []int{0,1,2,4,5,6,7,8}
+    if !a1.Eq(b1) {
+        t.Error("is not eq:",b1,a1)
+    }
+
+    a1 = LGSliceInt{0,1,2,3,4,5,6,5,7,8}
+    a1 = a1[:]
+
+    a1.RemoveValue(5)
+    b1 = []int{0,1,2,3,4,6,7,8}
+    if !a1.Eq(b1) {
+        t.Error("is not eq:",b1,a1)
+    }
+
+}
+
+
 func TestRemoveAtIndex(t *testing.T) {
     a1 := LGSliceInt{0,1,2,3,4,5,6,7,8}
     a1 = a1[:]

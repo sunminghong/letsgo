@@ -22,7 +22,7 @@ type LGMap struct {
 func NewLGMap() *LGMap {
     return &LGMap{
         lock: new(sync.RWMutex),
-        bm:   make(map[int]interface{}),
+        bm: make(map[int]interface{}),
     }
 }
 
@@ -62,3 +62,8 @@ func (m *LGMap) Delete(k int) {
     delete(m.bm, k)
 }
 
+func (m *LGMap) Clear() {
+    m.lock.Lock()
+    defer m.lock.Unlock()
+    m.bm = make(map[int]interface{})
+}

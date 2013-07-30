@@ -70,11 +70,10 @@ func TestMemcache(t *testing.T) {
 	}
     var b string
     var f uint16
-    var ok bool
 
-	f, ok =c.Get("Hello",&b)
-	if !ok {
-		t.Errorf("Get: %v", ok)
+	f, err =c.Get("Hello",&b)
+	if err!=nil {
+		t.Errorf("Get: %v", err)
 		return
 	}
 	if f != 0xFF3F {
@@ -94,10 +93,10 @@ func TestMemcache(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
     b = ""
-	_, ok =c.Get("Lost",&b)
+	_, err =c.Get("Lost",&b)
     ////fmt.Printf("timeout get is ",ok,b)
-    if ok {
-        t.Errorf("timeout : %v", ok)
+    if err==nil {
+        t.Errorf("timeout : %v", err)
 		return
     } else if b == "World" {
         t.Errorf("timeout : value is read out", err)
@@ -106,43 +105,43 @@ func TestMemcache(t *testing.T) {
     //fmt.Printf("timeout2 ....")
 
 	// cas
-	err = c.Set("Data", "Set", 0, 0)
+	err = c.Set("uid_-2097154", "Set", 0, 0)
 	if err != nil {
 		t.Errorf("Set: %v", err)
 		return
 	}
-	expect("cas1",t, c, "Data", "Set")
+	expect("cas1",t, c, "uid_-2097154", "Set")
 
     b = ""
     var cas uint64
-	cas,f,ok =c.Gets("Data",&b)
-	if !ok {
+	cas,f,err =c.Gets("uid_-2097154",&b)
+	if err!=nil {
 		t.Errorf("Gets: %v", err)
 		return
 	}
 	if cas == 0 {
 		t.Errorf("Expecting non-zero for cas")
 	}
-	err = c.Cas("Data",("not set"), 12345,0 ,0)
+	err = c.Cas("uid_-2097154","not set", 12345,0 ,0)
 	if err == nil {
 		t.Errorf("Cas: %v", err)
 		return
 	}
-	expect("cas2", t, c, "Data", "Set")
+	expect("cas2", t, c, "uid_-2097154", "Set")
 
-	err = c.Cas("Data", ("Changed"), cas, 0, 0)
+	err = c.Cas("uid_-2097154", "Changed", cas, 0, 0)
 	if err != nil {
 		t.Errorf("Set: %v", err)
 		return
 	}
-	expect("cas3",t, c, "Data", "Changed")
+	expect("cas3",t, c, "uid_-2097154", "Changed")
 
-	err = c.Set("Data",("Overwritten"), 0, 0)
+	err = c.Set("uid_-2097154",("Overwritten"), 0, 0)
 	if err != nil {
 		t.Errorf("Set: %v", err)
 		return
 	}
-	expect("cas4", t, c, "Data", "Overwritten")
+	expect("cas4", t, c, "uid_-2097154", "Overwritten")
 
 	// stats
 	_, err = c.Stats("")
@@ -176,9 +175,9 @@ func TestMemcache(t *testing.T) {
 	}
 
     b = ""
-	f, ok = c.Get("Flush",&b)
-	if ok {
-		t.Errorf("Get: %v after FlushAll", ok)
+	f, err = c.Get("Flush",&b)
+	if err==nil {
+		t.Errorf("Get: %v after FlushAll", err)
 		return
 	}
 	if b == "Test" {
@@ -191,10 +190,10 @@ func TestMemcache(t *testing.T) {
 func expect(cmd string, t *testing.T, c *LGMemcache, key, value string) {
     //fmt.Println(cmd,"...")
     var b string
-    _, ok :=c.Get(key,&b)
-	if !ok {
+    _, err :=c.Get(key,&b)
+	if err!=nil {
         //fmt.Println(cmd,"///")
-		t.Errorf("Get: %v", ok)
+		t.Errorf("Get: %v", err)
 		return
 	}
 	if string(b) != value {

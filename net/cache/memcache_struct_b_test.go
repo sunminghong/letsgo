@@ -37,9 +37,9 @@ func Benchmark_Get(t *testing.B) {
 
     c.Set("Hello", a1, 0, 0)
     for i:=0;i<t.N;i++ {
-        _, ok :=c.Get("Hello",a2)
-        if !ok {
-            t.Errorf("Get: %v", ok)
+        _, err :=c.Get("Hello",a2)
+        if err!=nil {
+            t.Errorf("Get: %v", err)
             return
         }
     }
@@ -64,9 +64,9 @@ func Benchmark_Gets(t *testing.B) {
 
     c.Set("Hello", a1, 0, 0)
     for i:=0;i<t.N;i++ {
-        _,_, ok :=c.Gets("Hello",a2)
-        if !ok {
-            t.Errorf("Get: %v", ok)
+        _,_, err:=c.Gets("Hello",a2)
+        if err!=nil {
+            t.Errorf("Get: %v", err)
             return
         }
     }
@@ -107,8 +107,8 @@ func Benchmark_CasNo(t *testing.B) {
         t.Errorf("Set: %v", err)
         return
     }
-    _,_,ok :=c.Gets("Data",a2)
-    if !ok {
+    _,_,err =c.Gets("Data",a2)
+    if err!=nil {
         t.Errorf("Gets: %v", err)
         return
     }
@@ -131,8 +131,8 @@ func Benchmark_CasYes(t *testing.B) {
         t.Errorf("Set: %v", err)
         return
     }
-    cas,_,ok :=c.Gets("Data",a2)
-    if !ok {
+    cas,_,err :=c.Gets("Data",a2)
+    if err!=nil {
         t.Errorf("Gets: %v", err)
         return
     }
