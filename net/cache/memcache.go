@@ -137,6 +137,21 @@ func (self *LGMemcache) Delete(key string) error {
 	return err
 }
 
+func (self *LGMemcache) Deletes(keys ...string) error {
+	if self.c == nil {
+		self.c = self.connectInit()
+	}
+
+    var errs error
+    for _,key:=range keys {
+        _, err := self.c.Delete(key)
+        if err !=nil {
+            errs = err
+        }
+    }
+	return errs
+}
+
 //This purges the entire cache.
 func (self *LGMemcache) FlushAll() (err error) {
     return self.c.FlushAll()

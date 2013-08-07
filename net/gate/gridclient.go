@@ -11,7 +11,7 @@
 package gate
 
 import (
-//    "reflect"
+    "reflect"
     . "github.com/sunminghong/letsgo/log"
     . "github.com/sunminghong/letsgo/net"
 )
@@ -30,10 +30,47 @@ type LGGridClient struct {
 
     Gateid int
     Grid *LGGridServer
+
+    //parent
+    Parent interface{}
+    parentMethodsMap map[string]reflect.Value
+}
+
+func (s *LGGridClient) SetParent(p interface{},methods ...string) {
+    s.Parent = p
+    if len(methods) == 0 {
+        methods = []string{"ClientByGateClosed"}
+    }
+
+    methodmap := make(map[string]reflect.Value)
+    parent := reflect.ValueOf(s.Parent)
+    for _,mname := range methods {
+        method := parent.MethodByName(mname)
+        if method.IsValid() {
+            methodmap[mname] = method
+        }
+    }
+    s.parentMethodsMap = methodmap
 }
 
 func (c *LGGridClient) Closed() {
-    c.Grid.RemoveGate(c.Gateid,c.GetTransport().Cid)
+    if c.Gateid > 0 {
+        c.Grid.RemoveGate(c.Gateid,c.GetTransport().Cid)
+    }
+}
+
+func (c *LGGridClient) ClientByGateClosed(gateid int, fromCid int) {
+    if method,ok := c.parentMethodsMap["ClientByGateClosed"]; ok {
+        args := []reflect.Value{
+            reflect.ValueOf(gateid),
+            reflect.ValueOf(fromCid),
+        }
+
+        method.Call(args)
+        return
+    }
+
+    panic("LGpanic:LGGridClient's Method ClientByGateClosed need override write by sub object")
 }
 
 //对数据进行拆包
@@ -52,6 +89,9 @@ func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
             LGTrace("msg.code:",int(endianer.Uint16(dp.Data)),len(dp.Data))
             msg := LGNewMessageReader(dp.Data,stream.Endian)
             c.Process(msg,c,0)
+
+        case LGDATAPACKET_TYPE_CLOSED:
+            c.ClientByGateClosed(c.Gateid,dp.FromCid)
 
         case LGDATAPACKET_TYPE_GATECONNECT:
             gatename,gateid := cmd.UnRegister(dp.Data)
@@ -84,6 +124,8 @@ func (c *LGGridClient) SendMessage(fromcid int,msg LGIMessageWriter) {
         dp.Type = LGDATAPACKET_TYPE_DELAY
     }
 
+    sdjfasfd
+    //todo: need gateid
     c.Transport.SendDP(dp)
 }
 

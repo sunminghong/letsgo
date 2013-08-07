@@ -78,5 +78,6 @@ func NewMessageWriter(c LGIClient) *LGMessageWriter {
 
 func init() {
     Handlers[2011] = Process2011
+    Handlers[2001] = Process2001
 }
 

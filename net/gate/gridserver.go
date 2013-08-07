@@ -112,15 +112,15 @@ func (gs *LGGridServer) RegisterGate(gridname string,gridid int,c LGIClient) {
     }
 }
 
-func (gs *LGGridServer) RemoveGate(gridid ,cid int) {
+func (gs *LGGridServer) RemoveGate(gateid ,cid int) {
     LGTrace("RemoveGate")
-    if cs,ok := gs.GateMap[gridid]; ok {
+    if cs,ok := gs.GateMap[gateid]; ok {
 
         cs.RemoveValue(cid)
         if len(cs) > 0 {
-            gs.GateMap[gridid] = cs
+            gs.GateMap[gateid] = cs
         } else {
-            delete(gs.GateMap,gridid)
+            delete(gs.GateMap,gateid)
         }
     }
 }

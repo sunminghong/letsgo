@@ -48,6 +48,24 @@ func LGNewClient (name string,transport *LGTransport) LGIClient {
 
 func (c *LGClient) Closed() {
     LGTrace("this client is closed!")
+
+    //dispatch to one grid
+    gridID,ok := c.dispatcher.Dispatch(0)
+    if ok {
+        gridClient := c.grids.Get(gridID)
+        if gridClient != nil {
+            dp := &LGDataPacket{
+                Type: LGDATAPACKET_TYPE_CLOSED,
+                FromCid: c.Transport.Cid,
+                Data: []byte{1},
+            }
+
+            gridClient.GetTransport().SendDP(dp)
+        }
+    }
+    return
+
+    //在线连接数更新统计
 }
 
 //对数据进行拆包
@@ -59,11 +77,16 @@ func (c *LGClient) ProcessDPs(dps []*LGDataPacket) {
     }()
 
     for _, dp := range dps {
+        var code int
+        if len(dp.Data) > 2 {
+            code = int(c.Transport.Stream.Endianer.Uint16(dp.Data))
+            //code := int(c.Transport.Stream.Endianer.Uint16(dp.Data))
+            LGTrace("msg.code:",code)
 
+        } else {
+            code = 0
+        }
         //msg := NewMessageReader(dp.Data,c.Transport.Stream.Endian)
-        code := int(c.Transport.Stream.Endianer.Uint16(dp.Data))
-        LGTrace("msg.code:",code)
-
         //dispatch to one grid
         gridID,ok := c.dispatcher.Dispatch(code)
         if ok {

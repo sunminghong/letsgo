@@ -20,13 +20,9 @@ import (
 )
 
 type LGServer struct {
-    Parent interface{}
     Name string
     Serverid int
     Addr string
-
-    parentMethodsMap map[string]reflect.Value
-
 
     broadcast_chan_num int
     read_buffer_size   int
@@ -49,6 +45,11 @@ type LGServer struct {
     stop bool
 
     idassign *LGIDAssign
+
+    //parent
+    Parent interface{}
+    parentMethodsMap map[string]reflect.Value
+
 }
 
 func LGNewServer(

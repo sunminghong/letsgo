@@ -1,5 +1,4 @@
-/*=============================================================================
-#     FileName: interface.go
+/*============================================================================= #     FileName: interface.go
 #         Desc: server base
 #       Author: sunminghong
 #        Email: allen.fantasy@gmail.com
@@ -17,8 +16,11 @@ import (
 const (
     LGDATAPACKET_TYPE_GENERAL = 0
     LGDATAPACKET_TYPE_DELAY = 1
+    LGDATAPACKET_TYPE_CLOSE = 2 //close a player client
     LGDATAPACKET_TYPE_BROADCAST = 3
     LGDATAPACKET_TYPE_GATECONNECT = 4
+    LGDATAPACKET_TYPE_GATEREMOVE= 5 //remove a gate client
+    LGDATAPACKET_TYPE_CLOSED = 6 //a player client closed tell to gridserver
 )
 
 //define a struct or class of rec transport connection

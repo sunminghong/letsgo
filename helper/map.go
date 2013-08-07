@@ -28,8 +28,8 @@ func NewLGMap() *LGMap {
 
 //Get from maps return the k's value
 func (m *LGMap) Get(k int) (interface{},bool) {
-    m.lock.RLock()
-    defer m.lock.RUnlock()
+    //m.lock.RLock()
+    //defer m.lock.RUnlock()
 
     val, ok := m.bm[k]
     return val,ok
@@ -46,10 +46,15 @@ func (m *LGMap) Set(k int, v interface{}) {
     }
 }
 
+func (m *LGMap) All() map[int]interface{} {
+    return m.bm
+}
+
 // Returns true if k is exist in the map.
 func (m *LGMap) Check(k int) bool {
-    m.lock.RLock()
-    defer m.lock.RUnlock()
+    //m.lock.RLock()
+    //defer m.lock.RUnlock()
+
     if _, ok := m.bm[k]; !ok {
         return false
     }
@@ -65,5 +70,6 @@ func (m *LGMap) Delete(k int) {
 func (m *LGMap) Clear() {
     m.lock.Lock()
     defer m.lock.Unlock()
+
     m.bm = make(map[int]interface{})
 }

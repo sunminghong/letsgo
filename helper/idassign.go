@@ -55,15 +55,11 @@ func LGNewIDAssign(maxid ...int) *LGIDAssign {
     ia := &LGIDAssign{}
     ia.maxid = _maxid
 
+    ia.Init()
+
     ia.idChan = ia.getFreeChan()
     ia.freeChan = make(chan int)
 
-    go func() {
-        for {
-            offset := <-ia.freeChan
-            ia.free_(offset)
-        }
-    }()
 
     go func() {
         for {
@@ -72,9 +68,12 @@ func LGNewIDAssign(maxid ...int) *LGIDAssign {
         }
     }()
 
-
-    ia.Init()
-
+    go func() {
+        for {
+            offset := <-ia.freeChan
+            ia.free_(offset)
+        }
+    }()
     return ia
 }
 

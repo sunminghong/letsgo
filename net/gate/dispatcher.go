@@ -74,7 +74,8 @@ func (r *LGDefaultDispatcher) Dispatch(messageCode int) (gridID int,ok bool) {
     gridIDArr,ok := r.messageCodemaps[gcode]
     LGTrace("gridIDArr,gcode:",gridIDArr,gcode)
     if !ok {
-        gridIDArr,ok = r.messageCodemaps[0]
+        gcode = 0
+        gridIDArr,ok = r.messageCodemaps[gcode]
         LGTrace("gridIDArr2,gcode:",gridIDArr,gcode)
     }
 

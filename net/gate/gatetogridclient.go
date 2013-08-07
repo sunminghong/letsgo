@@ -55,17 +55,25 @@ func (c *LGGateToGridClient) Register() {
 //对数据进行拆包
 func (c *LGGateToGridClient) ProcessDPs(dps []*LGDataPacket) {
     for _, dp := range dps {
-        code := c.Transport.Stream.Endianer.Uint16(dp.Data)
-        LGTrace("gridclient's processdps() \nmsg.code:",code)
-
         LGTrace("dp.type",dp.Type)
-        LGTrace("c.clients",c.clients)
+        LGTrace("c.clients",c.clients.All())
         switch dp.Type {
         case LGDATAPACKET_TYPE_DELAY:
             LGTrace("delay")
 
             dp.Type = LGDATAPACKET_TYPE_GENERAL
-            c.clients.Get(dp.FromCid).GetTransport().SendDP(dp)
+            cli := c.clients.Get(dp.FromCid)
+            if cli!=nil {
+                cli.GetTransport().SendDP(dp)
+            }
+
+        case LGDATAPACKET_TYPE_CLOSE:
+            LGTrace("gatetogridclient.ProcessDps():close player connection:",dp.FromCid)
+
+            if cc := c.clients.Get(dp.FromCid); cc!=nil {
+                LGTrace("gatetogridclient.ProcessDps():.....closed")
+                cc.Close()
+            }
 
         case LGDATAPACKET_TYPE_BROADCAST:
             LGTrace("broadcast")
