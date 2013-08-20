@@ -11,14 +11,17 @@
 package main
 
 import (
-    "./lib"
     "bufio"
     "fmt"
-    lnet "github.com/sunminghong/letsgo/net"
     "os"
     "strings"
     "time"
     "strconv"
+
+    lnet "github.com/sunminghong/letsgo/net"
+
+	"github.com/sbinet/liner"
+    "./lib"
 )
 
 // LGIClient  
@@ -71,16 +74,46 @@ func (c *Client) SendBroadcast(msg lnet.LGIMessageWriter) {
     c.Transport.SendBroadcast(msg.ToBytes())
 }
 
+
+func tabCompleter(line string) []string {
+	opts := make([]string, 0)
+
+	if strings.HasPrefix(line, "/") {
+		filters := []string{
+			"/conn ",
+			"/change ",
+			"/quit",
+			"/reg ",
+			"/rereg ",
+		}
+
+		for _, cmd := range filters {
+			if strings.HasPrefix(cmd, line) {
+				opts = append(opts, cmd)
+			}
+		}
+	}
+
+	return opts
+}
+
 // clientsender(): read from stdin and send it via network
 func clientsender(cid *int,client *lnet.ClientPool) {
-    reader := bufio.NewReader(os.Stdin)
+	term := liner.NewLiner()
+	fmt.Println("Skynet Interactive Shell")
+
+	term.SetCompleter(tabCompleter)
     for {
         if (*cid)==0 {
             fmt.Print("you no connect anyone server,please input conn cmd,\n")
         }
-        fmt.Print("you> ")
-        input, _ := reader.ReadBytes('\n')
-        cmd := string(input[:len(input)-1])
+		input, e := term.Prompt("> ")
+		if e != nil {
+			break
+		}
+
+        //cmd := string(input[:len(input)-1])
+        cmd := string(input)
         if cmd[0] == '/' {
             cmds := strings.Split(cmd," ")
             switch cmds[0]{

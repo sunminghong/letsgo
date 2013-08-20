@@ -108,7 +108,7 @@ func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
             c.Gateid = gateid
             c.Grid.RegisterGate(gatename,gateid,c)
 
-            LGInfo(c.GetTransport().Conn.RemoteAddr()," is register to gate!")
+            LGInfo(c.GetTransport().Conn.RemoteAddr()," is register to gate,gateid=",gateid)
         }
     }
 }
@@ -124,7 +124,6 @@ func (c *LGGridClient) SendMessage(fromcid int,msg LGIMessageWriter) {
         dp.Type = LGDATAPACKET_TYPE_DELAY
     }
 
-    sdjfasfd
     //todo: need gateid
     c.Transport.SendDP(dp)
 }

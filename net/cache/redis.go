@@ -55,6 +55,15 @@ func (self *LGRedis) Get(key string) (val string, err error){
     }
 }
 
+func (self *LGRedis) Hget(key string, field string) (val string, err error) {
+    v,err := self.Client.Hget(key,field)
+    if err == nil {
+        return string(v),err
+    } else {
+        return "",err
+    }
+}
+
 func (self *LGRedis) FlushAll() (err error){
     return self.Client.Flush(true)
 }

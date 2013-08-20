@@ -55,7 +55,7 @@ func (c *LGGateToGridClient) Register() {
 //对数据进行拆包
 func (c *LGGateToGridClient) ProcessDPs(dps []*LGDataPacket) {
     for _, dp := range dps {
-        LGTrace("dp.type",dp.Type)
+        LGTrace("gategridclient.ProcessDPs():dp.type",dp.Type)
         LGTrace("c.clients",c.clients.All())
         switch dp.Type {
         case LGDATAPACKET_TYPE_DELAY:

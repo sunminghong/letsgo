@@ -9,10 +9,11 @@
 #      History:
 =============================================================================*/
 package net
+
 import (
     "encoding/binary"
     . "github.com/sunminghong/letsgo/helper"
-    . "github.com/sunminghong/letsgo/log"
+//    . "github.com/sunminghong/letsgo/log"
 )
 
 const (
@@ -86,7 +87,7 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
         //Log("pos:",pos)
 
         //拆包
-        LGTrace("c.dpsize:",c.DPSize)
+        //LGTrace("c.dpsize:",c.DPSize)
         if c.DPSize > 0 {
             if ilen-pos < c.DPSize {
                 //如果缓存去数据长度不够就退出接着等后续数据
@@ -106,11 +107,11 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
             cs.SetPos(-7)
             m1,_ = cs.ReadByte()
             m2,_ = cs.ReadByte()
-            LGTrace("m1,m2",m1,m2)
+            //LGTrace("m1,m2",m1,m2)
             if m1==mask1 && m2==mask2 {
                 dataType,_ = cs.ReadByte()
                 _dpSize,err := cs.ReadUint32()
-                LGTrace("dataType,dpSize,endian",dataType,_dpSize,cs.Endian)
+                //LGTrace("dataType,dpSize,endian",dataType,_dpSize,cs.Endian)
                 if err != nil {
                     c.InitBuff()
                     c.DPSize = 0
@@ -119,12 +120,12 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
                 }
 
                 dpSize = int(_dpSize)
-                if dataType == LGDATAPACKET_TYPE_DELAY || dataType == LGDATAPACKET_TYPE_BROADCAST {
+                if dataType == LGDATAPACKET_TYPE_DELAY || dataType == LGDATAPACKET_TYPE_BROADCAST || dataType == LGDATAPACKET_TYPE_CLOSE || dataType == LGDATAPACKET_TYPE_CLOSED {
                     dpSize += 4
                 }
 
                 pos = cs.GetPos()
-                LGTrace("ilen,pos,dpSize",ilen,pos,dpSize)
+                //LGTrace("ilen,pos,dpSize",ilen,pos,dpSize)
                 if ilen - pos < dpSize {
                     c.DPSize = dpSize
                     c.DataType = dataType
@@ -144,7 +145,7 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
             dp := &LGDataPacket{Type:dataType}
 
             switch dataType {
-            case LGDATAPACKET_TYPE_DELAY,LGDATAPACKET_TYPE_BROADCAST:
+            case LGDATAPACKET_TYPE_DELAY,LGDATAPACKET_TYPE_BROADCAST,LGDATAPACKET_TYPE_CLOSE,LGDATAPACKET_TYPE_CLOSED:
                 dp.FromCid = int(d.Endianer.Uint32(data[dpSize-4:]))
                 dp.Data = data[:dpSize-4]
             default:
@@ -171,7 +172,7 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
 //对数据进行封包
 func (d *LGDatagram) Pack(dp *LGDataPacket) []byte {
     ilen := len(dp.Data)
-    if dp.Type == LGDATAPACKET_TYPE_DELAY || dp.Type == LGDATAPACKET_TYPE_BROADCAST {
+    if dp.Type == LGDATAPACKET_TYPE_DELAY || dp.Type == LGDATAPACKET_TYPE_BROADCAST || dp.Type == LGDATAPACKET_TYPE_CLOSE || dp.Type == LGDATAPACKET_TYPE_CLOSED {
         ilen += 4
     }
     buf := make([]byte, ilen+7)
@@ -186,7 +187,7 @@ func (d *LGDatagram) Pack(dp *LGDataPacket) []byte {
 
     copy(buf[7:], dp.Data)
 
-    if dp.Type == LGDATAPACKET_TYPE_DELAY || dp.Type == LGDATAPACKET_TYPE_BROADCAST {
+    if dp.Type == LGDATAPACKET_TYPE_DELAY || dp.Type == LGDATAPACKET_TYPE_BROADCAST || dp.Type == LGDATAPACKET_TYPE_CLOSE || dp.Type == LGDATAPACKET_TYPE_CLOSED {
         d.Endianer.PutUint32(buf[3+ilen:], uint32(dp.FromCid))
     }
     return buf
@@ -208,9 +209,10 @@ func (d *LGDatagram) PackWrite(write LGWriteFunc,dp *LGDataPacket) {
     write(buf)
     write(dp.Data)
 
-    if dp.Type == LGDATAPACKET_TYPE_DELAY || dp.Type == LGDATAPACKET_TYPE_BROADCAST {
+    if dp.Type == LGDATAPACKET_TYPE_DELAY || dp.Type == LGDATAPACKET_TYPE_BROADCAST || dp.Type == LGDATAPACKET_TYPE_CLOSE || dp.Type == LGDATAPACKET_TYPE_CLOSED {
         cid := make([]byte,4)
         d.Endianer.PutUint32(cid, uint32(dp.FromCid))
+        //LGTrace("packwrite():",cid)
         write(cid)
     }
 }

@@ -1,6 +1,7 @@
 package net
 
 import (
+    "time"
     "math/rand"
 )
 
@@ -8,7 +9,8 @@ import (
 //add check code to old id
 //oldid max value = 2097151 = 0x1fffff
 func LGGenerateID(oldid int) int {
-    code := rand.Intn(1024)
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+    code := r.Intn(1024)
     return oldid | int(code) << 21
 }
 

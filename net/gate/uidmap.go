@@ -11,7 +11,7 @@
 package gate
 
 import (
-    //. "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/log"
     . "github.com/sunminghong/letsgo/net"
     //    "unsafe"
     //"fmt"
@@ -41,7 +41,11 @@ func LGNewUidMap(cache iCache) *LGUidMap {
     return c
 }
 
-func (self *LGUidMap) RemoveUid(gateid, fromCid, cid int) {
+func (self *LGUidMap) RemoveUid(uid int) {
+    self.casCache.Delete("uid_" + strconv.Itoa(uid))
+}
+
+func (self *LGUidMap) RemoveKid(gateid, fromCid, cid int) {
 
     var kid int
 
@@ -54,13 +58,8 @@ func (self *LGUidMap) RemoveUid(gateid, fromCid, cid int) {
         kid = cid
     }
 
-    uid := self.GetUid(gateid, fromCid, cid)
-    if uid > 0 {
-        kkid := "kid_" + strconv.Itoa(kid)
-        self.casCache.Deletes("uid_"+strconv.Itoa(uid), kkid)
-    } else {
-        self.casCache.Delete("uid_" + strconv.Itoa(uid))
-    }
+    kkid := "kid_" + strconv.Itoa(kid)
+    self.casCache.Delete(kkid)
 }
 
 func (self *LGUidMap) CheckUid(uid int) (gateid, fromCid, cid int, cas uint64) {
@@ -142,10 +141,16 @@ func (self *LGUidMap) SaveUid(gateid, fromCid, cid, uid int) error {
     v2 := []int{uid, checkcode}
 
     //set to cache
-    self.casCache.Set("kid_"+strconv.Itoa(kid), v2, 0, 0)
+    err :=self.casCache.Set("kid_"+strconv.Itoa(kid), v2, 0, 0)
+    if err !=nil {
+        LGTrace("saveuid():",err)
+    }
 
     v3 := []int{gateid, fromCid, cid}
-    err := self.casCache.Set("uid_"+strconv.Itoa(uid), v3, 0, 0)
+    err = self.casCache.Set("uid_"+strconv.Itoa(uid), v3, 0, 0)
+    if err !=nil {
+        LGTrace("saveuid():",err)
+    }
 
     return err
 }
@@ -188,40 +193,3 @@ func (self *LGUidMap) Clear() {
     //todo: clear all uid from memcache
 }
 
-// reg uid if uid is not exists
-// return value:
-// 0,success
-// 4,reg lost ,because already online
-func (self *LGUidMap) Reg(gateid, fromcid, cid, uid int) int {
-    _, _, _, cas := self.CheckUid(uid)
-    if cas == 0 {
-        return self.ForceReg(gateid, fromcid, cid, uid)
-    }
-
-    return 4
-}
-
-// reg uid if uid is exists or not exists
-// return value:
-// 0,success, and is not exists
-// 1,success, and is exists
-// 2,reg lost, because memcached is error and is not exists
-// 3,reg lost, because memcached is error and is exists
-func (self *LGUidMap) ForceReg(gateid, fromcid, cid, uid int) int {
-    _, _, _, cas := self.CheckUid(uid)
-
-    err := self.SaveUid(gateid, fromcid, cid, uid)
-    if err == nil {
-        if cas > 0 {
-            return 1
-        } else {
-            return 0
-        }
-    }
-
-    if cas > 0 {
-        return 3
-    } else {
-        return 2
-    }
-}

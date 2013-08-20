@@ -102,13 +102,13 @@ func (gs *LGGridServer) Init(
     gs.SetParent(gs)
 }
 
-func (gs *LGGridServer) RegisterGate(gridname string,gridid int,c LGIClient) {
-    if cs,ok := gs.GateMap[gridid]; ok {
-        cs = append(cs,gridid)
+func (gs *LGGridServer) RegisterGate(gatename string,gateid int,c LGIClient) {
+    if cs,ok := gs.GateMap[gateid]; ok {
+        cs = append(cs,gateid)
 
-        gs.GateMap[gridid] = cs
+        gs.GateMap[gateid] = cs
     } else {
-        gs.GateMap[gridid] = LGSliceInt {c.GetTransport().Cid}
+        gs.GateMap[gateid] = LGSliceInt {c.GetTransport().Cid}
     }
 }
 

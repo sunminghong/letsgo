@@ -11,9 +11,7 @@
 package main
 
 import (
-    "bufio"
     "fmt"
-    "os"
     "strings"
     "time"
     "strconv"
@@ -23,21 +21,52 @@ import (
     . "github.com/sunminghong/letsgo/net"
     . "github.com/sunminghong/letsgo/helper"
     . "github.com/sunminghong/letsgo/log"
+	"github.com/sbinet/liner"
 )
 
 var endian = LGBigEndian
 
+func tabCompleter(line string) []string {
+	opts := make([]string, 0)
+
+	if strings.HasPrefix(line, "/") {
+		filters := []string{
+			"/conn ",
+			"/change ",
+			"/quit",
+			"/reg ",
+			"/rereg ",
+		}
+
+		for _, cmd := range filters {
+			if strings.HasPrefix(cmd, line) {
+				opts = append(opts, cmd)
+			}
+		}
+	}
+
+	return opts
+}
+
 // clientsender(): read from stdin and send it via network
 func clientsender(cid *int,client *LGClientPool) {
-    reader := bufio.NewReader(os.Stdin)
+	term := liner.NewLiner()
+	fmt.Println("chat client")
+    defer term.Close()
+
+	term.SetCompleter(tabCompleter)
     for {
         if (*cid)==0 {
             fmt.Print("you no connect anyone server,please input conn cmd,\n")
         }
-        fmt.Print("you> ")
-        input, _ := reader.ReadBytes('\n')
-        cmd := string(input[:len(input)-1])
 
+		input, e := term.Prompt("> ")
+		if e != nil {
+			break
+		}
+
+        //cmd := string(input[:len(input)-1])
+        cmd := string(input)
         var text string
 
         if cmd[0] == '/' {
@@ -78,9 +107,13 @@ func clientsender(cid *int,client *LGClientPool) {
                 go client.Start(name,addr,datagram)
 
 
-                fmt.Print("please input your name:")
-                input, _ := reader.ReadBytes('\n')
-                input =input[0:len(input)-1]
+                input, e = term.Prompt("please input your name: ")
+                if e != nil {
+                    break
+                }
+
+                //cmd := string(input[:len(input)-1])
+                cmd = string(input)
 
                 for true {
                     b := client.Clients.GetByName(name)
@@ -155,8 +188,7 @@ func main() {
     //client.Start("", 4444)
 
     quit := make(chan bool)
-    <- quit
-    
+    <-quit
     //running :=1
     //for running==1 {
     //    time.Sleep(3*time.Second)

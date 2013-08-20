@@ -80,8 +80,7 @@ func (c *LGClient) ProcessDPs(dps []*LGDataPacket) {
         var code int
         if len(dp.Data) > 2 {
             code = int(c.Transport.Stream.Endianer.Uint16(dp.Data))
-            //code := int(c.Transport.Stream.Endianer.Uint16(dp.Data))
-            LGTrace("msg.code:",code)
+            //LGTrace("msg.code:",code)
 
         } else {
             code = 0

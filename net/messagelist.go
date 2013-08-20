@@ -12,7 +12,7 @@ package net
 
 import (
     . "github.com/sunminghong/letsgo/helper"
-    . "github.com/sunminghong/letsgo/log"
+    //. "github.com/sunminghong/letsgo/log"
 )
 
 type LGMessageListWriter struct {
@@ -27,7 +27,7 @@ type LGMessageListWriter struct {
 func LGNewMessageListWriter(endian int) *LGMessageListWriter {
     list := &LGMessageListWriter{}
 
-    LGTrace("messagelistwriter Init by called")
+    //LGTrace("messagelistwriter Init by called")
     list.init(768,endian)
     return list
 }
@@ -62,13 +62,13 @@ func (list *LGMessageListWriter) ToBytes() []byte {
         uint16(list.buf.Len()+list.metabuf.Len() - 2))
     heads[2] = byte(list.length)
 
-    LGTrace("wind:",list.wind)
+    //LGTrace("wind:",list.wind)
     heads[3] = byte(list.wind)
-    LGTrace("metabuflist",list.metabuf.Bytes())
+    //LGTrace("metabuflist",list.metabuf.Bytes())
 
     list.metabuf.Write(list.buf.Bytes())
 
-    LGTrace("metabuflist",list.metabuf.Bytes())
+    //LGTrace("metabuflist",list.metabuf.Bytes())
     return list.metabuf.Bytes()
 }
 
@@ -116,7 +116,7 @@ func (list *LGMessageListReader) ReadStartTag() {
     //对齐列表项，如果列表数据项比读取的多，读下一个列表的数据是需要先将指针对齐
     for i:=list.wind;i<list.maxInd;i++ {
         ty,ok := list.meta[i]
-        LGTrace("checkread ty,ok",ty,ok)
+        //LGTrace("checkread ty,ok",ty,ok)
         if !ok {
             continue
         }

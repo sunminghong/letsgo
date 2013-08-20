@@ -15,7 +15,7 @@ import (
     "strings"
     "math/rand"
     . "github.com/sunminghong/letsgo/helper"
-    . "github.com/sunminghong/letsgo/log"
+    //. "github.com/sunminghong/letsgo/log"
 )
 
 type LGDefaultDispatcher struct {
@@ -39,7 +39,7 @@ func (r *LGDefaultDispatcher) Add(gridID int, gcodes *string) {
     }
 
     codes:= strings.Split(cs,",")
-    LGTrace("add disp",codes)
+    //LGTrace("add disp",codes)
     for _,p_ := range codes {
         p := strings.Trim(p_," ")
         if len(p) == 0 {
@@ -50,12 +50,12 @@ func (r *LGDefaultDispatcher) Add(gridID int, gcodes *string) {
             r.addDisp(gridID,gcode)
         }
     }
-    LGTrace("messagecodemaps1:",r.messageCodemaps)
+    //LGTrace("messagecodemaps1:",r.messageCodemaps)
 }
 
 func (r *LGDefaultDispatcher) Remove(gridID int) {
     r.removeGrids[gridID] = 1
-    LGTrace("removegrids:",r.removeGrids)
+    //LGTrace("removegrids:",r.removeGrids)
 }
 
 func (r *LGDefaultDispatcher) addDisp(gridID int, gcode int) {
@@ -72,11 +72,11 @@ func (r *LGDefaultDispatcher) Dispatch(messageCode int) (gridID int,ok bool) {
     gcode := r.groupCode(messageCode)
 
     gridIDArr,ok := r.messageCodemaps[gcode]
-    LGTrace("gridIDArr,gcode:",gridIDArr,gcode)
+    //LGTrace("gridIDArr,gcode:",gridIDArr,gcode)
     if !ok {
         gcode = 0
         gridIDArr,ok = r.messageCodemaps[gcode]
-        LGTrace("gridIDArr2,gcode:",gridIDArr,gcode)
+        //LGTrace("gridIDArr2,gcode:",gridIDArr,gcode)
     }
 
     if !ok {
@@ -84,19 +84,23 @@ func (r *LGDefaultDispatcher) Dispatch(messageCode int) (gridID int,ok bool) {
     }
 
     l := len(gridIDArr)
+    if l == 0 {
+        return 0,false
+    }
+
     i := rand.Intn(l)
-    LGTrace("rand:",l,i)
+    //LGTrace("rand:",l,i)
     for i<l {
         gridID = gridIDArr[i]
         _,ok := r.removeGrids[gridID]
-        LGTrace("removeGrids: ",r.removeGrids)
+        //LGTrace("removeGrids: ",r.removeGrids)
         if ok {
-            LGTrace("this grid is already down",gridID)
+            //LGTrace("this grid is already down",gridID)
 
             gridIDArr.RemoveAtIndex(i)
             r.messageCodemaps[gcode] = gridIDArr
 
-            LGTrace("removed ",i,":",gridIDArr)
+            //LGTrace("removed ",i,":",gridIDArr)
             l = len(gridIDArr)
             if l == 0 {
                 break
@@ -108,9 +112,9 @@ func (r *LGDefaultDispatcher) Dispatch(messageCode int) (gridID int,ok bool) {
             continue
         }
 
-        LGTrace(
-            "dispatcher Handler func messageCode,messageCode,gridID:",
-        messageCode,gcode,gridID,gridIDArr)
+        //LGTrace(
+        //    "dispatcher Handler func messageCode,messageCode,gridID:",
+        //messageCode,gcode,gridID,gridIDArr)
 
         return gridID,true
     }

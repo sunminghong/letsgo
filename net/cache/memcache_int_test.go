@@ -61,8 +61,56 @@ func TestMemcache2(t *testing.T) {
 		t.Errorf("Set: %v", err)
 		return
 	}
-    var b int
+
+	// Delete
+	err =c.Delete("Hello")
+	if err != nil {
+		t.Errorf("Delete: %v", err)
+	}
+	//expect2("Delete", t, c, "Hello",0) 
+
+	// Flags
+	err = c.Set("Hello", 1223, 0xFF3F, 0)
+	if err != nil {
+		t.Errorf("Set: %v", err)
+		return
+	}
+
+	// Delete
+	err =c.Delete("Hello")
+	if err != nil {
+		t.Errorf("Delete: %v", err)
+	}
+	//expect2("Delete", t, c, "Hello",0) 
+
+	// Flags
+	err = c.Set("Hello", 1223, 0xFF3F, 0)
+	if err != nil {
+		t.Errorf("Set: %v", err)
+		return
+	}
+
+	err = c.Set("adfa", "", 0, 0)
+	if err != nil {
+		t.Errorf("Set: %v", err)
+		return
+	}
+
     var f uint16
+    var sss string
+	f, err =c.Get("adfa",&sss)
+	if err!=nil {
+		t.Errorf("Get: %v", err)
+		return
+	}
+
+	f, err =c.Get("adfa1",&sss)
+	if err==nil {
+		t.Errorf("Get:108line %v")
+		return
+	}
+
+    var b int
     var ok bool
 
 	f, err =c.Get("Hello",&b)

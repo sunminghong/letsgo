@@ -215,12 +215,12 @@ func (msg *LGMessageWriter) ToBytes() []byte {
     msg.metabuf.Endianer.PutUint16(heads, uint16(msg.Code))
     heads[2] = msg.Ver
 
-    LGTrace("wind:", msg.wind)
+    //LGTrace("wind:", msg.wind)
     heads[3] = byte(msg.wind)
-    LGTrace("metabuf", msg.metabuf.Bytes())
+    //LGTrace("metabuf", msg.metabuf.Bytes())
     msg.metabuf.Write(msg.buf.Bytes())
 
-    LGTrace("metabuf", msg.metabuf.Bytes())
+    //LGTrace("metabuf", msg.metabuf.Bytes())
     return msg.metabuf.Bytes()
 }
 
@@ -273,7 +273,7 @@ func (msg *LGMessageReader) init() {
         panic("data init error")
     }
 
-    LGTrace("init meta:", meta)
+    //LGTrace("init meta:", meta)
     maxind := 0
     msg.meta = make(map[int]byte)
 
@@ -289,7 +289,7 @@ func (msg *LGMessageReader) init() {
     msg.maxInd = maxind
     msg.itemnum = itemnum
     msg.wind = 0
-    LGTrace(msg.meta)
+    //LGTrace(msg.meta)
 }
 
 func checkConvert(err error) {
@@ -397,13 +397,13 @@ func (msg *LGMessageReader) alignPos(wind int) {
 */
 
 func (msg *LGMessageReader) checkRead(datatype int) bool {
-    LGTrace("checkread wind,maxInd", msg.wind, msg.maxInd)
+    //LGTrace("checkread wind,maxInd", msg.wind, msg.maxInd)
     if msg.wind > msg.maxInd {
         return false
     }
 
     ty, ok := msg.meta[msg.wind]
-    LGTrace("checkread ty,ok", ty, ok, datatype)
+    //LGTrace("checkread ty,ok", ty, ok, datatype)
     if !ok {
         msg.wind++
         return false

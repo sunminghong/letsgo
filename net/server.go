@@ -133,6 +133,7 @@ func (s *LGServer) Start() {
                     LGWarn("connection num is more than ",s.maxConnections)
                 } else {
                     newcid = LGGenerateID(newcid)
+                    LGTrace("///////////////////////////////////////////////newcid:",newcid)
                     go s.transportHandler(newcid, connection)
                 }
             }
@@ -215,17 +216,17 @@ func (s *LGServer) transportReader(transport *LGTransport, client LGIClient) {
             break
         }
 
-        LGTrace("read to buff:", bytesRead)
+        //LGTrace("read to buff:", bytesRead)
         transport.BuffAppend(buffer[0:bytesRead])
 
-        LGTrace("transport.Buff", transport.Stream.Bytes())
+        //LGTrace("transport.Buff", transport.Stream.Bytes())
         n, dps := transport.Fetch()
-        LGTrace("fetch message number", n)
+        //LGTrace("fetch message number", n)
         if n > 0 {
             client.ProcessDPs(dps)
         }
     }
-    LGTrace("TransportReader stopped for ", transport.Cid)
+    //LGTrace("TransportReader stopped for ", transport.Cid)
 }
 
 func (s *LGServer) transportSender(transport *LGTransport, client LGIClient) {
@@ -284,7 +285,7 @@ func (s *LGServer) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
 func (s *LGServer) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
     for {
         //在go里面没有while do ，for可以无限循环
-        LGTrace("broadcastHandler: chan Waiting for input")
+        //LGTrace("broadcastHandler: chan Waiting for input")
         dp := <-broadcastChan
 
         //fromCid := dp.FromCid
@@ -294,7 +295,7 @@ func (s *LGServer) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
             Data: dp.Data,
         }
         for _, c := range s.Clients.All() {
-            LGTrace("broadcastHandler: client.type",c.GetType())
+            //LGTrace("broadcastHandler: client.type",c.GetType())
             //if fromCid == Cid {
             //    continue
             //}
@@ -304,7 +305,7 @@ func (s *LGServer) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
                 c.GetTransport().Outgoing <- dp0
             }
         }
-        LGTrace("broadcastHandler: Handle end!")
+        //LGTrace("broadcastHandler: Handle end!")
     }
 }
 
