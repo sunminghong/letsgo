@@ -325,6 +325,7 @@ func (gs *LGGateServer) StartConsole(quit chan bool) {
         case "/exit", "/quit":
             fmt.Println("this gateserver is exit")
             quit <- true
+            break
         default:
         }
     }
