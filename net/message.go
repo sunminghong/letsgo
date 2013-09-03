@@ -117,6 +117,17 @@ func (msg *LGMessageWriter) WriteUint(x int, wind int) {
     msg.maxInd++
 }
 
+func (msg *LGMessageWriter) WriteUints(xs ...int) {
+    for x := range xs {
+        msg.preWrite(0)
+
+        msg.buf.WriteUint(uint(x))
+        msg.writeMeta(TY_UINT)
+        msg.wind++
+        msg.maxInd++
+    }
+}
+
 func (msg *LGMessageWriter) WriteInt(x int, wind int) {
     msg.preWrite(wind)
 
@@ -124,6 +135,17 @@ func (msg *LGMessageWriter) WriteInt(x int, wind int) {
     msg.writeMeta(TY_INT)
     msg.wind++
     msg.maxInd++
+}
+
+func (msg *LGMessageWriter) WriteInts(xs ...int) {
+    for x := range xs {
+        msg.preWrite(0)
+
+        msg.buf.WriteInt(int(x))
+        msg.writeMeta(TY_INT)
+        msg.wind++
+        msg.maxInd++
+    }
 }
 
 func (msg *LGMessageWriter) WriteString(x string, wind int) {

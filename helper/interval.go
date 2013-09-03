@@ -1,103 +1,80 @@
 /*=============================================================================
-#     FileName: gate.go
-#         Desc: game gate server
+#     FileName: interval.go
+#         Desc: define a interval timer
 #       Author: sunminghong
 #        Email: allen.fantasy@gmail.com
 #     HomePage: http://weibo.com/5d13
 #      Version: 0.0.1
-#   LastChange: 2013-06-09 10:09:28
+#   LastChange: 2013-08-30 09:30:16
 #      History:
 =============================================================================*/
 package helper
 
 import (
-    "fmt"
     "time"
     "errors"
-    "runtime"
 )
-
 
 type LGInterval struct {
     duration time.Duration
-    quit chan bool
     stop chan bool
     callback func(self *LGInterval)
 
-    isRun bool
-
+    IsRun bool
     timer *time.Ticker
 
-    isExecuting bool
+    //callback func if is executing
+    IsExecuting bool
 }
 
 func NewLGInterval(duration time.Duration,callbackfn func(self *LGInterval)) *LGInterval {
-    return &LGInterval{duration,make(chan bool),make(chan bool),callbackfn,false,nil,false}
+    return &LGInterval{duration,make(chan bool),callbackfn,false,nil,false}
 }
 
 func (self *LGInterval) Start(newDuration ...time.Duration) error {
     if len(newDuration)>0 {
         self.duration = newDuration[0]
     }
-    
-    if self.isRun {
+
+    if self.IsRun {
         return errors.New("the instance is already running!")
     }
 
     go func() {
-        fmt.Println("is starting...")
-        self.isRun = true
+        self.IsRun = true
         self.timer = time.NewTicker(self.duration)
         for {
-            if !self.isRun {
-                //<-self.quit
+            if !self.IsRun {
                 goto quit
             }
 
             select {
-            //case <-self.quit:
-                //fmt.Println("quit")
-                //goto quit
             case <-self.timer.C:
-                self.isExecuting = true
+                self.IsExecuting = true
                 self.callback(self)
-                self.isExecuting = false
+                self.IsExecuting = false
             }
         }
 
         quit:
-        self.isRun = false
+        self.IsRun = false
         self.stop <- true
     }()
 
     return nil
 }
 
-var istop int =0
 func (self *LGInterval) Stop(callback ...func(interval *LGInterval)) {
     go func() {
-        if self.isRun {
-            self.isRun = false
-            //self.quit<- true
-            fmt.Println("enter _stop()")
+        if self.IsRun {
+            self.IsRun = false
 
-            a := istop
-            istop++
-            //for self.isExecuting {
-                //fmt.Println("self.isExecuting is true")
-                //time.Sleep(100*time.Millisecond)
-            //}
-            fmt.Println("istop a:",a)
             <-self.stop
             self.timer.Stop()
-            fmt.Println("istop a:",a)
 
             if len(callback)>0 {
                 callback[0](self)
             }
-
-            fmt.Println("-----||```------")
         }
-        fmt.Println("-----------")
     }()
 }
