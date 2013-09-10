@@ -232,14 +232,14 @@ func (s *LGServer) transportReader(transport *LGTransport, client LGIClient) {
 func (s *LGServer) transportSender(transport *LGTransport, client LGIClient) {
     for {
         select {
-        case dp := <-transport.Outgoing:
-            LGTrace("transportSender Outgoing:",dp.Type, len(dp.Data))
-            transport.PackWrite(dp)
-
         case data := <-transport.OutgoingBytes:
             LGTrace("transportSender OutgoingBytes:",len(data))
             //buf := s.Datagram.Pack(dp)
             transport.Conn.Write(data)
+
+        case dp := <-transport.Outgoing:
+            LGTrace("transportSender Outgoing:",dp.Type, len(dp.Data))
+            transport.PackWrite(dp)
 
         case <-transport.Quit:
             LGDebug("Transport ", transport.Cid, " quitting")

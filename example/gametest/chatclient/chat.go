@@ -125,6 +125,7 @@ func clientsender(cid *int,client *LGClientPool) {
                 }
 
                 text = string(input)
+
             case "/setlog":
                 if lv,err := strconv.Atoi(cmds[1]); err == nil {
                     LGSetLevel(lv)
@@ -133,14 +134,47 @@ func clientsender(cid *int,client *LGClientPool) {
                 name := cmds[1]
                 change(cid,client,name)
 
-            case "/quit\n":
+            case "/quit":
                 text = "/quit"
 
+            case "/11012":
+                c := client.Clients.Get(*cid)
+                msg := protos.NewMessageWriter(c)
+                msg.SetCode(1101,0)
+                msg.WriteUint(2,0)
+                msg.WriteUint(1,0)
+                msg.WriteUint(1,0)
+                //msg.WriteUints(1,0,0)
+                c.SendMessage(0,msg)
+                continue
+
+
+            case "/11011":
+                c := client.Clients.Get(*cid)
+                msg := protos.NewMessageWriter(c)
+                msg.SetCode(1101,0)
+                msg.WriteUint(1,0)
+                msg.WriteUint(1,0)
+                msg.WriteUint(1,0)
+                //msg.WriteUints(1,0,0)
+                c.SendMessage(0,msg)
+                continue
+
+            case "/1001":
+                c := client.Clients.Get(*cid)
+                msg := protos.NewMessageWriter(c)
+                msg.SetCode(1001,0)
+                msg.WriteUint(1,0)
+                c.SendMessage(0,msg)
+                continue
+
             default:
-                text = string(input[:len(input)-1])
+                //text = string(input[:len(input)-1])
+                text = string(input)
             }
         } else {
-            text = string(input[:len(input)-1])
+            //text = string(input[:len(input)-1])
+            text = string(input)
         }
 
         c := client.Clients.Get(*cid)
@@ -148,7 +182,7 @@ func clientsender(cid *int,client *LGClientPool) {
         msg.SetCode(1011,0)
         msg.WriteString(text,0)
 
-        LGTrace("has %v clients",client.Clients.Len())
+        LGTrace("has %v clients,text:%s",client.Clients.Len(),text)
         c.SendMessage(0,msg)
     }
 }

@@ -69,6 +69,10 @@ func (c *LGTransport) SendDP(dp *LGDataPacket) {
     c.Outgoing <- dp
 }
 
+func (c *LGTransport) SendBytes(data []byte) {
+    c.OutgoingBytes <- data
+}
+
 func (c *LGTransport) SendBroadcast(dp *LGDataPacket) {
     c.Server.SendBroadcast(dp)
 }

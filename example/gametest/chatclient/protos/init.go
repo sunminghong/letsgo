@@ -11,9 +11,10 @@
 package protos
 
 import (
+    "os"
     . "github.com/sunminghong/letsgo/net"
     "github.com/sunminghong/letsgo/helper"
-    "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/log"
 )
 
 var Endian int = helper.LGLittleEndian
@@ -52,7 +53,7 @@ func NewClient (name string,transport *LGTransport) LGIClient {
 func (c *Client) ProcessDPs(dps []*LGDataPacket) {
     for _, dp := range dps {
         msg := LGNewMessageReader(dp.Data,Endian)
-        log.LGTrace("msg.code:",msg.Code,msg.Ver)
+        LGTrace("msg.code:",msg.Code,msg.Ver)
 
         //todo: route don't execute
         processHandl(msg.Code,msg,c)
@@ -77,7 +78,26 @@ func NewMessageWriter(c LGIClient) *LGMessageWriter {
 }
 
 func init() {
-    Handlers[2011] = Process2011
+    Handlers[201] = Process201
     Handlers[2001] = Process2001
+    Handlers[2011] = Process2011
+    Handlers[2101] = Process2101
+
+    Handlers[2020] = Process2020
+    Handlers[2021] = Process2021
 }
 
+func logfightdata(data string) {
+    LGTrace(data)
+
+    readerFile := "/Users/Team1201/works/tmp/fightdata.txt"
+    fout, err := os.OpenFile(readerFile, os.O_RDWR|os.O_APPEND|os.O_CREATE,0666)
+    if err != nil {
+        LGTrace("Error:", err)
+        return
+    }
+
+    defer fout.Close()
+
+    fout.WriteString(data)
+}

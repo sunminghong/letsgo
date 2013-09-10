@@ -25,7 +25,7 @@ type LGMessageListWriter struct {
 }
 
 func LGNewMessageListWriter(endian int) *LGMessageListWriter {
-    list := &LGMessageListWriter{}
+    list := &LGMessageListWriter{LGMessageWriter:LGNewMessageWriter(endian)}
 
     //LGTrace("messagelistwriter Init by called")
     list.init(768,endian)
@@ -83,9 +83,8 @@ type LGMessageListReader struct {
 }
 
 func LGNewMessageListReader(buf *LGRWStream) *LGMessageListReader {
-    list := &LGMessageListReader{}
+    list := &LGMessageListReader{LGMessageReader:&LGMessageReader{}}
 
-    _=buf
     list.buf = buf
 
 

@@ -15,12 +15,13 @@ import (
 
 const (
     LGDATAPACKET_TYPE_GENERAL = 0
-    LGDATAPACKET_TYPE_DELAY = 1
-    LGDATAPACKET_TYPE_CLOSE = 2 //close a player client
-    LGDATAPACKET_TYPE_BROADCAST = 3
-    LGDATAPACKET_TYPE_GATECONNECT = 4
-    LGDATAPACKET_TYPE_GATEREMOVE= 5 //remove a gate client
-    LGDATAPACKET_TYPE_CLOSED = 6 //a player client closed tell to gridserver
+    LGDATAPACKET_TYPE_DELAY = 2 + 1 
+    LGDATAPACKET_TYPE_CLOSE = 4 + 1 //close a player client
+    LGDATAPACKET_TYPE_BROADCAST = 6 + 1
+    LGDATAPACKET_TYPE_GATECONNECT = 8 
+    LGDATAPACKET_TYPE_GATEREMOVE= 10 //remove a gate client
+    LGDATAPACKET_TYPE_CLOSED = 12 + 1 //a player client closed tell to gridserver
+    LGDATAPACKET_TYPE_DELAY_DATAS = 14 + 1
 )
 
 //define a struct or class of rec transport connection
@@ -88,6 +89,7 @@ type LGnewTransportFunc func(
 
 type LGIMessageWriter interface {
     SetCode(code int, ver byte)
+    GetCode() int
 
     preWrite(wind int)
     writeMeta(datatype int)
@@ -95,7 +97,10 @@ type LGIMessageWriter interface {
     WriteUint32(x int, wind int)
 
     WriteUint(x int, wind int)
+    WriteUints(x ...int)
+
     WriteInt(x int, wind int)
+    WriteInts(x ...int)
 
     WriteString(x string, wind int)
     //WriteList(list *MessageListWriter, wind int)

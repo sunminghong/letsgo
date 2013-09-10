@@ -16,43 +16,48 @@ import (
     "time"
 )
 
-
-func LGDisconnect(c *LGGridClient, gateid, fromCid, cid int, prefunc func(disconnect LGIClient)) {
-    LGTrace("Disconnect is called:",gateid,fromCid,cid)
-
-    if fromCid == 0 {
+func LGGetConnection(c *LGGridClient, gateid, cid int) *LGGridClient {
+    if gateid==0 {
         //close direct connection
         if server, ok := c.GetTransport().Server.(*LGGridServer); ok {
-            LGTrace("close direct connection")
             if dc := server.Clients.Get(cid); dc != nil {
-                prefunc(dc)
-
-                time.Sleep(300 * time.Millisecond)
-                dc.Close()
-            } else {
-                prefunc(nil)
+                if dgc,ok := dc.(*LGGridClient);ok {
+                    return dgc
+                } else {
+                    return nil
+                }
             }
+            return nil
         } else {
-            prefunc(nil)
+            return nil
         }
-        return
     }
 
-    var dgc LGIClient
-    if c.Gateid == 0 {
+    if c.Gateid != gateid{
         //要从一个直连clientA断开一个非直连clientGB，就必须通过gateid去找到连接clientGB的clientG
         if gridserver, ok := c.GetTransport().Server.(*LGGridServer); ok {
             LGTrace("gatemap:",gridserver.GateMap)
             if cs, ok := gridserver.GateMap[gateid]; ok {
                 if dc := gridserver.Clients.Get(cs[0]); dc != nil {
-                    dgc = dc
+                    if dgc,ok := dc.(*LGGridClient);ok {
+                        return dgc
+                    } else {
+                        return nil
+                    }
                 }
             }
         }
-    } else {
-        dgc = c
-    }
 
+    } else {
+        return c
+    }
+    return nil
+}
+
+func LGDisconnect(c *LGGridClient, gateid, fromCid, cid int, prefunc func(disconnect LGIClient)) {
+    LGTrace("Disconnect is called:",gateid,fromCid,cid)
+
+    dgc := LGGetConnection(c,gateid,cid)
     if dgc == nil {
         LGTrace("disconnect is lost:gate client is lost")
 
@@ -60,16 +65,44 @@ func LGDisconnect(c *LGGridClient, gateid, fromCid, cid int, prefunc func(discon
         return
     }
 
+    if fromCid == 0 {
+        prefunc(dgc)
+
+        time.Sleep(200 * time.Millisecond)
+        dgc.Close()
+        return
+    }
+
     prefunc(dgc)
     //this is connection is conneted by a gate
 
     //wait one second then send a command to gate to close client player connection
-    time.Sleep(300 * time.Millisecond)
+    time.Sleep(200 * time.Millisecond)
 
     dp := &LGDataPacket{
         Type:    LGDATAPACKET_TYPE_CLOSE,
         FromCid: fromCid,
         Data:    []byte{1},
+    }
+
+    dgc.GetTransport().SendDP(dp)
+}
+
+func LGSendMessage(c *LGGridClient,gateid int,fromCid int,cid int,msg LGIMessageWriter) {
+    dgc := LGGetConnection(c,gateid,cid)
+    if dgc == nil {
+        return
+    }
+
+    dp := &LGDataPacket{
+        FromCid: fromCid,
+        Data: msg.ToBytes(),
+    }
+
+    if fromCid == 0 {
+        dp.Type = LGDATAPACKET_TYPE_GENERAL
+    } else {
+        dp.Type = LGDATAPACKET_TYPE_DELAY
     }
 
     dgc.GetTransport().SendDP(dp)

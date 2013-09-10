@@ -30,6 +30,11 @@ func LGTest_MessageWrite(t *testing.T) {
     b2 :=uint(42323499)
     b3 :="bsdbbbb"
 
+    c1 := 234
+    c2 := 23425
+    c3 :=1
+    c4 := 4352
+
     //编码/写数据
     b4 := LGNewMessageListWriter(LGBigEndian)
     for i:=0;i<5;i++ {
@@ -49,6 +54,8 @@ func LGTest_MessageWrite(t *testing.T) {
     msgw.WriteU(b2)
     msgw.WriteU(b3)
     msgw.WriteList(b4,0)
+
+    msgw.WriteUints(c1,c2,c3,c4)
     //fmt.Println("messageWrite",msgw.ToBytes(1,1))
 
     msgw.SetCode(1,1)
@@ -137,6 +144,24 @@ func LGTest_MessageWrite(t *testing.T) {
         vv4.ReadEndTag()
     }
 
+
+    if vv1!= int(c1) {
+        t.Error("item a1 ReadInt is wrong:",vv1,c1)
+    }
+
+    vv2 = msg.ReadUint()
+    if vv2!= int(c2) {
+        t.Error("item a1 ReadInt is wrong:",vv2,c2)
+    }
+
+    vvv3 := msg.ReadUint()
+    if vvv3!= c3 {
+        t.Error("item a1 ReadInt is wrong:",vvv3,c3)
+    }
+    vvv4 := msg.ReadUint()
+    if vvv4!= c4 {
+        t.Error("item a1 ReadInt is wrong:",vvv4,c4)
+    }
 
 }
 /*

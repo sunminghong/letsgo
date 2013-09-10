@@ -72,6 +72,10 @@ func (msg *LGMessageWriter) SetCode(code int, ver byte) {
     msg.Ver = ver
 }
 
+func (msg *LGMessageWriter) GetCode() int {
+    return msg.Code
+}
+
 func (msg *LGMessageWriter) preWrite(wind int) {
     if wind == 0 {
         return
@@ -90,6 +94,9 @@ func (msg *LGMessageWriter) writeMeta(datatype int) {
 }
 
 func (msg *LGMessageWriter) WriteUint16(x int, wind int) {
+    if x < 0 {
+        panic("WriteUint16 only write > 0 integer")
+    }
     msg.preWrite(wind)
 
     //todo:if x=0 then dont't write
@@ -100,6 +107,9 @@ func (msg *LGMessageWriter) WriteUint16(x int, wind int) {
 }
 
 func (msg *LGMessageWriter) WriteUint32(x int, wind int) {
+    if x < 0 {
+        panic("WriteUint32 only write > 0 integer")
+    }
     msg.preWrite(wind)
 
     msg.buf.WriteUint32(uint32(x))
@@ -109,6 +119,9 @@ func (msg *LGMessageWriter) WriteUint32(x int, wind int) {
 }
 
 func (msg *LGMessageWriter) WriteUint(x int, wind int) {
+    if x < 0 {
+        panic("WriteUint only write > 0 integer")
+    }
     msg.preWrite(wind)
 
     msg.buf.WriteUint(uint(x))
@@ -119,12 +132,15 @@ func (msg *LGMessageWriter) WriteUint(x int, wind int) {
 
 func (msg *LGMessageWriter) WriteUints(xs ...int) {
     for x := range xs {
+
         msg.preWrite(0)
 
         msg.buf.WriteUint(uint(x))
         msg.writeMeta(TY_UINT)
         msg.wind++
         msg.maxInd++
+        
+        //msg.WriteUint(x, 0)
     }
 }
 

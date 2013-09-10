@@ -113,18 +113,33 @@ func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
     }
 }
 
-func (c *LGGridClient) SendMessage(fromcid int,msg LGIMessageWriter) {
+func (c *LGGridClient) SendMessage(fromCid int,msg LGIMessageWriter) {
     dp := &LGDataPacket{
-        FromCid: fromcid,
+        FromCid: fromCid,
         Data: msg.ToBytes(),
     }
-    if fromcid == 0 {
+
+    if fromCid == 0 {
         dp.Type = LGDATAPACKET_TYPE_GENERAL
     } else {
         dp.Type = LGDATAPACKET_TYPE_DELAY
     }
 
-    //todo: need gateid
+    c.Transport.SendDP(dp)
+}
+
+func (c *LGGridClient) SendBytes(fromCid int,data []byte) {
+    if (fromCid == 0) {
+        c.Transport.SendBytes(data)
+        return
+    }
+
+    dp := &LGDataPacket{
+        Type: LGDATAPACKET_TYPE_DELAY_DATAS,
+        FromCid: fromCid,
+        Data: data,
+    }
+    LGTrace("sendbytes from gridclient:%s,%v",fromCid,dp.Data)
     c.Transport.SendDP(dp)
 }
 

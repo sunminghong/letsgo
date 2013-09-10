@@ -13,6 +13,7 @@ package log
 import (
     "log"
     "os"
+    "strings"
 )
 
 //--------------------
@@ -55,7 +56,12 @@ func LGSetLogger(l *log.Logger) {
 // LGTrace logs a message at trace level.
 func LGTrace(v ...interface{}) {
     if level <= LGLevelLGTrace {
-        LetsLogger.Printf("[T] %v\n", v)
+        s := v[0].(string)
+        if strings.Index(s,"%") == -1 {
+            LetsLogger.Printf("[T] %v\n", v)
+        } else {
+            LetsLogger.Printf("[T] " + s + "\n", v[1:]...)
+        }
     }
 }
 

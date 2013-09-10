@@ -8,96 +8,44 @@
 #   LastChange: 2013-06-09 10:09:28
 #      History:
 =============================================================================*/
-package helper
+package main
 
 import (
     "fmt"
     "time"
     "errors"
     "runtime"
+    "github.com/ugorji/go/codec"
 )
 
+var (
+        v interface{} // value to decode/encode into
+        mh codec.MsgpackHandle
+    )
 
-type LGInterval struct {
-    duration time.Duration
-    quit chan bool
-    stop chan bool
-    callback func(self *LGInterval)
-
-    isRun bool
-
-    timer *time.Ticker
-
-    isExecuting bool
-}
-
-func NewLGInterval(duration time.Duration,callbackfn func(self *LGInterval)) *LGInterval {
-    return &LGInterval{duration,make(chan bool),make(chan bool),callbackfn,false,nil,false}
-}
-
-func (self *LGInterval) Start(newDuration ...time.Duration) error {
-    if len(newDuration)>0 {
-        self.duration = newDuration[0]
-    }
-    
-    if self.isRun {
-        return errors.New("the instance is already running!")
+func main() {
+    a := map[string]interface{}{
+        "I":23,
+        "J":2345,
+        "k":"234234",
     }
 
-    go func() {
-        fmt.Println("is starting...")
-        self.isRun = true
-        self.timer = time.NewTicker(self.duration)
-        for {
-            if !self.isRun {
-                //<-self.quit
-                goto quit
-            }
+    b := []byte
+    //enc = codec.NewEncoder(w, &mh)
+    enc = codec.NewEncoderBytes(&b, &mh)
+    err = enc.Encode(a)
+    if err == nil {
+        fmt.Println("len(b)=%d,v=%v",len(b),b)
+    } else {
+        fmt.Println("err=",err)
+        return
+    }
 
-            select {
-            //case <-self.quit:
-                //fmt.Println("quit")
-                //goto quit
-            case <-self.timer.C:
-                self.isExecuting = true
-                self.callback(self)
-                self.isExecuting = false
-            }
-        }
+    var v interface{} // value to decode/encode into
+    //dec = codec.NewDecoder(r, &mh)
+    dec = codec.NewDecoderBytes(b, &mh)
+    err = dec.Decode(&v)
 
-        quit:
-        self.isRun = false
-        self.stop <- true
-    }()
+    fmt.Println("v=%v",v)
 
-    return nil
-}
-
-var istop int =0
-func (self *LGInterval) Stop(callback ...func(interval *LGInterval)) {
-    go func() {
-        if self.isRun {
-            self.isRun = false
-            //self.quit<- true
-            fmt.Println("enter _stop()")
-
-            a := istop
-            istop++
-            //for self.isExecuting {
-                //fmt.Println("self.isExecuting is true")
-                //time.Sleep(100*time.Millisecond)
-            //}
-            fmt.Println("istop a:",a)
-            <-self.stop
-            self.timer.Stop()
-            fmt.Println("istop a:",a)
-
-            if len(callback)>0 {
-                callback[0](self)
-            }
-
-            fmt.Println("-----||```------")
-        }
-        fmt.Println("-----------")
-    }()
 }

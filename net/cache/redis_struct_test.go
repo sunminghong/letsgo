@@ -19,12 +19,16 @@ import (
     "fmt"
 )
 
-type C struct {
+type D struct {
     I1 int
     I2 int
     I3 int
     I4 int
     I5 int
+}
+
+type C struct {
+    *D
     I6 int
     I7 int
     I8 int
@@ -52,11 +56,13 @@ func (a1 *C) Eq(a2 *C) bool {
 
 func NewC() (a1 *C) {
     a1 = &C{
-        I1:1,
-        I2:12,
-        I3:13,
-        I4:1234,
-        I5:1342,
+        D:&D{
+            I1:1,
+            I2:12,
+            I3:13,
+            I4:1234,
+            I5:1342,
+        },
         I6:123423,
         I7:123,
         I8:2341,
@@ -105,7 +111,7 @@ func TestRedis3(t *testing.T) {
         return
     }
 
-    var b C
+    b := &C{D:&D{}}
     var ok bool
 
 	err=c.Hgetall("Hello",&b)
