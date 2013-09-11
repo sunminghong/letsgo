@@ -131,8 +131,10 @@ func (msg *LGMessageWriter) WriteUint(x int, wind int) {
 }
 
 func (msg *LGMessageWriter) WriteUints(xs ...int) {
-    for x := range xs {
-
+    for _,x := range xs {
+        if x < 0 {
+            panic("WriteUint only write > 0 integer")
+        }
         msg.preWrite(0)
 
         msg.buf.WriteUint(uint(x))
@@ -154,7 +156,7 @@ func (msg *LGMessageWriter) WriteInt(x int, wind int) {
 }
 
 func (msg *LGMessageWriter) WriteInts(xs ...int) {
-    for x := range xs {
+    for _,x := range xs {
         msg.preWrite(0)
 
         msg.buf.WriteInt(int(x))
