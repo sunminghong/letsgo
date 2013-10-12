@@ -46,7 +46,7 @@ func (c *LGGateToGridClient) Register() {
     dp := &LGDataPacket{
         FromCid: 0,
         Data: line,
-        Type : LGDATAPACKET_TYPE_GATECONNECT,
+        Type : LGDATAPACKET_TYPE_GATE_REGISTER,
     }
 
     c.Transport.SendDP(dp)
@@ -56,42 +56,42 @@ func (c *LGGateToGridClient) Register() {
 func (c *LGGateToGridClient) ProcessDPs(dps []*LGDataPacket) {
     for _, dp := range dps {
         LGTrace("gategridclient.ProcessDPs():dp.type=%d,fromcid=%d,len(data)=%d",dp.Type,dp.FromCid,len(dp.Data))
-        LGTrace("c.clients",c.clients.All())
+        //LGTrace("c.clients",c.clients.All())
+        if dp.Type == LGDATAPACKET_TYPE_BROADCAST {
+            LGTrace("broadcast")
+            //c.gate.SendBroadcast(c.gate.Clients.Get(dp.FromCid).GetTransport(),dp)
+            c.Gate.SendBroadcast(dp)
+            return
+        }
+
+        cli := c.clients.Get(dp.FromCid)
+        if cli == nil {
+            LGTrace("dp lost,fromcid:%d",dp.FromCid)
+            return
+        }
+
         switch dp.Type {
         case LGDATAPACKET_TYPE_DELAY:
             LGTrace("dp.Type = delay msg")
 
             dp.Type = LGDATAPACKET_TYPE_GENERAL
-            cli := c.clients.Get(dp.FromCid)
-            if cli!=nil {
-                cli.GetTransport().SendDP(dp)
-            }
+            cli.GetTransport().SendDP(dp)
+
+        case LGDATAPACKET_TYPE_DELAY_DATAS_COMPRESS:
+            LGTrace("delay compress datas:%d,\n%v",dp.FromCid,dp.Data)
+
+            dp.Type = LGDATAPACKET_TYPE_DATAS_COMPRESS
+            cli.GetTransport().SendDP(dp)
 
         case LGDATAPACKET_TYPE_DELAY_DATAS:
             LGTrace("delay datas:%d,\n%v",dp.FromCid,dp.Data)
 
-            cli := c.clients.Get(dp.FromCid)
-            if cli!=nil {
-                LGTrace("delay datas is send")
-                cli.GetTransport().SendBytes(dp.Data)
-            }
+            LGTrace("delay datas is send")
+            cli.GetTransport().SendBytes(dp.Data)
 
         case LGDATAPACKET_TYPE_CLOSE:
-            LGTrace("gatetogridclient.ProcessDps():close player connection:",dp.FromCid)
-
-            if cc := c.clients.Get(dp.FromCid); cc!=nil {
-                LGTrace("gatetogridclient.ProcessDps():.....closed")
-                cc.Close()
-            }
-
-        case LGDATAPACKET_TYPE_BROADCAST:
-            LGTrace("broadcast")
-            //c.gate.SendBroadcast(c.gate.Clients.Get(dp.FromCid).GetTransport(),dp)
-            c.Gate.SendBroadcast(dp)
-
-        default:
-            //process msg ,eg:command line
-            c.clients.Get(dp.FromCid).GetTransport().SendDP(dp)
+            LGTrace("gatetogridclient.ProcessDps():close player connection:%d",dp.FromCid)
+            cli.Close()
         }
     }
 }

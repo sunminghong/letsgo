@@ -13,7 +13,7 @@ package net
 import (
     "encoding/binary"
     . "github.com/sunminghong/letsgo/helper"
-//    . "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/log"
 )
 
 const (
@@ -87,7 +87,6 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
         //Log("pos:",pos)
 
         //拆包
-        //LGTrace("c.dpsize:",c.DPSize)
         if c.DPSize > 0 {
             if ilen-pos < c.DPSize {
                 //如果缓存去数据长度不够就退出接着等后续数据
@@ -96,7 +95,7 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
             dpSize = c.DPSize
             dataType = c.DataType
         } else {
-            //Log("ilen,pos:",ilen,pos)
+            LGTrace("ilen,pos:%d,%d",ilen,pos)
             if ilen-pos < 7 {
                 return
             }

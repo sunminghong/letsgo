@@ -93,7 +93,7 @@ func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
         case LGDATAPACKET_TYPE_CLOSED:
             c.ClientByGateClosed(c.Gateid,dp.FromCid)
 
-        case LGDATAPACKET_TYPE_GATECONNECT:
+        case LGDATAPACKET_TYPE_GATE_REGISTER:
             gatename,gateid := cmd.UnRegister(dp.Data)
             c.SetType(LGCLIENT_TYPE_GATE)
 
@@ -128,7 +128,7 @@ func (c *LGGridClient) SendMessage(fromCid int,msg LGIMessageWriter) {
     c.Transport.SendDP(dp)
 }
 
-func (c *LGGridClient) SendBytes(fromCid int,data []byte) {
+func (c *LGGridClient) SendBytes(ifCompress bool,fromCid int,data []byte) {
     if (fromCid == 0) {
         c.Transport.SendBytes(data)
         return
@@ -139,6 +139,10 @@ func (c *LGGridClient) SendBytes(fromCid int,data []byte) {
         FromCid: fromCid,
         Data: data,
     }
+    if ifCompress {
+        dp.Type = LGDATAPACKET_TYPE_DELAY_DATAS_COMPRESS
+    }
+
     LGTrace("sendbytes from gridclient:%s,%v",fromCid,dp.Data)
     c.Transport.SendDP(dp)
 }

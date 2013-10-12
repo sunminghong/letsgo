@@ -16,7 +16,7 @@ import (
     "fmt"
 )
 
-func Testtime(t *testing.T) {
+func Test_time(t *testing.T) {
     t2 := time.Now().Unix()
     fmt.Println("now timestamp is %d",t2)
 
@@ -41,6 +41,9 @@ func Testtime(t *testing.T) {
     if t8 != d {
         t.Error("LGStrftime is not equ LGStrttime",t7,t8)
     }
+
+    fmt.Println("logstrftime:",LGStrftime(t7,"2006-01-02 15:4:5"))
+    fmt.Println("logstrftime:",LGStrftime(t7,"20060102150405"))
 
     //t9 := LGStrftime(t2)
     //if t9 !=  {

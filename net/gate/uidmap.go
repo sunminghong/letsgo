@@ -45,82 +45,8 @@ func (self *LGUidMap) RemoveUid(uid int) {
     self.casCache.Delete("uid_" + strconv.Itoa(uid))
 }
 
-func (self *LGUidMap) RemoveKid(gateid, fromCid, cid int) {
-
+func getKid(gateid,fromCid,cid int) (kidstr string,checkcode int) {
     var kid int
-
-    if fromCid > 0 {
-        //fromcid = gate-to-grid-clientid + checkcode
-        kid, _= LGParseID(fromCid)
-        kid = LGCombineID(kid, gateid)
-        kid = 0 - kid
-    } else {
-        kid = cid
-    }
-
-    kkid := "kid_" + strconv.Itoa(kid)
-    self.casCache.Delete(kkid)
-}
-
-func (self *LGUidMap) CheckUid(uid int) (gateid, fromCid, cid int, cas uint64) {
-    var v2 []int
-    var err error
-    //if not exists in local map object ,then read from cache read
-    cas, _, err = self.casCache.Gets(
-        "uid_"+strconv.Itoa(uid), &v2)
-
-    if err != nil {
-        cas = 0
-        return
-    }
-    gateid, fromCid, cid = v2[0], v2[1], v2[2]
-
-    return
-}
-
-func (self *LGUidMap) GetUid(gateid, fromCid, cid int) (uid int) {
-    var kid int
-    var checkcode int
-
-    if fromCid > 0 {
-        //fromcid = gate-to-grid-clientid + checkcode
-        kid, checkcode = LGParseID(fromCid)
-        kid = LGCombineID(kid, gateid)
-        kid = 0 - kid
-    } else {
-        kid = cid
-    }
-
-    var v2 []int
-    var ok bool
-    var err error
-
-    _, _, err = self.casCache.Gets(
-        "kid_"+strconv.Itoa(kid), &v2)
-
-    if err == nil {
-        ok = true
-    }
-
-    if !ok {
-        return
-    }
-
-    uid, co := v2[0], v2[1]
-    //fmt.Println("co,checkcode:",co,checkcode,v2)
-    if fromCid != 0 {
-        if co == checkcode {
-            return uid
-        } else {
-            return 0
-        }
-    } else {
-        return uid
-    }
-}
-
-func (self *LGUidMap) SaveUid(gateid, fromCid, cid, uid int) error {
-    var kid, checkcode int
 
     if fromCid > 0 {
 
@@ -138,10 +64,61 @@ func (self *LGUidMap) SaveUid(gateid, fromCid, cid, uid int) error {
         kid = cid
     }
 
+    kidstr = "kid_" + strconv.Itoa(kid)
+    return
+}
+
+func (self *LGUidMap) RemoveKid(gateid, fromCid, cid int) {
+    kidstr,_ := getKid(gateid,fromCid,cid)
+    self.casCache.Delete(kidstr)
+}
+
+func (self *LGUidMap) CheckUid(uid int) (gateid, fromCid, cid int, cas uint64) {
+    var v2 []int
+    var err error
+    //if not exists in local map object ,then read from cache read
+    cas, _, err = self.casCache.Gets("uid_"+strconv.Itoa(uid), &v2)
+
+    if err != nil {
+        cas = 0
+        return
+    }
+    gateid, fromCid, cid = v2[0], v2[1], v2[2]
+    return
+}
+
+func (self *LGUidMap) GetUid(gateid, fromCid, cid int) (uid int) {
+    kidstr,checkcode := getKid(gateid,fromCid,cid)
+
+    var v2 []int
+    var err error
+
+    _, _, err = self.casCache.Gets(kidstr, &v2)
+
+    if err != nil {
+        return
+    }
+
+    uid, co := v2[0], v2[1]
+    //fmt.Println("co,checkcode:",co,checkcode,v2)
+    if fromCid != 0 {
+        if co == checkcode {
+            return uid
+        } else {
+            return 0
+        }
+    } else {
+        return uid
+    }
+}
+
+func (self *LGUidMap) SaveUid(gateid, fromCid, cid, uid int) error {
+    kidstr,checkcode := getKid(gateid,fromCid,cid)
+
     v2 := []int{uid, checkcode}
 
     //set to cache
-    err :=self.casCache.Set("kid_"+strconv.Itoa(kid), v2, 0, 0)
+    err :=self.casCache.Set(kidstr, v2, 0, 0)
     if err !=nil {
         LGTrace("saveuid():",err)
     }
@@ -165,28 +142,12 @@ func (self *LGUidMap) CasUid(gateid, fromCid, cid, uid int, cas uint64) error {
         return err
     }
 
-    var kid, checkcode int
-
-    if fromCid > 0 {
-
-        //下面是我独特设计，~_~
-        //1.为了防止同一个gate服务器分配到同样的cid（cid==fromcid）的玩家身份
-        //混淆，必须加上checkcode验证
-        //2.将checkcode剥离出来用cid 作为key，就可以将uidmap的数据项控制在
-        //65536（32768）个以内，因此几乎可以不用清理uidmap数据项
-
-        kid, checkcode = LGParseID(fromCid)
-        kid = LGCombineID(kid, gateid)
-        kid = 0 - kid
-
-    } else {
-        kid = cid
-    }
+    kidstr,checkcode := getKid(gateid,fromCid,cid)
 
     v2 := []int{uid, checkcode}
 
     //set to cache
-    return self.casCache.Set("kid_"+strconv.Itoa(kid), v2, 0, 0)
+    return self.casCache.Set(kidstr, v2, 0, 0)
 }
 
 func (self *LGUidMap) Clear() {

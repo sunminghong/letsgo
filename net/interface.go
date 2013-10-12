@@ -15,13 +15,15 @@ import (
 
 const (
     LGDATAPACKET_TYPE_GENERAL = 0
-    LGDATAPACKET_TYPE_DELAY = 2 + 1 
+    LGDATAPACKET_TYPE_DELAY = 2 + 1
     LGDATAPACKET_TYPE_CLOSE = 4 + 1 //close a player client
     LGDATAPACKET_TYPE_BROADCAST = 6 + 1
-    LGDATAPACKET_TYPE_GATECONNECT = 8 
-    LGDATAPACKET_TYPE_GATEREMOVE= 10 //remove a gate client
+    LGDATAPACKET_TYPE_GATE_REGISTER= 8
+    LGDATAPACKET_TYPE_GATE_REMOVE= 10 //remove a gate client
     LGDATAPACKET_TYPE_CLOSED = 12 + 1 //a player client closed tell to gridserver
     LGDATAPACKET_TYPE_DELAY_DATAS = 14 + 1
+    LGDATAPACKET_TYPE_DELAY_DATAS_COMPRESS = 16 + 1
+    LGDATAPACKET_TYPE_DATAS_COMPRESS = 18 //to player client connection
 )
 
 //define a struct or class of rec transport connection

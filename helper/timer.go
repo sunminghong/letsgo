@@ -14,7 +14,8 @@ import (
     "time"
 )
 
-var BaseTimestamp int = 1375286400
+//2013-10-01 00:00:00
+const BaseTimestamp int = 1380556800
 
 func LGNetTimestamp(times ...interface{}) int {
     //减去 2013-8-1

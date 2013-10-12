@@ -56,7 +56,7 @@ func LGNewServer(
     name string,serverid int,addr string, maxConnections int,
     makeclient LGNewClientFunc, datagram LGIDatagram) *LGServer {
 
-    serverid += rand.Intn(1024) * 10000
+    serverid += rand.Intn(99) * 100
     s := &LGServer{
         Name:name,
         Serverid:serverid,
@@ -219,7 +219,7 @@ func (s *LGServer) transportReader(transport *LGTransport, client LGIClient) {
         //LGTrace("read to buff:", bytesRead)
         transport.BuffAppend(buffer[0:bytesRead])
 
-        //LGTrace("transport.Buff", transport.Stream.Bytes())
+        LGTrace("transport.Buff", transport.Stream.Bytes())
         n, dps := transport.Fetch()
         //LGTrace("fetch message number", n)
         if n > 0 {

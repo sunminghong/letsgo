@@ -15,7 +15,7 @@ import (
     "strings"
     "math/rand"
     . "github.com/sunminghong/letsgo/helper"
-    //. "github.com/sunminghong/letsgo/log"
+    . "github.com/sunminghong/letsgo/log"
 )
 
 type LGDefaultDispatcher struct {
@@ -36,10 +36,11 @@ func (r *LGDefaultDispatcher) Add(gridID int, gcodes *string) {
     cs := strings.Replace(*gcodes," ","",-1)
     if len(cs) ==0 {
         r.addDisp(gridID,0)
+        return
     }
 
     codes:= strings.Split(cs,",")
-    //LGTrace("add disp",codes)
+    LGTrace("add disp",codes)
     for _,p_ := range codes {
         p := strings.Trim(p_," ")
         if len(p) == 0 {
@@ -50,7 +51,7 @@ func (r *LGDefaultDispatcher) Add(gridID int, gcodes *string) {
             r.addDisp(gridID,gcode)
         }
     }
-    //LGTrace("messagecodemaps1:",r.messageCodemaps)
+    LGTrace("messagecodemaps1:",r.messageCodemaps)
 }
 
 func (r *LGDefaultDispatcher) Remove(gridID int) {
@@ -72,7 +73,7 @@ func (r *LGDefaultDispatcher) Dispatch(messageCode int) (gridID int,ok bool) {
     gcode := r.groupCode(messageCode)
 
     gridIDArr,ok := r.messageCodemaps[gcode]
-    //LGTrace("gridIDArr,gcode:",gridIDArr,gcode)
+    LGTrace("gridIDArr=%v,gcode:%v,maps:%v",gridIDArr,gcode,r.messageCodemaps)
     if !ok {
         gcode = 0
         gridIDArr,ok = r.messageCodemaps[gcode]
