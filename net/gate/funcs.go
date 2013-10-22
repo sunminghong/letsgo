@@ -16,9 +16,37 @@ import (
     "time"
 )
 
+func LGGetConnection(c *LGGridClient, gateid, cid int) *LGGridClient {
+    if gateid == 0 {
+		if cid == 0 {
+			return nil
+		}
+        //close direct connection
+        if server, ok := c.GetTransport().Server.(*LGGridServer); ok {
+            if dc := server.Clients.Get(cid); dc != nil {
+				if dgc, ok := dc.(*LGGridClient); ok {
+                    return dgc
+                }
+            }
+        }
+        return nil
+    }
+
+    if gridserver, ok := c.GetTransport().Server.(*LGGridServer); ok {
+        //LGTrace("gatemap:",gridserver.GateMap)
+        if cs, ok := gridserver.GateMap[gateid]; ok {
+            if dc := gridserver.Clients.Get(cs[0]); dc != nil {
+				if dgc, ok := dc.(*LGGridClient); ok {
+                    return dgc
+                }
+            }
+        }
+    }
+    return nil
+}
 
 func LGDisconnect(c *LGGridClient, gateid, fromCid, cid int, prefunc func(disconnect LGIClient)) {
-    LGTrace("Disconnect is called:",gateid,fromCid,cid)
+    LGTrace("Disconnect is called:", gateid, fromCid, cid)
 
     if fromCid == 0 {
         //close direct connection
@@ -42,7 +70,7 @@ func LGDisconnect(c *LGGridClient, gateid, fromCid, cid int, prefunc func(discon
     if c.Gateid == 0 {
         //要从一个直连clientA断开一个非直连clientGB，就必须通过gateid去找到连接clientGB的clientG
         if gridserver, ok := c.GetTransport().Server.(*LGGridServer); ok {
-            LGTrace("gatemap:",gridserver.GateMap)
+            LGTrace("gatemap:", gridserver.GateMap)
             if cs, ok := gridserver.GateMap[gateid]; ok {
                 if dc := gridserver.Clients.Get(cs[0]); dc != nil {
                     dgc = dc
