@@ -107,9 +107,6 @@ type LGIMessageWriter interface {
     WriteString(x string, wind int)
     //WriteList(list *MessageListWriter, wind int)
 
-	WriteUints(xs ...int)
-	WriteInts(xs ...int)
-
     //对数据进行封包
     ToBytes() []byte
 }
