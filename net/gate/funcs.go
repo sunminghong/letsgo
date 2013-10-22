@@ -36,7 +36,7 @@ func LGGetConnection(c *LGGridClient, gateid, cid int) *LGGridClient {
     if c.Gateid != gateid{
         //要从一个直连clientA断开一个非直连clientGB，就必须通过gateid去找到连接clientGB的clientG
         if gridserver, ok := c.GetTransport().Server.(*LGGridServer); ok {
-            LGTrace("gatemap:",gridserver.GateMap)
+            LGTrace("gatemap:", gridserver.GateMap)
             if cs, ok := gridserver.GateMap[gateid]; ok {
                 if dc := gridserver.Clients.Get(cs[0]); dc != nil {
                     if dgc,ok := dc.(*LGGridClient);ok {

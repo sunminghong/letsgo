@@ -11,18 +11,17 @@
 package net
 
 import (
-    . "github.com/sunminghong/letsgo/log"
+	. "github.com/sunminghong/letsgo/log"
 )
 
 type LGProcessHandleFunc func(
-    msg LGIMessageReader,c LGIClient,fromCid int)
+	msg LGIMessageReader, c LGIClient, fromCid int)
 
-
-// Client  
+// Client
 type LGDefaultClient struct {
-    *LGBaseClient
+	*LGBaseClient
 
-    Process LGProcessHandleFunc
+	Process LGProcessHandleFunc
 }
 
 /*
@@ -41,13 +40,12 @@ func LGMakeDefaultClient (name string,transport *LGTransport) LGIClient {
 
 //对数据进行拆包
 func (c *LGDefaultClient) ProcessDPs(dps []*LGDataPacket) {
-    for _, dp := range dps {
-        code := int(c.Transport.Stream.Endianer.Uint16(dp.Data))
-        LGTrace("msg.code:",code,len(dp.Data))
+	for _, dp := range dps {
+		code := int(c.Transport.Stream.Endianer.Uint16(dp.Data))
+		LGTrace("msg.code:", code, len(dp.Data))
 
-        msgReader := LGNewMessageReader(dp.Data,c.Transport.Stream.Endian)
+		msgReader := LGNewMessageReader(dp.Data, c.Transport.Stream.Endian)
 
-        c.Process(msgReader,c,0)
-    }
+		c.Process(msgReader, c, 0)
+	}
 }
-
