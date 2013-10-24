@@ -65,6 +65,7 @@ func LGNewRWStream(buf interface{}, endian int) *LGRWStream {
 var ErrTooLarge = errors.New("net.LGRWStream: too large")
 var ErrIndex = errors.New("net.LGRWStream: index over range")
 
+func (b *LGRWStream) DebugOut() (string,int,[]byte,int,int,int) { return "rwstream.buf:",len(b.buf),b.buf[:],b.off,b.last,b.end}
 func (b *LGRWStream) Bytes() []byte { return b.buf[b.off:b.end] }
 
 func (b *LGRWStream) Len() int { return b.end - b.off }

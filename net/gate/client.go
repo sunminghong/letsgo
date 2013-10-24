@@ -96,6 +96,10 @@ func (c *LGClient) ProcessDPs(dps []*LGDataPacket) {
                 dp.Type = LGDATAPACKET_TYPE_DELAY
                 dp.FromCid = c.Transport.Cid
 
+				buf := make([]byte,len(dp.Data))
+				copy(buf,dp.Data)
+				dp.Data = buf
+
                 gridClient.GetTransport().SendDP(dp)
 
                 //todo: 当grid超时处理是需要返回原协议失败

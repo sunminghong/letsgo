@@ -57,6 +57,10 @@ func (c *LGGateToGridClient) ProcessDPs(dps []*LGDataPacket) {
     for _, dp := range dps {
         LGTrace("gategridclient.ProcessDPs():dp.type=%d,fromcid=%d,len(data)=%d",dp.Type,dp.FromCid,len(dp.Data))
         //LGTrace("c.clients",c.clients.All())
+
+		buf := make([]byte,len(dp.Data))
+		copy(buf,dp.Data)
+		dp.Data = buf
         if dp.Type == LGDATAPACKET_TYPE_BROADCAST {
             LGTrace("broadcast")
             //c.gate.SendBroadcast(c.gate.Clients.Get(dp.FromCid).GetTransport(),dp)
@@ -72,7 +76,7 @@ func (c *LGGateToGridClient) ProcessDPs(dps []*LGDataPacket) {
 
         switch dp.Type {
         case LGDATAPACKET_TYPE_DELAY:
-            LGTrace("dp.Type = delay msg")
+            LGTrace("dp.Type = delay msg",dp.Data)
 
             dp.Type = LGDATAPACKET_TYPE_GENERAL
             cli.GetTransport().SendDP(dp)
