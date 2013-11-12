@@ -13,6 +13,7 @@ package helper
 import (
     "encoding/binary"
     "errors"
+    "fmt"
 )
 
 const (
@@ -143,6 +144,11 @@ func (b *LGRWStream) grow(n int) int {
 // If the buffer becomes too large, Write will panic with
 // ErrTooLarge.
 func (b *LGRWStream) Write(p []byte) (n int) {
+    defer func(){
+		if x := recover(); x != nil {
+            fmt.Printf("rwstream write() recover:%s,end=%d,len=%d,newlen=%d", x, b.end,b.Len(),len(p))
+		}
+    }()
     n = len(p)
     m := b.grow(n)
     b.end += n

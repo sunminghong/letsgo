@@ -14,7 +14,7 @@ import (
     . "github.com/sunminghong/letsgo/net"
 )
 
-func newMessageWriter(c LGIClient) LGIMessageWriter {
+func newMessageWriter(c LGIConnection) LGIMessageWriter {
     return LGNewMessageWriter(c.GetTransport().Stream.Endian)
 }
 

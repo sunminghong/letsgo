@@ -17,7 +17,7 @@ import (
     "strconv"
 )
 
-func Process1011(msgReader LGIMessageReader,c LGIClient,fromCid int,session *Session) {
+func Process1011(msgReader LGIMessageReader,c LGIConnection,fromCid int,session *Session) {
     LGTrace("process 1011 is called")
 
     md := msgReader.ReadString()

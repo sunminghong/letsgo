@@ -28,7 +28,7 @@ import (
 //Dispatcher
 type LGIDispatcher interface {
     Init()
-    //Add(client Client,protocols []int)
+    //Add(client Connection,protocols []int)
     Add(gridID int, messageCodes *string)
     Remove(gridID int)
 
@@ -52,18 +52,18 @@ type gridConf struct {
 type LGGateServer struct {
     *LGServer
 
-    Grids *LGClientPool
+    Grids *LGConnectionPool
 
     Dispatcher LGIDispatcher
 
-    //makeclient NewGateClientFunc
+    //makeclient NewGateConnectionFunc
     gridConfs map[string]*gridConf
 }
 
 func (gs *LGGateServer) InitFromConfig(
     configfile string,
-    newPlayerClient LGNewClientFunc, datagram LGIDatagram,
-    newGridClient LGNewClientFunc, dispatcher LGIDispatcher) {
+    newPlayerConnection LGNewConnectionFunc, datagram LGIDatagram,
+    newGridConnection LGNewConnectionFunc, dispatcher LGIDispatcher) {
 
     c, err := goconf.ReadConfigFile(configfile)
     if err != nil {
@@ -110,19 +110,19 @@ func (gs *LGGateServer) InitFromConfig(
     LGSetLevel(loglevel)
 
     gs.Init(name, serverid, host, maxConnections,
-        newPlayerClient, datagram, newGridClient, dispatcher)
+        newPlayerConnection, datagram, newGridConnection, dispatcher)
 
 }
 
 func (gs *LGGateServer) Init(
     name string, gridid int, host string, maxConnections int,
-    newPlayerClient LGNewClientFunc, datagram LGIDatagram,
-    newGridClient LGNewClientFunc, dispatcher LGIDispatcher) {
+    newPlayerConnection LGNewConnectionFunc, datagram LGIDatagram,
+    newGridConnection LGNewConnectionFunc, dispatcher LGIDispatcher) {
 
-    gs.LGServer = LGNewServer(name, gridid, host, maxConnections, newPlayerClient, datagram)
+    gs.LGServer = LGNewServer(name, gridid, host, maxConnections, newPlayerConnection, datagram)
 
     gs.gridConfs = make(map[string]*gridConf)
-    gs.Grids = LGNewClientPool(newGridClient, datagram)
+    gs.Grids = LGNewConnectionPool(newGridConnection, datagram)
 
     gs.Dispatcher = LGNewDispatcher()
 
@@ -148,7 +148,7 @@ func (gs *LGGateServer) ReConnectGrids() {
     for name, v := range gs.gridConfs {
         LGTrace("ps is name:", name, v.state)
 
-        c := gs.Grids.Clients.GetByName(name)
+        c := gs.Grids.Connections.GetByName(name)
         if c != nil {
             continue
         }
@@ -225,9 +225,9 @@ func (gs *LGGateServer) ConnectGrid(
     go pool.Start(name, host, datagram)
     time.Sleep(2 * time.Second)
 
-    LGTrace("clientpool:", pool.Clients.All())
+    LGTrace("clientpool:", pool.Connections.All())
     //if Pool don't find it ,then that is no success!
-    c := pool.Clients.GetByName(name)
+    c := pool.Connections.GetByName(name)
     if c == nil {
         LGError(host + " can't connect")
         return

@@ -64,6 +64,7 @@ func (m *LGMap) Check(k int) bool {
 func (m *LGMap) Delete(k int) {
     m.lock.Lock()
     defer m.lock.Unlock()
+
     delete(m.bm, k)
 }
 

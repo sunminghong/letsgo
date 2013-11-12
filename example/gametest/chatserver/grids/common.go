@@ -51,11 +51,11 @@ import (
 
 
 */
-type Client struct {
-    *LGGridClient
+type Connection struct {
+    *LGGridConnection
 }
 
-func (c *Client) Closed() {
+func (c *Connection) Closed() {
     LGTrace("a grid client closed")
 
     //msg := "system: " + (*c.Username) + " is leave!"
@@ -66,23 +66,23 @@ func (c *Client) Closed() {
     //c.Transport.SendBroadcast(mw.ToBytes())
 }
 
-func NewClient(name string,transport *LGTransport) LGIClient {
-    cg := &LGGridClient{
-        LGBaseClient:&LGBaseClient{Transport:transport,Name:name},
+func NewConnection(name string,transport *LGTransport) LGIConnection {
+    cg := &LGGridConnection{
+        LGBaseConnection:&LGBaseConnection{Transport:transport,Name:name},
         Process:ProccessHandle,
     }
 
-    c := &Client{ cg }
+    c := &Connection{ cg }
 
     return c
 }
 
 
-type ProccessFunc func(msg LGIMessageReader,c LGIClient,fromCid int,session *p.Session)
+type ProccessFunc func(msg LGIMessageReader,c LGIConnection,fromCid int,session *p.Session)
 
 var Handlers map[int]ProccessFunc= make(map[int]ProccessFunc)
 
-func ProccessHandle(msg LGIMessageReader,c LGIClient,fromCid int) {
+func ProccessHandle(msg LGIMessageReader,c LGIConnection,fromCid int) {
     LGTrace("message is request")
     code := msg.ReadCode()
     h, ok := Handlers[code]

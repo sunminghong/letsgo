@@ -16,12 +16,12 @@ import (
     "time"
 )
 
-func LGGetConnection(c *LGGridClient, gateid, cid int) *LGGridClient {
+func LGGetConnection(c *LGGridConnection, gateid, cid int) *LGGridConnection {
     if gateid==0 {
         //close direct connection
         if server, ok := c.GetTransport().Server.(*LGGridServer); ok {
-            if dc := server.Clients.Get(cid); dc != nil {
-                if dgc,ok := dc.(*LGGridClient);ok {
+            if dc := server.Connections.Get(cid); dc != nil {
+                if dgc,ok := dc.(*LGGridConnection);ok {
                     return dgc
                 } else {
                     return nil
@@ -33,13 +33,13 @@ func LGGetConnection(c *LGGridClient, gateid, cid int) *LGGridClient {
         }
     }
 
-    if c.Gateid != gateid{
+    if c.GateId != gateid{
         //要从一个直连clientA断开一个非直连clientGB，就必须通过gateid去找到连接clientGB的clientG
         if gridserver, ok := c.GetTransport().Server.(*LGGridServer); ok {
             LGTrace("gatemap:", gridserver.GateMap)
             if cs, ok := gridserver.GateMap[gateid]; ok {
-                if dc := gridserver.Clients.Get(cs[0]); dc != nil {
-                    if dgc,ok := dc.(*LGGridClient);ok {
+                if dc := gridserver.Connections.Get(cs[0]); dc != nil {
+                    if dgc,ok := dc.(*LGGridConnection);ok {
                         return dgc
                     } else {
                         return nil
@@ -54,7 +54,7 @@ func LGGetConnection(c *LGGridClient, gateid, cid int) *LGGridClient {
     return nil
 }
 
-func LGDisconnect(c *LGGridClient, gateid, fromCid, cid int, prefunc func(disconnect LGIClient)) {
+func LGDisconnect(c *LGGridConnection, gateid, fromCid, cid int, prefunc func(disconnect LGIConnection)) {
     LGTrace("Disconnect is called:",gateid,fromCid,cid)
 
     dgc := LGGetConnection(c,gateid,cid)
@@ -88,7 +88,7 @@ func LGDisconnect(c *LGGridClient, gateid, fromCid, cid int, prefunc func(discon
     dgc.GetTransport().SendDP(dp)
 }
 
-func LGSendMessage(c *LGGridClient,gateid int,fromCid int,cid int,msg LGIMessageWriter) {
+func LGSendMessage(c *LGGridConnection,gateid int,fromCid int,cid int,msg LGIMessageWriter) {
     dgc := LGGetConnection(c,gateid,cid)
     if dgc == nil {
         return

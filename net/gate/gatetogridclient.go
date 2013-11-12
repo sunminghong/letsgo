@@ -15,31 +15,31 @@ import (
     . "github.com/sunminghong/letsgo/net"
 )
 
-// Client  
-type LGGateToGridClient struct {
-    *LGBaseClient
+// Connection  
+type LGGateToGridConnection struct {
+    *LGBaseConnection
 
     Gate *LGGateServer
-    clients *LGClientMap
+    clients *LGConnectionMap
 }
 /*
-func LGNewGateToGridClient (name string,transport *LGTransport) LGIClient {
+func LGNewGateToGridConnection (name string,transport *LGTransport) LGIConnection {
     LGTrace("gridclient is connect:",name)
 
-    c := &LGGateToGridClient{LGBaseClient:&LGBaseClient{Transport:transport,Name:name}}
+    c := &LGGateToGridConnection{LGBaseConnection:&LGBaseConnection{Transport:transport,Name:name}}
 
     c.Register()
 
     return c
 }*/
 
-func (c *LGGateToGridClient) Closed() {
+func (c *LGGateToGridConnection) Closed() {
     gridID := c.GetTransport().Cid
     c.Gate.Dispatcher.Remove(gridID)
 }
 
-func (c *LGGateToGridClient) Register() {
-    c.clients = c.Gate.Clients
+func (c *LGGateToGridConnection) Register() {
+    c.clients = c.Gate.Connections
 
     line := cmd.Register(c.Gate.Name,c.Gate.Serverid)
     //register to grid server
@@ -53,7 +53,7 @@ func (c *LGGateToGridClient) Register() {
 }
 
 //对数据进行拆包
-func (c *LGGateToGridClient) ProcessDPs(dps []*LGDataPacket) {
+func (c *LGGateToGridConnection) ProcessDPs(dps []*LGDataPacket) {
     for _, dp := range dps {
         LGTrace("gategridclient.ProcessDPs():dp.type=%d,fromcid=%d,len(data)=%d",dp.Type,dp.FromCid,len(dp.Data))
         //LGTrace("c.clients",c.clients.All())
@@ -63,7 +63,7 @@ func (c *LGGateToGridClient) ProcessDPs(dps []*LGDataPacket) {
 		dp.Data = buf
         if dp.Type == LGDATAPACKET_TYPE_BROADCAST {
             LGTrace("broadcast")
-            //c.gate.SendBroadcast(c.gate.Clients.Get(dp.FromCid).GetTransport(),dp)
+            //c.gate.SendBroadcast(c.gate.Connections.Get(dp.FromCid).GetTransport(),dp)
             c.Gate.SendBroadcast(dp)
             return
         }

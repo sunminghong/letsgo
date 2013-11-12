@@ -1,6 +1,6 @@
 /*=============================================================================
 #     FileName: redis.go
-#         Desc: client of memcached client
+#         Desc: conn of memcached conn
 #       Author: sunminghong
 #        Email: allen.fantasy@gmail.com
 #     HomePage: http://weibo.com/5d13

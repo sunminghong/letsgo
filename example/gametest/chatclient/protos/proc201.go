@@ -17,7 +17,7 @@ import (
 )
 
 
-func Process201(msgReader LGIMessageReader,c LGIClient,fromCid int) {
+func Process201(msgReader LGIMessageReader,c LGIConnection,fromCid int) {
     LGTrace("process 201 is called")
 
     subcode := msgReader.ReadUint()

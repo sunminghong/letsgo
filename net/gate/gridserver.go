@@ -26,11 +26,11 @@ type LGGridServer struct {
 
     //Dispatcher LGIDispatcher
 
-    //makeclient NewGridClientFunc
+    //makeclient NewGridConnectionFunc
 }
 
 func (gs *LGGridServer) InitFromConfig (
-    configfile string, newGridClient LGNewClientFunc,
+    configfile string, newGridConnection LGNewConnectionFunc,
     datagram LGIDatagram) {
 
     c, err := goconf.ReadConfigFile(configfile)
@@ -83,17 +83,17 @@ func (gs *LGGridServer) InitFromConfig (
     LGSetLevel(loglevel)
 
     gs.Init( name,serverid,allowDirectConnection,host,maxConnections,
-        newGridClient,datagram)
+        newGridConnection,datagram)
 }
 
 func (gs *LGGridServer) Init(
     name string,gridid int,allowDirectConnection bool,host string,
     maxConnections int,
-    newGridClient LGNewClientFunc, datagram LGIDatagram) {
+    newGridConnection LGNewConnectionFunc, datagram LGIDatagram) {
 
 
     gs.LGServer = LGNewServer(
-        name,gridid,host,maxConnections,newGridClient,datagram)
+        name,gridid,host,maxConnections,newGridConnection,datagram)
 
     gs.GateMap = make(map[int]LGSliceInt)
 
@@ -102,7 +102,7 @@ func (gs *LGGridServer) Init(
     gs.SetParent(gs)
 }
 
-func (gs *LGGridServer) RegisterGate(gatename string,gateid int,c LGIClient) {
+func (gs *LGGridServer) RegisterGate(gatename string,gateid int,c LGIConnection) {
     if cs,ok := gs.GateMap[gateid]; ok {
         cs = append(cs,gateid)
 
@@ -145,7 +145,7 @@ func (gs *LGGridServer) BroadcastHandler(broadcastChan <-chan *LGDataPacket) {
 
         //broadcast to dplayer client of irect connect to this server 
         if gs.AllowDirectConnection {
-            for _, c := range gs.Clients.All() {
+            for _, c := range gs.Connections.All() {
                 //if fromCid == Cid {
                 //    continue
                 //}
@@ -161,7 +161,7 @@ func (gs *LGGridServer) BroadcastHandler(broadcastChan <-chan *LGDataPacket) {
             LGTrace("broadcastHandler: gatemap",cs)
 
             cid := cs[0]
-            gs.Clients.Get(cid).GetTransport().Outgoing <- dp
+            gs.Connections.Get(cid).GetTransport().Outgoing <- dp
         }
         LGTrace("broadcastHandler: Handle end!")
     }

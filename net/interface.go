@@ -49,13 +49,13 @@ type LGIDatagram interface {
     PackWrite(write LGWriteFunc,dp *LGDataPacket)
 }
 
-type LGNewClientFunc func(name string, transport *LGTransport) LGIClient
+type LGNewConnectionFunc func(name string, transport *LGTransport) LGIConnection
 
 const (
     LGCLIENT_TYPE_GENERAL = 0
     LGCLIENT_TYPE_GATE = 1
 )
-type LGIClient interface {
+type LGIConnection interface {
 
     GetType() int
     SetType(t int)

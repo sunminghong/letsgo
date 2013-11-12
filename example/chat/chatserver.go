@@ -15,20 +15,20 @@ import (
     "./lib"
 )
 
-// LGIClient  
-type Client struct {
+// LGIConnection  
+type Connection struct {
     Transport *lnet.Transport
     Name string
     Username *string
 }
 
-func LGMakeClient (name string,transport *lnet.Transport) lnet.LGIClient {
+func LGMakeConnection (name string,transport *lnet.Transport) lnet.LGIConnection {
     username := "someone"
-    return &Client{transport,name,&username}
+    return &Connection{transport,name,&username}
 }
 
 //对数据进行拆包
-func (c *Client) ProcessDPs(dps []*lnet.LGDataPacket) {
+func (c *Connection) ProcessDPs(dps []*lnet.LGDataPacket) {
     for _,dp:=range dps {
         md := string(dp.Data)
 
@@ -50,28 +50,28 @@ func (c *Client) ProcessDPs(dps []*lnet.LGDataPacket) {
 }
 
 //对数据进行拆包
-func (c *Client) GetTransport() *lnet.Transport {
+func (c *Connection) GetTransport() *lnet.Transport {
     return c.Transport
 }
 
-func (c *Client) GetName() string {
+func (c *Connection) GetName() string {
     return c.Name
 }
 
-func (c *Client) Close() {
+func (c *Connection) Close() {
     c.Transport.Close()
 }
 
-func (c *Client) Closed() {
+func (c *Connection) Closed() {
     msg := "system: " + (*c.Username) + " is leave!"
     c.Transport.SendBroadcast([]byte(msg))
 }
 
-func (c *Client) SendMessage(msg lnet.LGIMessageWriter) {
+func (c *Connection) SendMessage(msg lnet.LGIMessageWriter) {
     c.Transport.SendDP(0,msg.ToBytes())
 }
 
-func (c *Client) SendBroadcast(msg lnet.LGIMessageWriter) {
+func (c *Connection) SendBroadcast(msg lnet.LGIMessageWriter) {
     c.Transport.SendBroadcast(msg.ToBytes())
 }
 
@@ -80,7 +80,7 @@ func main() {
 
     config := make(map[string]interface{})
 
-    serv := lnet.NewServer(MakeClient,datagram,config)
+    serv := lnet.NewServer(MakeConnection,datagram,config)
 
     serv.Start("",4444)
 }

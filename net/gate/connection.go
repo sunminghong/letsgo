@@ -15,29 +15,29 @@ import (
     . "github.com/sunminghong/letsgo/net"
 )
 
-// Client  
-type LGClient struct {
-    *LGBaseClient
+// Connection  
+type LGConnection struct {
+    *LGBaseConnection
 
     //gate *LGGateServer
 
     dispatcher LGIDispatcher
 
     Gate *LGGateServer
-    grids *LGClientMap
+    grids *LGConnectionMap
 }
 
 
-func LGNewClient (name string,transport *LGTransport) LGIClient {
+func LGNewConnection (name string,transport *LGTransport) LGIConnection {
     LGTrace("gateclient is connect:",name)
 
-    c := &LGClient{
-        LGBaseClient:&LGBaseClient{Transport:transport,Name:name},
+    c := &LGConnection{
+        LGBaseConnection:&LGBaseConnection{Transport:transport,Name:name},
     }
 
     if gate,ok := c.Transport.Server.(*LGGateServer) ;ok {
         c.Gate = gate
-        c.grids = c.Gate.Grids.Clients
+        c.grids = c.Gate.Grids.Connections
     } else {
         LGError("gateserver client init error:transport.Server is not GateServer type")
     }
@@ -46,21 +46,21 @@ func LGNewClient (name string,transport *LGTransport) LGIClient {
     return c
 }
 
-func (c *LGClient) Closed() {
+func (c *LGConnection) Closed() {
     LGTrace("this client is closed!")
 
     //dispatch to one grid
     gridID,ok := c.dispatcher.Dispatch(0)
     if ok {
-        gridClient := c.grids.Get(gridID)
-        if gridClient != nil {
+        gridConnection := c.grids.Get(gridID)
+        if gridConnection != nil {
             dp := &LGDataPacket{
                 Type: LGDATAPACKET_TYPE_CLOSED,
                 FromCid: c.Transport.Cid,
                 Data: []byte{1},
             }
 
-            gridClient.GetTransport().SendDP(dp)
+            gridConnection.GetTransport().SendDP(dp)
         }
     }
     return
@@ -69,7 +69,7 @@ func (c *LGClient) Closed() {
 }
 
 //对数据进行拆包
-func (c *LGClient) ProcessDPs(dps []*LGDataPacket) {
+func (c *LGConnection) ProcessDPs(dps []*LGDataPacket) {
     defer func() {
         if r:=recover(); r!=nil {
             LGError("grid 服务出错：",r)
@@ -90,8 +90,8 @@ func (c *LGClient) ProcessDPs(dps []*LGDataPacket) {
         gridID,ok := c.dispatcher.Dispatch(code)
         if ok {
             LGTrace("dispatch to gridID",gridID)
-            gridClient := c.grids.Get(gridID)
-            if gridClient != nil {
+            gridConnection := c.grids.Get(gridID)
+            if gridConnection != nil {
 
                 dp.Type = LGDATAPACKET_TYPE_DELAY
                 dp.FromCid = c.Transport.Cid
@@ -100,7 +100,7 @@ func (c *LGClient) ProcessDPs(dps []*LGDataPacket) {
 				copy(buf,dp.Data)
 				dp.Data = buf
 
-                gridClient.GetTransport().SendDP(dp)
+                gridConnection.GetTransport().SendDP(dp)
 
                 //todo: 当grid超时处理是需要返回原协议失败
             } else {

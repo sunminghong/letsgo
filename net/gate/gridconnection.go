@@ -1,13 +1,15 @@
 /*=============================================================================
-#     FileName: defaultgridclient.go
-#         Desc: client of default grid server receive (process player or gate connection on common)
-#       Author: sunminghong
-#        Email: allen.fantasy@gmail.com
-#     HomePage: http://weibo.com/5d13
-#      Version: 0.0.1
-#   LastChange: 2013-06-07 10:40:26
+#     FileName: gridclient.go
+#       Author: sunminghong, allen.fantasy@gmail.com, http://weibo.com/5d13
+#         Team: http://1201.us
+#   LastChange: 2013-11-06 19:25:47
 #      History:
 =============================================================================*/
+
+
+/*
+
+*/
 package gate
 
 import (
@@ -19,16 +21,16 @@ import (
 
 //define client
 type LGGridProcessHandleFunc func(
-    msg LGIMessageReader,c *LGGridClient,fromCid int)
+    msg LGIMessageReader,c *LGGridConnection,fromCid int)
 
 
-// LGIClient  
-type LGGridClient struct {
-    *LGBaseClient
+// LGIConnection  
+type LGGridConnection struct {
+    *LGBaseConnection
 
     Process LGGridProcessHandleFunc
 
-    Gateid int
+    GateId int
     Grid *LGGridServer
 
     //parent
@@ -36,10 +38,10 @@ type LGGridClient struct {
     parentMethodsMap map[string]reflect.Value
 }
 
-func (s *LGGridClient) SetParent(p interface{},methods ...string) {
+func (s *LGGridConnection) SetParent(p interface{},methods ...string) {
     s.Parent = p
     if len(methods) == 0 {
-        methods = []string{"ClientByGateClosed"}
+        methods = []string{"ConnectionByGateClosed"}
     }
 
     methodmap := make(map[string]reflect.Value)
@@ -53,14 +55,14 @@ func (s *LGGridClient) SetParent(p interface{},methods ...string) {
     s.parentMethodsMap = methodmap
 }
 
-func (c *LGGridClient) Closed() {
-    if c.Gateid > 0 {
-        c.Grid.RemoveGate(c.Gateid,c.GetTransport().Cid)
+func (c *LGGridConnection) Closed() {
+    if c.GateId > 0 {
+        c.Grid.RemoveGate(c.GateId,c.GetTransport().Cid)
     }
 }
 
-func (c *LGGridClient) ClientByGateClosed(gateid int, fromCid int) {
-    if method,ok := c.parentMethodsMap["ClientByGateClosed"]; ok {
+func (c *LGGridConnection) ConnectionByGateClosed(gateid int, fromCid int) {
+    if method,ok := c.parentMethodsMap["ConnectionByGateClosed"]; ok {
         args := []reflect.Value{
             reflect.ValueOf(gateid),
             reflect.ValueOf(fromCid),
@@ -70,11 +72,11 @@ func (c *LGGridClient) ClientByGateClosed(gateid int, fromCid int) {
         return
     }
 
-    panic("LGpanic:LGGridClient's Method ClientByGateClosed need override write by sub object")
+    panic("LGpanic:LGGridConnection's Method ConnectionByGateClosed need override write by sub object")
 }
 
 //对数据进行拆包
-func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
+func (c *LGGridConnection) ProcessDPs(dps []*LGDataPacket) {
     stream := c.Transport.Stream
     endianer := stream.Endianer
     for _, dp := range dps {
@@ -91,7 +93,7 @@ func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
             c.Process(msg,c,0)
 
         case LGDATAPACKET_TYPE_CLOSED:
-            c.ClientByGateClosed(c.Gateid,dp.FromCid)
+            c.ConnectionByGateClosed(c.GateId,dp.FromCid)
 
         case LGDATAPACKET_TYPE_GATE_REGISTER:
             gatename,gateid := cmd.UnRegister(dp.Data)
@@ -105,7 +107,7 @@ func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
                     LGError("gridserver client init error:transport.Server is not GridServer type")
                 }
             }
-            c.Gateid = gateid
+            c.GateId = gateid
             c.Grid.RegisterGate(gatename,gateid,c)
 
             LGInfo(c.GetTransport().Conn.RemoteAddr()," is register to gate,gateid=",gateid)
@@ -113,7 +115,7 @@ func (c *LGGridClient) ProcessDPs(dps []*LGDataPacket) {
     }
 }
 
-func (c *LGGridClient) SendMessage(fromCid int,msg LGIMessageWriter) {
+func (c *LGGridConnection) SendMessage(fromCid int,msg LGIMessageWriter) {
     dp := &LGDataPacket{
         FromCid: fromCid,
         Data: msg.ToBytes(),
@@ -128,7 +130,7 @@ func (c *LGGridClient) SendMessage(fromCid int,msg LGIMessageWriter) {
     c.Transport.SendDP(dp)
 }
 
-func (c *LGGridClient) SendBytes(ifCompress bool,fromCid int,data []byte) {
+func (c *LGGridConnection) SendBytes(ifCompress bool,fromCid int,data []byte) {
     if (fromCid == 0) {
         c.Transport.SendBytes(data)
         return

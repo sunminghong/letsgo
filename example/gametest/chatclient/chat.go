@@ -49,7 +49,7 @@ func tabCompleter(line string) []string {
 }
 
 // clientsender(): read from stdin and send it via network
-func clientsender(cid *int,client *LGClientPool) {
+func clientsender(cid *int,client *LGConnectionPool) {
 	term := liner.NewLiner()
 	fmt.Println("chat client")
     defer term.Close()
@@ -91,7 +91,7 @@ func clientsender(cid *int,client *LGClientPool) {
                         addr = cmds[1]
                     }
 
-                    p := client.Clients.GetByName(name)
+                    p := client.Connections.GetByName(name)
                     if p != nil {
                         fmt.Println(name," is exists !")
                         continue
@@ -116,7 +116,7 @@ func clientsender(cid *int,client *LGClientPool) {
                 cmd = string(input)
 
                 for true {
-                    b := client.Clients.GetByName(name)
+                    b := client.Connections.GetByName(name)
                     if b!=nil{
                         change(cid,client,name)
                         break
@@ -138,7 +138,7 @@ func clientsender(cid *int,client *LGClientPool) {
                 text = "/quit"
 
             case "/11012":
-                c := client.Clients.Get(*cid)
+                c := client.Connections.Get(*cid)
                 msg := protos.NewMessageWriter(c)
                 msg.SetCode(1101,0)
                 msg.WriteUint(2,0)
@@ -150,7 +150,7 @@ func clientsender(cid *int,client *LGClientPool) {
 
 
             case "/11011":
-                c := client.Clients.Get(*cid)
+                c := client.Connections.Get(*cid)
                 msg := protos.NewMessageWriter(c)
                 msg.SetCode(1101,0)
                 msg.WriteUint(1,0)
@@ -161,7 +161,7 @@ func clientsender(cid *int,client *LGClientPool) {
                 continue
 
             case "/1001":
-                c := client.Clients.Get(*cid)
+                c := client.Connections.Get(*cid)
                 msg := protos.NewMessageWriter(c)
                 msg.SetCode(1001,0)
                 msg.WriteUint(1,0)
@@ -177,25 +177,25 @@ func clientsender(cid *int,client *LGClientPool) {
             text = string(input)
         }
 
-        c := client.Clients.Get(*cid)
+        c := client.Connections.Get(*cid)
         msg := protos.NewMessageWriter(c)
         msg.SetCode(1011,0)
         msg.WriteString(text,0)
 
-        LGTrace("has %v clients,text:%s",client.Clients.Len(),text)
+        LGTrace("has %v clients,text:%s",client.Connections.Len(),text)
         c.SendMessage(0,msg)
     }
 }
 
-func change(cid *int,client *LGClientPool,name string,) {
-    b:= client.Clients.GetByName(name)
+func change(cid *int,client *LGConnectionPool,name string,) {
+    b:= client.Connections.GetByName(name)
     if b!=nil{
         _cid := b.GetTransport().Cid
         *cid = _cid
         fmt.Println("current connection change:")
     }
 
-    for c,p:=range client.Clients.All() {
+    for c,p:=range client.Connections.All() {
         if p.GetName() != name {
             fmt.Println(" ",c,p.GetName())
         } else {
@@ -216,7 +216,7 @@ func main() {
     datagram := LGNewDatagram(protos.Endian)
 
     cid := 0
-    client := LGNewClientPool(protos.NewClient, datagram)
+    client := LGNewConnectionPool(protos.NewConnection, datagram)
     go clientsender(&cid,client)
 
     //client.Start("", 4444)

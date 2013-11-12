@@ -21,7 +21,7 @@ import (
 //Handlers[2011] = Process2011
 //}
 
-func Process2011(msgReader LGIMessageReader,c LGIClient,fromCid int) {
+func Process2011(msgReader LGIMessageReader,c LGIConnection,fromCid int) {
     LGTrace("process 2011 is called")
 
     md := msgReader.ReadString()

@@ -29,11 +29,11 @@ const (
 var gateserver *LGGateServer=&LGGateServer{}
 
 //
-//func newPlayerClient (name string,transport *LGTransport) LGIClient {
+//func newPlayerConnection (name string,transport *LGTransport) LGIConnection {
 //    LGTrace("gateclient is connect:",name)
 //
-//    c := &LGClient{
-//        LGBaseClient:&LGBaseClient{Transport:transport,Name:name},
+//    c := &LGConnection{
+//        LGBaseConnection:&LGBaseConnection{Transport:transport,Name:name},
 //        Gate : gateserver,
 //    }
 //
@@ -41,10 +41,10 @@ var gateserver *LGGateServer=&LGGateServer{}
 //    return c
 //}
 //
-func newGridClient (name string,transport *LGTransport) LGIClient {
+func newGridConnection (name string,transport *LGTransport) LGIConnection {
     LGTrace("gridclient is connect:",name)
 
-    c := &LGGateToGridClient{LGBaseClient:&LGBaseClient{Transport:transport,Name:name}}
+    c := &LGGateToGridConnection{LGBaseConnection:&LGBaseConnection{Transport:transport,Name:name}}
     c.Gate = gateserver
 
     c.Register()
@@ -67,12 +67,12 @@ func main() {
     //todo: server endian
     datagram := LGNewDatagram(endian)
     //gateserver := LGNewGateServer(
-    //    LGNewClient,datagram,newGridClient,LGNewDispatcher())
+    //    LGNewConnection,datagram,newGridConnection,LGNewDispatcher())
 
 
 
     gateserver.InitFromConfig(
-        *gateconf,LGNewClient,datagram,newGridClient,LGNewDispatcher())
+        *gateconf,LGNewConnection,datagram,newGridConnection,LGNewDispatcher())
 
     LGSetLevel(*loglevel)
 

@@ -37,7 +37,7 @@ func main() {
     datagram := LGNewDatagram(LGLittleEndian)
 
     serv = &LGGridServer{}
-    serv.InitFromConfig(*conf,grids.NewClient, datagram)
+    serv.InitFromConfig(*conf,grids.NewConnection, datagram)
 
     serv.Start()
 }

@@ -28,14 +28,14 @@ type LGServer struct {
     read_buffer_size   int
 
     maxConnections int
-    makeclient LGNewClientFunc
+    makeclient LGNewConnectionFunc
     Datagram   LGIDatagram
 
     host string
     port int
 
     //define transport dict/map set
-    Clients *LGClientMap
+    Connections *LGConnectionMap
 
     TransportNum int
 
@@ -54,7 +54,7 @@ type LGServer struct {
 
 func LGNewServer(
     name string,serverid int,addr string, maxConnections int,
-    makeclient LGNewClientFunc, datagram LGIDatagram) *LGServer {
+    makeclient LGNewConnectionFunc, datagram LGIDatagram) *LGServer {
 
     serverid += rand.Intn(99) * 100
     s := &LGServer{
@@ -62,7 +62,7 @@ func LGNewServer(
         Serverid:serverid,
         Addr : addr,
         maxConnections : maxConnections,
-        Clients: LGNewClientMap(),
+        Connections: LGNewConnectionMap(),
         stop: false,
         exitChan: make(chan bool),
     }
@@ -145,8 +145,8 @@ func (s *LGServer) SetMaxConnections(max int) {
     s.maxConnections = max
 }
 
-func (s *LGServer) RemoveClient(cid int) {
-    //if method,ok := s.parentMethodsMap["RemoveClient"]; ok {
+func (s *LGServer) RemoveConnection(cid int) {
+    //if method,ok := s.parentMethodsMap["RemoveConnection"]; ok {
     //    args := []reflect.Value{
     //        reflect.ValueOf(cid),
     //    }
@@ -155,7 +155,7 @@ func (s *LGServer) RemoveClient(cid int) {
     //    return
     //}
 
-    s.Clients.Remove(cid)
+    s.Connections.Remove(cid)
 
     //release id assign
     cid,_= LGParseID(cid)
@@ -163,7 +163,7 @@ func (s *LGServer) RemoveClient(cid int) {
 }
 
 func (s *LGServer) AllocTransportid() int {
-    if (s.Clients.Len() >= s.maxConnections) {
+    if (s.Connections.Len() >= s.maxConnections) {
         return 0
     }
 
@@ -191,16 +191,16 @@ func (s *LGServer) transportHandler(newcid int, connection net.Conn) {
     transport := s.NewTransport(newcid, connection)
     name := "c_"+strconv.Itoa(newcid)
     client := s.makeclient(name,transport)
-    s.Clients.Add(newcid, name, client)
+    s.Connections.Add(newcid, name, client)
 
     //创建go的线程 使用Goroutine
     go s.transportSender(transport, client)
     go s.transportReader(transport, client)
 
-    LGDebug("has clients:",s.Clients.Len())
+    LGDebug("has clients:",s.Connections.Len())
 }
 
-func (s *LGServer) transportReader(transport *LGTransport, client LGIClient) {
+func (s *LGServer) transportReader(transport *LGTransport, client LGIConnection) {
     buffer := make([]byte, s.read_buffer_size)
     for {
 
@@ -211,7 +211,7 @@ func (s *LGServer) transportReader(transport *LGTransport, client LGIClient) {
             client.Closed()
             transport.Closed()
             transport.Conn.Close()
-            s.RemoveClient(transport.Cid)
+            s.RemoveConnection(transport.Cid)
             LGError(err)
             break
         }
@@ -229,7 +229,7 @@ func (s *LGServer) transportReader(transport *LGTransport, client LGIClient) {
     //LGTrace("TransportReader stopped for ", transport.Cid)
 }
 
-func (s *LGServer) transportSender(transport *LGTransport, client LGIClient) {
+func (s *LGServer) transportSender(transport *LGTransport, client LGIConnection) {
     for {
         select {
         case data := <-transport.OutgoingBytes:
@@ -246,7 +246,7 @@ func (s *LGServer) transportSender(transport *LGTransport, client LGIClient) {
 
             transport.Closed()
             transport.Conn.Close()
-            s.RemoveClient(transport.Cid)
+            s.RemoveConnection(transport.Cid)
             break
         }
     }
@@ -266,7 +266,7 @@ func (s *LGServer) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
             FromCid: 0,
             Data: dp.Data,
         })
-        for _, c := range s.Clients.All() {
+        for _, c := range s.Connections.All() {
             LGTrace("broadcastHandler: client.type",c.GetType())
             //if fromCid == Cid {
             //    continue
@@ -294,7 +294,7 @@ func (s *LGServer) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
             FromCid: 0,
             Data: dp.Data,
         }
-        for _, c := range s.Clients.All() {
+        for _, c := range s.Connections.All() {
             //LGTrace("broadcastHandler: client.type",c.GetType())
             //if fromCid == Cid {
             //    continue
