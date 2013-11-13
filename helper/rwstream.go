@@ -13,7 +13,7 @@ package helper
 import (
     "encoding/binary"
     "errors"
-    "fmt"
+    //"fmt"
 )
 
 const (
@@ -108,12 +108,24 @@ func (b *LGRWStream) Reset() {
     b.last = b.off
 }
 
+// makeSlice allocates a slice of size n. If the allocation fails, it panics
+// with ErrTooLarge.
+func makeSlice(n int) []byte {
+    // If the make fails, give a known error.
+    defer func() {
+        if recover() != nil {
+            panic(ErrTooLarge)
+        }
+    }()
+    return make([]byte, n*2)
+}
+
 // grow grows the buffer to guarantee space for n more bytes.
 // It returns the index where bytes should be written.
 // If the buffer can't grow it will panic with ErrTooLarge.
 func (b *LGRWStream) grow(n int) int {
     m := b.Len()
-    x := cap(b.buf)
+    x := len(b.buf)
 
     if b.end+n > x {
         if m+n > x {
@@ -128,13 +140,13 @@ func (b *LGRWStream) grow(n int) int {
         b.last -= b.off
         b.off = 0
         b.end = m
-    } else {
-        if x > b.buffSize {
-            b.buf = b.buf[b.off : b.off+m]
-            b.last -= b.off
-            b.off = 0
-            b.end = m
-        }
+    //} else {
+        //if x > b.buffSize {
+            //b.buf = b.buf[b.off : b.off+m]
+            //b.last -= b.off
+            //b.off = 0
+            //b.end = m
+        //}
     }
     return b.end
 }
@@ -144,14 +156,23 @@ func (b *LGRWStream) grow(n int) int {
 // If the buffer becomes too large, Write will panic with
 // ErrTooLarge.
 func (b *LGRWStream) Write(p []byte) (n int) {
-    defer func(){
-		if x := recover(); x != nil {
-            fmt.Printf("rwstream write() recover:%s,end=%d,len=%d,newlen=%d", x, b.end,b.Len(),len(p))
-		}
-    }()
-    n = len(p)
-    m := b.grow(n)
-    b.end += n
+    //defer func(){
+		//if x := recover(); x != nil {
+            //fmt.Printf("rwstream write() recover:%s,cap=%d,end=%d,len=%d,newlen=%d\n", x,cap(b.buf), b.end,b.Len(),len(p))
+
+        //panic("write is err!")
+		//}
+    //}()
+
+    //fmt.Printf("2rwstream write(),cap=%d,len(b.buf)=%d,off=%d,end=%d,m=%d,len=%d,newlen=%d\n", cap(b.buf),len(b.buf), b.off, b.end,m,b.Len(),len(p))
+    nn := len(p)
+    m := b.grow(nn)
+    b.end += nn
+
+    //if len(b.buf) > 2000 {
+        //fmt.Printf("1rwstream write(),cap=%d,len(b.buf)=%d,off=%d,end=%d,len=%d,newlen=%d\n", cap(b.buf),len(b.buf), b.off, b.end,b.Len(),len(p))
+        //panic("rwstream.Write() is error:")
+    //}
     return copy(b.buf[m:], p)
 }
 
@@ -255,18 +276,6 @@ func (b *LGRWStream) ReadUint64() (uint64, error) {
     }
     x := b.Endianer.Uint64(buf)
     return x, nil
-}
-
-// makeSlice allocates a slice of size n. If the allocation fails, it panics
-// with ErrTooLarge.
-func makeSlice(n int) []byte {
-    // If the make fails, give a known error.
-    defer func() {
-        if recover() != nil {
-            panic(ErrTooLarge)
-        }
-    }()
-    return make([]byte, n)
 }
 
 func (b *LGRWStream) ReadUint() (uint, error) {
