@@ -219,7 +219,7 @@ func (s *LGServer) transportReader(transport *LGTransport, client LGIConnection)
         //LGTrace("read to buff:", bytesRead)
         transport.BuffAppend(buffer[0:bytesRead])
 
-        LGTrace("transport.Buff", transport.Stream.Len())
+        LGTrace("server transportReader.Buff", transport.Stream.Len())
         n, dps := transport.Fetch()
         //LGTrace("fetch message number", n)
         if n > 0 {
@@ -233,7 +233,7 @@ func (s *LGServer) transportSender(transport *LGTransport, client LGIConnection)
     for {
         select {
         case data := <-transport.OutgoingBytes:
-            LGTrace("transportSender OutgoingBytes:",len(data))
+            LGTrace("server transportSender OutgoingBytes:",len(data))
             //buf := s.Datagram.Pack(dp)
             transport.Conn.Write(data)
 

@@ -133,10 +133,10 @@ func (cp *LGConnectionPool) transportReader(transport *LGTransport, client LGICo
             break
         }
 
-        LGTrace("read to buff:", bytesRead)
+        LGTrace("pool transportReader read to buff:", bytesRead)
         transport.BuffAppend(buffer[0:bytesRead])
 
-        LGTrace("clientpool transport.Buff", len(transport.Stream.Bytes()))
+        LGTrace("tpool transportReader Buff", len(transport.Stream.Bytes()))
         //, transport.Stream.Bytes())
         //LGTrace(transport.Stream.DebugOut())
         n, dps := transport.Fetch()
@@ -152,7 +152,7 @@ func (cp *LGConnectionPool) transportSender(transport *LGTransport) {
     for {
         select {
         case dp := <-transport.Outgoing:
-            LGTrace("clientpool transportSender:",dp.Type, dp.Data)
+            LGTrace("clientpool transportSender:dp.type=%v,dp.data=% X",dp.Type, dp.Data)
             //buf := cp.datagram.Pack(dp)
             //transport.Conn.Write(buf)
 

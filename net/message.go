@@ -81,7 +81,8 @@ func (msg *LGMessageWriter) preWrite(wind int) {
         return
     }
     if wind < msg.maxInd {
-        panic("item write order is wrong!")
+        LGError("messageWriter.preWrite():item write order is wrong!")
+        return
     }
     msg.maxInd = wind
 }
@@ -95,7 +96,7 @@ func (msg *LGMessageWriter) writeMeta(datatype int) {
 
 func (msg *LGMessageWriter) WriteUint16(x int, wind int) {
     if x < 0 {
-        panic("WriteUint16 only write > 0 integer")
+        LGError("WriteUint16 only write > 0 integer");return
     }
     msg.preWrite(wind)
 
@@ -108,7 +109,7 @@ func (msg *LGMessageWriter) WriteUint16(x int, wind int) {
 
 func (msg *LGMessageWriter) WriteUint32(x int, wind int) {
     if x < 0 {
-        panic("WriteUint32 only write > 0 integer")
+        LGError("WriteUint32 only write > 0 integer");return
     }
     msg.preWrite(wind)
 
@@ -120,7 +121,7 @@ func (msg *LGMessageWriter) WriteUint32(x int, wind int) {
 
 func (msg *LGMessageWriter) WriteUint(x int, wind int) {
     if x < 0 {
-        panic("WriteUint only write > 0 integer")
+        LGError("WriteUint only write > 0 integer");return
     }
     msg.preWrite(wind)
 
@@ -133,7 +134,7 @@ func (msg *LGMessageWriter) WriteUint(x int, wind int) {
 func (msg *LGMessageWriter) WriteUints(xs ...int) {
     for _,x := range xs {
         if x < 0 {
-            panic("WriteUint only write > 0 integer")
+            LGError("WriteUint only write > 0 integer");return
         }
         msg.preWrite(0)
 
@@ -141,7 +142,6 @@ func (msg *LGMessageWriter) WriteUints(xs ...int) {
         msg.writeMeta(TY_UINT)
         msg.wind++
         msg.maxInd++
-        
         //msg.WriteUint(x, 0)
     }
 }
@@ -194,7 +194,7 @@ func (msg *LGMessageWriter) WriteU(x ...interface{}) {
         case int:
             vv, _ := v.(int)
             if vv < 0 {
-                panic("WriteU only write > 0 integer")
+                LGError("WriteU only write > 0 integer");return
             }
             msg.WriteUint(int(vv), 0)
         case uint32:
@@ -309,8 +309,8 @@ func (msg *LGMessageReader) init() {
     itemnum := int(_itemnum)
     meta, n := buf.Read(itemnum)
     if n < itemnum {
-        LGError("messageReader data init ",n,itemnum,buf.Bytes())
-        panic("data init error")
+        LGError("messageReader data init error",n,itemnum,buf.Bytes())
+        return
     }
 
     //LGTrace("init meta:", meta)
@@ -334,7 +334,7 @@ func (msg *LGMessageReader) init() {
 
 func checkConvert(err error) {
     if err != nil {
-        panic("type cast failed!")
+        LGError("messageReader type convert failed:",err)
     }
 }
 
@@ -390,7 +390,7 @@ func (msg *LGMessageReader) ReadUint(wind int) uint {
     v := msg.items[wind]
     a,ok := v.(uint)
     if !ok {
-        panic("type cast failed!")
+        LGError("type cast failed!");return
     }
     return uint(a),ok
 }
@@ -399,7 +399,7 @@ func (msg *LGMessageReader) ReadInt(wind int) int {
     v := msg.items[wind]
     a,ok := v.(int)
     if !ok {
-        panic("type cast failed!")
+        LGError("type cast failed!");return
     }
 
     return a,ok
@@ -451,7 +451,8 @@ func (msg *LGMessageReader) checkRead(datatype int) bool {
 
     /////if (ty & 0x07) != TY_UINT{
     if ty != byte(datatype) {
-        panic("item data type that is reader is wrong")
+        LGError("messageReader: item data type that is reader is wrong",msg.wind,datatype)
+        return false
     }
     return true
 }
