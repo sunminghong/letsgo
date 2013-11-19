@@ -55,7 +55,7 @@ func (c *LGGateToGridConnection) Register() {
 //对数据进行拆包
 func (c *LGGateToGridConnection) ProcessDPs(dps []*LGDataPacket) {
     for _, dp := range dps {
-        LGTrace("gategridclient.ProcessDPs():dp.type=%d,fromcid=% X,len(data)=%d",dp.Type,dp.FromCid,len(dp.Data))
+        LGTrace("gategridclient.ProcessDPs():dp.type=%d,fromcid=%d,len(data)=%d",dp.Type,dp.FromCid,len(dp.Data))
         //LGTrace("c.clients",c.clients.All())
 
 		buf := make([]byte,len(dp.Data))
@@ -70,7 +70,7 @@ func (c *LGGateToGridConnection) ProcessDPs(dps []*LGDataPacket) {
 
         cli := c.clients.Get(dp.FromCid)
         if cli == nil {
-            LGTrace("dp lost,fromcid:% X",dp.FromCid)
+            LGTrace("dp lost,fromcid:%d",dp.FromCid)
             return
         }
 
@@ -82,13 +82,13 @@ func (c *LGGateToGridConnection) ProcessDPs(dps []*LGDataPacket) {
             cli.GetTransport().SendDP(dp)
 
         case LGDATAPACKET_TYPE_DELAY_DATAS_COMPRESS:
-            LGTrace("delay compress datas:%d,\n% X",dp.FromCid,dp.Data)
+            LGTrace("delay compress datas:fromcid:%d,\n% X",dp.FromCid,dp.Data)
 
             dp.Type = LGDATAPACKET_TYPE_DATAS_COMPRESS
             cli.GetTransport().SendDP(dp)
 
         case LGDATAPACKET_TYPE_DELAY_DATAS:
-            LGTrace("delay datas:%d,\n% X",dp.FromCid,dp.Data)
+            LGTrace("delay datas:cid:%d,\n% X",dp.FromCid,dp.Data)
 
             LGTrace("delay datas is send")
             cli.GetTransport().SendBytes(dp.Data)

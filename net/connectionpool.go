@@ -136,7 +136,7 @@ func (cp *LGConnectionPool) transportReader(transport *LGTransport, client LGICo
         LGTrace("pool transportReader read to buff:", bytesRead)
         transport.BuffAppend(buffer[0:bytesRead])
 
-        LGTrace("tpool transportReader Buff", len(transport.Stream.Bytes()))
+        LGTrace("tpool transportReader Buff:%d,% X", len(transport.Stream.Bytes()),transport.Stream.Bytes())
         //, transport.Stream.Bytes())
         //LGTrace(transport.Stream.DebugOut())
         n, dps := transport.Fetch()

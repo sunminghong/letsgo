@@ -44,9 +44,8 @@ func LGGetLevel() int {
 func LGSetLevel(l int) {
     level = l
 }
-
 // logger references the used application logger.
-var LetsLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
+var LetsLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lmicroseconds)
 
 // SetLogger sets a new logger.
 func LGSetLogger(l *log.Logger) {

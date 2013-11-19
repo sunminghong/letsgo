@@ -49,7 +49,6 @@ type LGServer struct {
     //parent
     Parent interface{}
     parentMethodsMap map[string]reflect.Value
-
 }
 
 func LGNewServer(
@@ -238,7 +237,7 @@ func (s *LGServer) transportSender(transport *LGTransport, client LGIConnection)
             transport.Conn.Write(data)
 
         case dp := <-transport.Outgoing:
-            LGTrace("transportSender Outgoing:",dp.Type, len(dp.Data)) //,dp.Data)
+            LGTrace("transportSender Outgoing:type=%d,len=%d,% X",dp.Type, len(dp.Data),dp.Data)
             transport.PackWrite(dp)
 
         case <-transport.Quit:

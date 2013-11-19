@@ -116,10 +116,14 @@ func (c *LGGridConnection) ProcessDPs(dps []*LGDataPacket) {
 }
 
 func (c *LGGridConnection) SendMessage(fromCid int,msg LGIMessageWriter) {
+    b := msg.ToBytes()
+
     dp := &LGDataPacket{
         FromCid: fromCid,
-        Data: msg.ToBytes(),
+        Data: b,
     }
+
+    LGTrace("sendmessage:code:%d, data:% X",msg.GetCode(),b)
 
     if fromCid == 0 {
         dp.Type = LGDATAPACKET_TYPE_GENERAL

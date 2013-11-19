@@ -115,11 +115,11 @@ func (gs *LGGateServer) InitFromConfig(
 }
 
 func (gs *LGGateServer) Init(
-    name string, gridid int, host string, maxConnections int,
+    name string, gateid int, host string, maxConnections int,
     newPlayerConnection LGNewConnectionFunc, datagram LGIDatagram,
     newGridConnection LGNewConnectionFunc, dispatcher LGIDispatcher) {
 
-    gs.LGServer = LGNewServer(name, gridid, host, maxConnections, newPlayerConnection, datagram)
+    gs.LGServer = LGNewServer(name, gateid, host, maxConnections, newPlayerConnection, datagram)
 
     gs.gridConfs = make(map[string]*gridConf)
     gs.Grids = LGNewConnectionPool(newGridConnection, datagram)
@@ -158,7 +158,6 @@ func (gs *LGGateServer) ReConnectGrids() {
         }
 
         gs.ConnectGrid(name, v.host, &v.messageCodes, v.datagram)
-
     }
 }
 
