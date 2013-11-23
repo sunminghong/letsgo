@@ -1,13 +1,11 @@
 /*=============================================================================
-#     FileName: gs.go
-#         Desc: server base
-#       Author: sunminghong
-#        Email: allen.fantasy@gmail.com
-#     HomePage: http://weibo.com/5d13
-#      Version: 0.0.1
-#   LastChange: 2013-06-09 10:09:20
+#     FileName: gateserver.go
+#       Author: sunminghong, allen.fantasy@gmail.com, http://weibo.com/5d13
+#         Team: http://1201.us
+#   LastChange: 2013-11-22 10:49:10
 #      History:
 =============================================================================*/
+
 package gate
 
 import (
@@ -36,8 +34,9 @@ type LGIDispatcher interface {
 }
 
 const (
-    CONNECTION_STATE_FREE        = 0
-    CONNECTION_STATE_CONNECTTING = 1
+    CONNECTION_STATE_FREE        int = iota
+    CONNECTION_STATE_CONNECTTING
+    CONNECTION_STATE_AUTORECONNECTION
 )
 
 type gridConf struct {
@@ -58,6 +57,9 @@ type LGGateServer struct {
 
     //makeclient NewGateConnectionFunc
     gridConfs map[string]*gridConf
+
+    interval *LGInterval
+    autoReconnectDuration time.Duration
 }
 
 func (gs *LGGateServer) InitFromConfig(
@@ -109,15 +111,21 @@ func (gs *LGGateServer) InitFromConfig(
     }
     LGSetLevel(loglevel)
 
+    autoDuration, err := c.GetInt(section, "autoReconnectDuration")
+    if err != nil {
+        autoDuration = 5
+    }
+    autoReconnectDuration := time.Duration(autoDuration) * time.Second
+
     gs.Init(name, serverid, host, maxConnections,
-        newPlayerConnection, datagram, newGridConnection, dispatcher)
+        newPlayerConnection, datagram, newGridConnection, dispatcher,autoReconnectDuration)
 
 }
 
 func (gs *LGGateServer) Init(
     name string, gateid int, host string, maxConnections int,
     newPlayerConnection LGNewConnectionFunc, datagram LGIDatagram,
-    newGridConnection LGNewConnectionFunc, dispatcher LGIDispatcher) {
+    newGridConnection LGNewConnectionFunc, dispatcher LGIDispatcher,autoReconnectionDuration time.Duration) {
 
     gs.LGServer = LGNewServer(name, gateid, host, maxConnections, newPlayerConnection, datagram)
 
@@ -127,6 +135,8 @@ func (gs *LGGateServer) Init(
     gs.Dispatcher = LGNewDispatcher()
 
     gs.SetParent(gs)
+
+    gs.autoReconnectDuration = autoReconnectionDuration
 }
 
 func (gs *LGGateServer) NewTransport(
@@ -144,6 +154,49 @@ func (gs *LGGateServer) Start(gridsconfigfile *string) {
 }
 */
 
+func (gs *LGGateServer) AddAutoReConnect(name string) {
+    if v,ok := gs.gridConfs[name]; ok {
+        v.state = CONNECTION_STATE_AUTORECONNECTION
+
+        LGTrace("add autoReconn 2",name)
+    }
+
+    if gs.interval == nil {
+        gs.interval = NewLGInterval(gs.autoReconnectDuration, gs.autoReConnectGrid)
+        gs.interval.Start(gs.autoReconnectDuration)
+    } else if !gs.interval.IsRun {
+        gs.interval.Start(gs.autoReconnectDuration)
+    }
+
+}
+
+func (gs *LGGateServer) autoReConnectGrid(interval *LGInterval) {
+    cou := 0
+    for name, v := range gs.gridConfs {
+        LGTrace("ps is name:", name, v.state)
+
+        //c := gs.Grids.Connections.GetByName(name)
+        //if c != nil {
+            //LGError("auto reconnection error:this gridserver is connected:%s",name)
+            //v.state = CONNECTION_STATE_CONNECTTING
+            //continue
+        //}
+
+        if v.state != CONNECTION_STATE_AUTORECONNECTION {
+            continue
+        }
+        LGTrace("auto reconnect to ", name, v.state)
+
+        cou ++
+        if gs.ConnectGrid(name, v.host, &v.messageCodes, v.datagram) {
+            cou --
+        }
+    }
+    if cou == 0 {
+        interval.Stop()
+    }
+}
+
 func (gs *LGGateServer) ReConnectGrids() {
     for name, v := range gs.gridConfs {
         LGTrace("ps is name:", name, v.state)
@@ -153,8 +206,8 @@ func (gs *LGGateServer) ReConnectGrids() {
             continue
         }
 
-        if v.state != CONNECTION_STATE_FREE {
-            //continue
+        if v.state == CONNECTION_STATE_CONNECTTING {
+            continue
         }
 
         gs.ConnectGrid(name, v.host, &v.messageCodes, v.datagram)
@@ -216,11 +269,12 @@ func (gs *LGGateServer) ConnectGrids(configfile *string) {
 }
 
 func (gs *LGGateServer) ConnectGrid(
-    name string, host string, messageCodes *string, datagram LGIDatagram) {
+    name string, host string, messageCodes *string, datagram LGIDatagram) bool {
 
     LGInfo("connect to grid:", name)
 
     pool := gs.Grids
+    //todo: maybe add finish chan and remove time.Sleep
     go pool.Start(name, host, datagram)
     time.Sleep(2 * time.Second)
 
@@ -229,7 +283,7 @@ func (gs *LGGateServer) ConnectGrid(
     c := pool.Connections.GetByName(name)
     if c == nil {
         LGError(host + " can't connect")
-        return
+        return false
     }
 
     gs.gridConfs[name].state = CONNECTION_STATE_CONNECTTING
@@ -238,6 +292,7 @@ func (gs *LGGateServer) ConnectGrid(
     gs.Dispatcher.Add(gridID, messageCodes)
 
     LGInfo("be connected to grid ", name)
+    return true
 }
 
 func tabCompleter(line string) []string {

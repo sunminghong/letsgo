@@ -13,6 +13,7 @@ package net
 import (
     "reflect"
     "net"
+    "time"
     "math/rand"
     "strconv"
     . "github.com/sunminghong/letsgo/helper"
@@ -54,8 +55,8 @@ type LGServer struct {
 func LGNewServer(
     name string,serverid int,addr string, maxConnections int,
     makeclient LGNewConnectionFunc, datagram LGIDatagram) *LGServer {
-
-    serverid += rand.Intn(99) * 100
+    r := rand.New(rand.NewSource(time.Now().UnixNano()))
+    serverid += r.Intn(99) * 100
     s := &LGServer{
         Name:name,
         Serverid:serverid,
@@ -125,7 +126,7 @@ func (s *LGServer) Start() {
             if error != nil {
                 LGError("Transport error: ", error)
             } else {
-                LGDebug(connection.RemoteAddr()," is connection!")
+                LGDebug("%v is connection!",connection.RemoteAddr())
 
                 newcid := s.AllocTransportid()
                 if newcid == 0 {

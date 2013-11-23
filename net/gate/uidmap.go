@@ -1,21 +1,20 @@
 /*=============================================================================
 #     FileName: uidmap.go
-#         Desc: client of default grid server receive (process player or gate connection on common)
-#       Author: sunminghong
-#        Email: allen.fantasy@gmail.com
-#     HomePage: http://weibo.com/5d13
-#      Version: 0.0.1
-#   LastChange: 2013-06-09 18:03:17
+#       Author: sunminghong, allen.fantasy@gmail.com, http://weibo.com/5d13
+#         Team: http://1201.us
+#   LastChange: 2013-11-19 11:41:58
 #      History:
 =============================================================================*/
+
 package gate
 
 import (
+    "fmt"
+    "strconv"
+
     . "github.com/sunminghong/letsgo/log"
     . "github.com/sunminghong/letsgo/net"
     //    "unsafe"
-    //"fmt"
-    "strconv"
 )
 
 type iCache interface {
@@ -41,12 +40,12 @@ func LGNewUidMap(cache iCache) *LGUidMap {
     return c
 }
 
-func (self *LGUidMap) RemoveUid(uid int) {
-    self.casCache.Delete("uid_" + strconv.Itoa(uid))
+func getUidKey(uid int ) string {
+    return "uid_" + strconv.Itoa(uid)
 }
 
 func getKid(gateid,fromCid,cid int) (kidstr string,checkcode int) {
-    var kid int
+    var kid string
 
     if fromCid > 0 {
 
@@ -56,28 +55,51 @@ func getKid(gateid,fromCid,cid int) (kidstr string,checkcode int) {
         //2.将checkcode剥离出来用cid 作为key，就可以将uidmap的数据项控制在
         //65536（32768）个以内，因此几乎可以不用清理uidmap数据项
 
-        kid, checkcode = LGParseID(fromCid)
-        kid = LGCombineID(kid, gateid)
-        kid = 0 - kid
+        _kid, _checkcode := LGParseID(fromCid)
+        //kid = LGCombineID(kid, gateid)
+        //kid = 0 - kid
+        kid = fmt.Sprintf("%d_%d",_kid,gateid)
+        checkcode = _checkcode
 
     } else {
-        kid = cid
+        kid = strconv.Itoa(cid)
     }
 
-    kidstr = "kid_" + strconv.Itoa(kid)
+    kidstr = "kid_" + kid
     return
 }
 
-func (self *LGUidMap) RemoveKid(gateid, fromCid, cid int) {
+func (self *LGUidMap) RemoveUid(uid int) {
+    self.casCache.Delete(getUidKey(uid))
+}
+
+func (self *LGUidMap) RemoveConnectionIdByUid(uid int) {
+    if uid == 0 {
+        return
+    }
+
+    gateid,fromCid,cid,_ := self.CheckUid(uid)
     kidstr,_ := getKid(gateid,fromCid,cid)
-    self.casCache.Delete(kidstr)
+
+    self.casCache.Deletes(kidstr,getUidKey(uid))
+}
+
+func (self *LGUidMap) RemoveConnectionId(gateid, fromCid, cid int) {
+    kidstr,_ := getKid(gateid,fromCid,cid)
+
+    uid := self.GetUid(gateid,fromCid,cid)
+    if uid > 0 {
+        self.casCache.Deletes(kidstr,getUidKey(uid))
+    } else {
+        self.casCache.Delete(kidstr)
+    }
 }
 
 func (self *LGUidMap) CheckUid(uid int) (gateid, fromCid, cid int, cas uint64) {
     var v2 []int
     var err error
     //if not exists in local map object ,then read from cache read
-    cas, _, err = self.casCache.Gets("uid_"+strconv.Itoa(uid), &v2)
+    cas, _, err = self.casCache.Gets(getUidKey(uid), &v2)
 
     if err != nil {
         cas = 0
@@ -95,12 +117,13 @@ func (self *LGUidMap) GetUid(gateid, fromCid, cid int) (uid int) {
 
     _, _, err = self.casCache.Gets(kidstr, &v2)
 
+    fmt.Println("cache read error:",kidstr,err)
     if err != nil {
         return
     }
 
     uid, co := v2[0], v2[1]
-    //fmt.Println("co,checkcode:",co,checkcode,v2)
+    fmt.Println("co,checkcode:",co,checkcode,v2)
     if fromCid != 0 {
         if co == checkcode {
             return uid
@@ -119,12 +142,13 @@ func (self *LGUidMap) SaveUid(gateid, fromCid, cid, uid int) error {
 
     //set to cache
     err :=self.casCache.Set(kidstr, v2, 0, 0)
+    fmt.Println("cache set kidstr:",kidstr,err)
     if err !=nil {
         LGTrace("saveuid():",err)
     }
 
     v3 := []int{gateid, fromCid, cid}
-    err = self.casCache.Set("uid_"+strconv.Itoa(uid), v3, 0, 0)
+    err = self.casCache.Set(getUidKey(uid), v3, 0, 0)
     if err !=nil {
         LGTrace("saveuid():",err)
     }
@@ -137,7 +161,7 @@ func (self *LGUidMap) CasUid(gateid, fromCid, cid, uid int, cas uint64) error {
     //    return self.SaveUid(gateid,fromCid,cid,uid)
     //}
     v3 := []int{gateid, fromCid, cid}
-    err := self.casCache.Cas("uid_"+strconv.Itoa(uid), v3, cas, 0, 0)
+    err := self.casCache.Cas(getUidKey(uid), v3, cas, 0, 0)
     if err != nil {
         return err
     }

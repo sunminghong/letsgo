@@ -36,6 +36,10 @@ func LGNewGateToGridConnection (name string,transport *LGTransport) LGIConnectio
 func (c *LGGateToGridConnection) Closed() {
     gridID := c.GetTransport().Cid
     c.Gate.Dispatcher.Remove(gridID)
+
+
+    LGTrace("add autoReconn ",c.GetName())
+    c.Gate.AddAutoReConnect(c.GetName())
 }
 
 func (c *LGGateToGridConnection) Register() {

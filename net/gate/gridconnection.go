@@ -7,9 +7,6 @@
 =============================================================================*/
 
 
-/*
-
-*/
 package gate
 
 import (
@@ -83,7 +80,7 @@ func (c *LGGridConnection) ProcessDPs(dps []*LGDataPacket) {
 
         switch dp.Type {
         case LGDATAPACKET_TYPE_DELAY:
-            LGTrace("msg.code(delay):",int(endianer.Uint16(dp.Data)),len(dp.Data))
+            LGDebug("msg.code(delay):",int(endianer.Uint16(dp.Data)),len(dp.Data))
             msg := LGNewMessageReader(dp.Data,stream.Endian)
             c.Process(msg,c,dp.FromCid)
 
@@ -110,7 +107,7 @@ func (c *LGGridConnection) ProcessDPs(dps []*LGDataPacket) {
             c.GateId = gateid
             c.Grid.RegisterGate(gatename,gateid,c)
 
-            LGInfo(c.GetTransport().Conn.RemoteAddr()," is register to gate,gateid=",gateid)
+            LGInfo("%v is register to gate,gateid=%d",c.GetTransport().Conn.RemoteAddr(),gateid)
         }
     }
 }
@@ -123,6 +120,7 @@ func (c *LGGridConnection) SendMessage(fromCid int,msg LGIMessageWriter) {
         Data: b,
     }
 
+    LGDebug("sendmessage:code:%d",msg.GetCode())
     LGTrace("sendmessage:code:%d, data:% X",msg.GetCode(),b)
 
     if fromCid == 0 {

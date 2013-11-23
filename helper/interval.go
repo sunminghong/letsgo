@@ -72,8 +72,8 @@ func (self *LGInterval) Stop(callback ...func(interval *LGInterval)) {
             <-self.stop
             self.timer.Stop()
 
-            if len(callback)>0 {
-                callback[0](self)
+            for _,cb := range callback {
+                cb(self)
             }
         }
     }()

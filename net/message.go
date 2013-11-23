@@ -42,6 +42,9 @@ type LGMessageWriter struct {
     maxInd int
 
     needWriteMeta bool
+
+    alreadyToBytes bool
+    outBuffer []byte
 }
 
 func LGNewMessageWriter(endian int) *LGMessageWriter {
@@ -65,6 +68,9 @@ func (msg *LGMessageWriter) init(bufsize int, endian int) {
     //leave 4 bytes to head(code,ver,metaitemdata)
     //leave 4 bytes to head(list length(uint16),list length(byte),metaitemdataLength(byte))
     msg.metabuf.Write([]byte{0, 0, 0, 0})
+
+    msg.alreadyToBytes = false
+    //msg.outBuffer = []byte{}
 }
 
 func (msg *LGMessageWriter) SetCode(code int, ver byte) {
@@ -77,6 +83,7 @@ func (msg *LGMessageWriter) GetCode() int {
 }
 
 func (msg *LGMessageWriter) preWrite(wind int) {
+    msg.alreadyToBytes = false
     if wind == 0 {
         return
     }
@@ -243,6 +250,10 @@ func (msg *LGMessageWriter) Write(x ...interface{}) {
 
 //对数据进行封包
 func (msg *LGMessageWriter) ToBytes() []byte {
+    if msg.alreadyToBytes {
+        return msg.outBuffer
+    }
+
     if msg.Code == 0 {
         LGWarn("messagewriter ToBytes() msg.Code == 0")
         return nil
@@ -255,13 +266,19 @@ func (msg *LGMessageWriter) ToBytes() []byte {
     msg.metabuf.Endianer.PutUint16(heads, uint16(msg.Code))
     heads[2] = msg.Ver
 
-    //LGTrace("wind:", msg.wind)
+    LGTrace("code:%d,wind:%d",msg.Code, msg.wind)
     heads[3] = byte(msg.wind)
-    //LGTrace("metabuf", msg.metabuf.Bytes())
-    msg.metabuf.Write(msg.buf.Bytes())
+    LGTrace("code:%d,metabuf:% X", msg.Code,msg.metabuf.Bytes())
+    // msg.metabuf.Write(msg.buf.Bytes())
 
-    //LGTrace("metabuf", msg.metabuf.Bytes())
-    return msg.metabuf.Bytes()
+    bs := make([]byte,msg.metabuf.Len()+msg.buf.Len())
+    copy(bs,msg.metabuf.Bytes())
+    copy(bs[msg.metabuf.Len():],msg.buf.Bytes())
+    msg.alreadyToBytes = true
+    msg.outBuffer = bs
+
+    LGTrace("code:%d,metabuf:% X", msg.Code,bs)
+    return bs
 }
 
 /////////////////////////////////////////////////////////////////////////////////

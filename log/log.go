@@ -1,13 +1,11 @@
 /*=============================================================================
 #     FileName: log.go
-#         Desc: logger
-#       Author: sunminghong
-#        Email: allen.fantasy@gmail.com
-#     HomePage: http://weibo.com/5d13
-#      Version: 0.0.1
-#   LastChange: 2013-05-23 18:01:57
+#       Author: sunminghong, allen.fantasy@gmail.com, http://weibo.com/5d13
+#         Team: http://1201.us
+#   LastChange: 2013-11-19 18:36:07
 #      History:
 =============================================================================*/
+
 package log
 
 import (
@@ -52,50 +50,54 @@ func LGSetLogger(l *log.Logger) {
     LetsLogger = l
 }
 
+func sout(t string,v ...interface{}) {
+    s,ok := v[0].(string)
+    if !ok || strings.Index(s,"%") == -1 {
+        LetsLogger.Printf("["+ t +"] %v\n", v)
+    } else {
+        LetsLogger.Printf("["+ t +"] " + s + "\n", v[1:]...)
+    }
+}
+
 // LGTrace logs a message at trace level.
 func LGTrace(v ...interface{}) {
     if level <= LGLevelLGTrace {
-        s := v[0].(string)
-        if strings.Index(s,"%") == -1 {
-            LetsLogger.Printf("[T] %v\n", v)
-        } else {
-            LetsLogger.Printf("[T] " + s + "\n", v[1:]...)
-        }
+        sout("T",v...)
     }
 }
 
 // Debug logs a message at debug level.
 func LGDebug(v ...interface{}) {
     if level <= LGLevelDebug {
-        LetsLogger.Printf("[D] %v\n", v)
+        sout("D",v...)
     }
 }
 
 // Info logs a message at info level.
 func LGInfo(v ...interface{}) {
     if level <= LGLevelInfo {
-        LetsLogger.Printf("[I] %v\n", v)
+        sout("I",v...)
     }
 }
 
 // Warning logs a message at warning level.
 func LGWarn(v ...interface{}) {
     if level <= LGLevelWarning {
-        LetsLogger.Printf("[W] %v\n", v)
+        sout("W",v...)
     }
 }
 
 // Error logs a message at error level.
 func LGError(v ...interface{}) {
     if level <= LGLevelError {
-        LetsLogger.Printf("[E] %v\n", v)
+        sout("E",v...)
     }
 }
 
 // Critical logs a message at critical level.
 func LGCritical(v ...interface{}) {
     if level <= LGLevelCritical {
-        LetsLogger.Printf("[C] %v\n", v)
+        sout("C",v...)
     }
 }
 

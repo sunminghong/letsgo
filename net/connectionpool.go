@@ -47,7 +47,6 @@ func LGNewConnectionPool(newclient LGNewConnectionFunc, datagram LGIDatagram ) *
     cp.Quit = make(chan bool)
     cp.read_buffer_size = 1024
 
-    //创建一个管道 chan map 需要make creates slices, maps, and channels only
     cp.broadcastChan = make(chan *LGDataPacket,1)
     go cp.broadcastHandler(cp.broadcastChan)
 

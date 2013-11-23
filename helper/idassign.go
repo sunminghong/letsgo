@@ -1,13 +1,11 @@
 /*=============================================================================
 #     FileName: idassign.go
-#         Desc: class with unix's process id alloc
-#       Author: sunminghong
-#        Email: allen.fantasy@gmail.com
-#     HomePage: http://weibo.com/5d13
-#      Version: 0.0.1
-#   LastChange: 2013-06-05 10:46:10
+#       Author: sunminghong, allen.fantasy@gmail.com, http://weibo.com/5d13
+#         Team: http://1201.us
+#   LastChange: 2013-11-21 15:51:44
 #      History:
 =============================================================================*/
+
 package helper
 
 import (
@@ -207,3 +205,4 @@ func (ia *LGIDAssign) getFree() int {
 
     return offset
 }
+

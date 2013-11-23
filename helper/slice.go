@@ -64,3 +64,34 @@ func (self LGSliceInt) Eq(slice []int) bool {
 
 }
 
+type LGISearch interface {
+    Len() int
+    //if eq return 0
+    //if gt return 1
+    //if lt return -1
+    Compare(index,val int) int
+}
+
+//General binary search
+
+func LGSliceSearch(objs LGISearch,key int) int {
+    high := objs.Len() -1
+    low := 0
+    for low <= high {
+        mid := (low + high) >> 1
+        r := objs.Compare(mid,key)
+        switch r {
+            case 0:
+                return mid
+            case -1:
+                low = mid + 1
+            case 1:
+                high = mid - 1
+            }
+    }
+
+    return -1
+}
+
+//func LGSliceDelete(
+
