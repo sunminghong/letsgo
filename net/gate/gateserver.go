@@ -16,7 +16,7 @@ import (
     //"os"
     "fmt"
     "github.com/sbinet/liner"
-    goconf "github.com/sunminghong/goconf"
+    iniconfig "github.com/sunminghong/iniconfig"
     . "github.com/sunminghong/letsgo/helper"
     . "github.com/sunminghong/letsgo/log"
     . "github.com/sunminghong/letsgo/net"
@@ -67,13 +67,20 @@ func (gs *LGGateServer) InitFromConfig(
     newPlayerConnection LGNewConnectionFunc, datagram LGIDatagram,
     newGridConnection LGNewConnectionFunc, dispatcher LGIDispatcher) {
 
-    c, err := goconf.ReadConfigFile(configfile)
+    c, err := iniconfig.ReadConfigFile(configfile)
     if err != nil {
         LGError(err.Error())
         return
     }
 
     section := "Default"
+
+    logconf, err := c.GetString(section,"logConfigFile")
+    if err != nil {
+        logconf = ""
+    }
+    LGSetLogger(&logconf)
+
     //start grid service
     name, err := c.GetString(section, "name")
     if err != nil {
@@ -104,12 +111,6 @@ func (gs *LGGateServer) InitFromConfig(
     } else {
         datagram.SetEndian(LGLittleEndian)
     }
-
-    loglevel, err := c.GetInt(section, "logLevel")
-    if err != nil {
-        loglevel = 0
-    }
-    LGSetLevel(loglevel)
 
     autoDuration, err := c.GetInt(section, "autoReconnectDuration")
     if err != nil {
@@ -173,7 +174,7 @@ func (gs *LGGateServer) AddAutoReConnect(name string) {
 func (gs *LGGateServer) autoReConnectGrid(interval *LGInterval) {
     cou := 0
     for name, v := range gs.gridConfs {
-        LGTrace("ps is name:", name, v.state)
+        LGTrace("autoReConnectGrid ps is name:", name, v.state)
 
         //c := gs.Grids.Connections.GetByName(name)
         //if c != nil {
@@ -199,7 +200,7 @@ func (gs *LGGateServer) autoReConnectGrid(interval *LGInterval) {
 
 func (gs *LGGateServer) ReConnectGrids() {
     for name, v := range gs.gridConfs {
-        LGTrace("ps is name:", name, v.state)
+        LGTrace("ReConnectGrids ps is name:", name, v.state)
 
         c := gs.Grids.Connections.GetByName(name)
         if c != nil {
@@ -215,7 +216,7 @@ func (gs *LGGateServer) ReConnectGrids() {
 }
 
 func (gs *LGGateServer) ConnectGrids(configfile *string) {
-    c, err := goconf.ReadConfigFile(*configfile)
+    c, err := iniconfig.ReadConfigFile(*configfile)
     if err != nil {
         LGError(err.Error())
         return
@@ -235,7 +236,7 @@ func (gs *LGGateServer) ConnectGrids(configfile *string) {
 
         gname, err := c.GetString(section, "name")
         if err != nil {
-            //if err.Reason == goconf.SectionNotFound {
+            //if err.Reason == iniconfig.SectionNotFound {
             //    break
             //} else {
             LGError(err.Error())

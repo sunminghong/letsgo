@@ -15,7 +15,7 @@ import (
     //    "strconv"
     //"time"
     //"net"
-    //goconf "github.com/hgfischer/goconf"
+    //iniconfig "github.com/hgfischer/iniconfig"
     . "github.com/sunminghong/letsgo/helper"
     . "github.com/sunminghong/letsgo/log"
     . "github.com/sunminghong/letsgo/net"

@@ -266,10 +266,9 @@ func (msg *LGMessageWriter) ToBytes() []byte {
     msg.metabuf.Endianer.PutUint16(heads, uint16(msg.Code))
     heads[2] = msg.Ver
 
-    LGTrace("code:%d,wind:%d",msg.Code, msg.wind)
+    //LGTrace("code:%d,wind:%d",msg.Code, msg.wind)
     heads[3] = byte(msg.wind)
-    LGTrace("code:%d,metabuf:% X", msg.Code,msg.metabuf.Bytes())
-    // msg.metabuf.Write(msg.buf.Bytes())
+    //LGTrace("code:%d,metabuf:% X", msg.Code,msg.metabuf.Bytes())
 
     bs := make([]byte,msg.metabuf.Len()+msg.buf.Len())
     copy(bs,msg.metabuf.Bytes())
@@ -277,7 +276,7 @@ func (msg *LGMessageWriter) ToBytes() []byte {
     msg.alreadyToBytes = true
     msg.outBuffer = bs
 
-    LGTrace("code:%d,metabuf:% X", msg.Code,bs)
+    //LGTrace("code:%d,metabuf:% X", msg.Code,bs)
     return bs
 }
 

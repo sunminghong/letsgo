@@ -80,12 +80,12 @@ func (c *LGGridConnection) ProcessDPs(dps []*LGDataPacket) {
 
         switch dp.Type {
         case LGDATAPACKET_TYPE_DELAY:
-            LGDebug("msg.code(delay):",int(endianer.Uint16(dp.Data)),len(dp.Data))
+            LGTrace("ProcessDps(delay) code:%d,len(dp.data):%d",int(endianer.Uint16(dp.Data)),len(dp.Data))
             msg := LGNewMessageReader(dp.Data,stream.Endian)
             c.Process(msg,c,dp.FromCid)
 
         case LGDATAPACKET_TYPE_GENERAL:
-            LGTrace("msg.code:",int(endianer.Uint16(dp.Data)),len(dp.Data))
+            LGTrace("ProcessDps(general) code:%d,len(dp.data):%d",int(endianer.Uint16(dp.Data)),len(dp.Data))
             msg := LGNewMessageReader(dp.Data,stream.Endian)
             c.Process(msg,c,0)
 
@@ -121,7 +121,7 @@ func (c *LGGridConnection) SendMessage(fromCid int,msg LGIMessageWriter) {
     }
 
     LGDebug("sendmessage:code:%d",msg.GetCode())
-    LGTrace("sendmessage:code:%d, data:% X",msg.GetCode(),b)
+    //LGTrace("sendmessage:code:%d, data:% X",msg.GetCode(),b)
 
     if fromCid == 0 {
         dp.Type = LGDATAPACKET_TYPE_GENERAL

@@ -13,7 +13,6 @@ package net
 import (
     "encoding/binary"
     . "github.com/sunminghong/letsgo/helper"
-    . "github.com/sunminghong/letsgo/log"
 )
 
 const (
@@ -95,7 +94,7 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
             dpSize = c.DPSize
             dataType = c.DataType
         } else {
-            LGTrace("ilen,pos:%d,%d",ilen,pos)
+            //LGTrace("ilen,pos:%d,%d",ilen,pos)
             if ilen-pos < 7 {
                 return
             }
@@ -174,7 +173,6 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
 //对数据进行封包
 func (d *LGDatagram) Pack(dp *LGDataPacket) []byte {
     ilen := len(dp.Data)
-    //if dp.Type == LGDATAPACKET_TYPE_DELAY || dp.Type == LGDATAPACKET_TYPE_BROADCAST || dp.Type == LGDATAPACKET_TYPE_CLOSE || dp.Type == LGDATAPACKET_TYPE_CLOSED 
     if dp.Type & 1 == 1 {
         ilen += 4
     }
@@ -190,7 +188,6 @@ func (d *LGDatagram) Pack(dp *LGDataPacket) []byte {
 
     copy(buf[7:], dp.Data)
 
-    //if dp.Type == LGDATAPACKET_TYPE_DELAY || dp.Type == LGDATAPACKET_TYPE_BROADCAST || dp.Type == LGDATAPACKET_TYPE_CLOSE || dp.Type == LGDATAPACKET_TYPE_CLOSED 
     if dp.Type & 1 == 1 {
         d.Endianer.PutUint32(buf[3+ilen:], uint32(dp.FromCid))
     }

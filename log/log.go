@@ -8,112 +8,57 @@
 
 package log
 
-import (
-    "log"
-    "os"
-    "strings"
-)
+import "github.com/sunminghong/freelog"
 
 //--------------------
 // LOG LEVEL
 //--------------------
 
+/*
 // Log levels to control the logging output.
 const (
-    LGLevelLGTrace = iota
-    LGLevelDebug
-    LGLevelInfo
-    LGLevelWarning
-    LGLevelError
-    LGLevelCritical
-)
+	LGLevelAll = iota
+	LGLevelTrace
+	LGLevelDebug
+	LGLevelInfo
+	LGLevelWarn
+	LGLevelError
+    LGLevelPanic
+	LGLevelFatal
+	LGLevelOff
+)*/
 
-// logLGLevel controls the global log level used by the logger.
-var level = LGLevelLGTrace
-
-// LogLGLevel returns the global log level and can be used in
-// own implementations of the logger interface.
-func LGGetLevel() int {
-    return level
+func LGSetLogger(inifile *string) {
+    freelog.CallDepth = 3
+    freelog.Start(inifile)
 }
 
-// SetLogLGLevel sets the global log level used by the simple
-// logger.
-func LGSetLevel(l int) {
-    level = l
-}
-// logger references the used application logger.
-var LetsLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lmicroseconds)
-
-// SetLogger sets a new logger.
-func LGSetLogger(l *log.Logger) {
-    LetsLogger = l
-}
-
-func sout(t string,v ...interface{}) {
-    s,ok := v[0].(string)
-    if !ok || strings.Index(s,"%") == -1 {
-        LetsLogger.Printf("["+ t +"] %v\n", v)
-    } else {
-        LetsLogger.Printf("["+ t +"] " + s + "\n", v[1:]...)
-    }
-}
-
-// LGTrace logs a message at trace level.
 func LGTrace(v ...interface{}) {
-    if level <= LGLevelLGTrace {
-        sout("T",v...)
-    }
+    freelog.Trace(v...)
 }
 
-// Debug logs a message at debug level.
 func LGDebug(v ...interface{}) {
-    if level <= LGLevelDebug {
-        sout("D",v...)
-    }
+    freelog.Debug(v...)
 }
 
-// Info logs a message at info level.
 func LGInfo(v ...interface{}) {
-    if level <= LGLevelInfo {
-        sout("I",v...)
-    }
+    freelog.Info(v...)
 }
 
-// Warning logs a message at warning level.
 func LGWarn(v ...interface{}) {
-    if level <= LGLevelWarning {
-        sout("W",v...)
-    }
+    freelog.Warn(v...)
 }
 
 // Error logs a message at error level.
 func LGError(v ...interface{}) {
-    if level <= LGLevelError {
-        sout("E",v...)
-    }
+    freelog.Error(v...)
 }
 
 // Critical logs a message at critical level.
-func LGCritical(v ...interface{}) {
-    if level <= LGLevelCritical {
-        sout("C",v...)
-    }
+func LGPanic(v ...interface{}) {
+    freelog.Panic(v...)
 }
 
-/*
-package main
-
-import (
-       "runtime"
-       "fmt"
-)
-
-func main() {
-        funcName, file, line, ok := runtime.Caller(0)
-        if ok {
-            fmt.Println("Func Name=" + runtime.FuncForPC(funcName).Name())
-            fmt.Printf("file: %s    line=%d\n", file, line)
-        }
+func LGPrintPanicStack() {
+    freelog.PrintPanicStack()
 }
-*/

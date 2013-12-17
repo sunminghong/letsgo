@@ -12,7 +12,7 @@ package gate
 
 import (
     "net"
-    goconf "github.com/sunminghong/goconf"
+    iniconfig "github.com/sunminghong/iniconfig"
     . "github.com/sunminghong/letsgo/net"
     . "github.com/sunminghong/letsgo/helper"
     . "github.com/sunminghong/letsgo/log"
@@ -33,13 +33,21 @@ func (gs *LGGridServer) InitFromConfig (
     configfile string, newGridConnection LGNewConnectionFunc,
     datagram LGIDatagram) {
 
-    c, err := goconf.ReadConfigFile(configfile)
+    c, err := iniconfig.ReadConfigFile(configfile)
     if err != nil {
         LGError(err.Error())
         return
     }
 
     section := "Default"
+
+    logconf, err := c.GetString(section,"logConfigFile")
+    if err != nil {
+        logconf = ""
+    }
+    LGSetLogger(&logconf)
+
+
     //start grid service
     name, err := c.GetString(section,"name")
     if err != nil {
@@ -76,11 +84,19 @@ func (gs *LGGridServer) InitFromConfig (
         datagram.SetEndian(LGLittleEndian)
     }
 
-    loglevel, err := c.GetInt(section,"logLevel")
+    profile, err := c.GetInt(section,"profile")
     if err != nil {
-        loglevel = 0
+        profile = 0
     }
-    LGSetLevel(loglevel)
+
+    if profile > 0 {
+		LGSetMemProfileRate(1)
+		defer func() {
+			LGGC()
+			LGDumpHeap()
+			LGPrintGCSummary()
+		}()
+    }
 
     gs.Init( name,serverid,allowDirectConnection,host,maxConnections,
         newGridConnection,datagram)

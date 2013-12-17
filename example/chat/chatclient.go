@@ -1,13 +1,11 @@
 /*=============================================================================
 #     FileName: chatclient.go
-#         Desc: chat client
-#       Author: sunminghong
-#        Email: allen.fantasy@gmail.com
-#     HomePage: http://weibo.com/5d13
-#      Version: 0.0.1
-#   LastChange: 2013-05-13 17:48:50
+#       Author: sunminghong, allen.fantasy@gmail.com, http://weibo.com/5d13
+#         Team: http://1201.us
+#   LastChange: 2013-12-10 11:34:28
 #      History:
 =============================================================================*/
+
 package main
 
 import (

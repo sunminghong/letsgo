@@ -238,7 +238,8 @@ func (s *LGServer) transportSender(transport *LGTransport, client LGIConnection)
             transport.Conn.Write(data)
 
         case dp := <-transport.Outgoing:
-            LGTrace("transportSender Outgoing:type=%d,len=%d,% X",dp.Type, len(dp.Data),dp.Data)
+            //LGTrace("transportSender Outgoing:type=%d,len=%d,% X",dp.Type, len(dp.Data),dp.Data)
+            LGTrace("transportSender Outgoing:type=%d,len=%d",dp.Type, len(dp.Data))
             transport.PackWrite(dp)
 
         case <-transport.Quit:
