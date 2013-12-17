@@ -85,6 +85,16 @@ func (c *LGGateToGridConnection) ProcessDPs(dps []*LGDataPacket) {
             dp.Type = LGDATAPACKET_TYPE_GENERAL
             cli.GetTransport().SendDP(dp)
 
+        case LGDATAPACKET_TYPE_FORWARD:
+            LGDebug("dp.Type = forward msg:% X",dp.Data)
+
+            if len(dp.Data) > 2 {
+                code := int(cli.GetTransport().Stream.Endianer.Uint16(dp.Data))
+                c.Gate.Dispatch(code, dp)
+            } else {
+                LGError("forward msg has no code")
+            }
+
         case LGDATAPACKET_TYPE_DELAY_DATAS_COMPRESS:
             LGTrace("delay compress datas:fromcid:%d,\n% X",dp.FromCid,dp.Data)
 

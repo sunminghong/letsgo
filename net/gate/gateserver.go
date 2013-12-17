@@ -12,15 +12,14 @@ import (
     "net"
     "strconv"
     "time"
-    //"bufio"
-    //"os"
     "fmt"
+    "strings"
+
     "github.com/sbinet/liner"
     iniconfig "github.com/sunminghong/iniconfig"
     . "github.com/sunminghong/letsgo/helper"
     . "github.com/sunminghong/letsgo/log"
     . "github.com/sunminghong/letsgo/net"
-    "strings"
 )
 
 //Dispatcher
@@ -295,6 +294,33 @@ func (gs *LGGateServer) ConnectGrid(
     LGInfo("be connected to grid ", name)
     return true
 }
+
+func (gs *LGGateServer) Dispatch(code int, dp *LGDataPacket) {
+    LGTrace("gs's dispatch is run")
+
+    //dispatch to one grid
+    gridID,ok := gs.Dispatcher.Dispatch(code)
+    if ok {
+        LGTrace("dispatch to gridID",gridID)
+        gridConnection := gs.Grids.Connections.Get(gridID)
+        if gridConnection != nil {
+
+            buf := make([]byte,len(dp.Data))
+            copy(buf,dp.Data)
+            dp.Data = buf
+
+            gridConnection.GetTransport().SendDP(dp)
+
+            //todo: 当grid超时处理是需要返回原协议失败
+        } else {
+            //todo: 是否需要缓存没有处理的数据包
+            LGError("分配的grid 服务器不存在:",code)
+        }
+    } else {
+        LGError("messageCode has not grid process:",code)
+    }
+}
+
 
 func tabCompleter(line string) []string {
     opts := make([]string, 0)

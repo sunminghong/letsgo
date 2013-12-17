@@ -24,6 +24,8 @@ const (
     LGDATAPACKET_TYPE_DELAY_DATAS = 14 + 1
     LGDATAPACKET_TYPE_DELAY_DATAS_COMPRESS = 16 + 1
     LGDATAPACKET_TYPE_DATAS_COMPRESS = 18 //to player client connection
+
+    LGDATAPACKET_TYPE_FORWARD = 20 + 1 //forward msg to other grid server 
 )
 
 //define a struct or class of rec transport connection

@@ -29,6 +29,10 @@ func (self *LGPlayerConnection) SendBroadcast(msg LGIMessageWriter) {
 	self.LGGridConnection.SendBroadcast(self.FromCid, msg)
 }
 
+func (self *LGPlayerConnection) ForwardMessage(msg LGIMessageWriter) {
+	self.LGGridConnection.ForwardMessage(self.FromCid, msg)
+}
+
 func LGGetPlayerConnection(c *LGGridConnection, gateId, fromCid, cid int) *LGPlayerConnection {
 
 	newc := LGGetConnection(c, gateId, cid)

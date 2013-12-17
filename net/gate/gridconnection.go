@@ -112,6 +112,21 @@ func (c *LGGridConnection) ProcessDPs(dps []*LGDataPacket) {
     }
 }
 
+func (c *LGGridConnection) ForwardMessage(fromCid int,msg LGIMessageWriter) {
+    b := msg.ToBytes()
+
+    dp := &LGDataPacket{
+        FromCid: fromCid,
+        Data: b,
+        Type:LGDATAPACKET_TYPE_FORWARD,
+    }
+
+    LGDebug("forwardmessage:code:%d",msg.GetCode())
+    //LGTrace("sendmessage:code:%d, data:% X",msg.GetCode(),b)
+
+    c.Transport.SendDP(dp)
+}
+
 func (c *LGGridConnection) SendMessage(fromCid int,msg LGIMessageWriter) {
     b := msg.ToBytes()
 
