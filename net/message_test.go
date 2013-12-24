@@ -16,7 +16,7 @@ import (
     . "github.com/sunminghong/letsgo/helper"
 )
 
-func LGTest_MessageWrite(t *testing.T) {
+func Test_MessageWrite(t *testing.T) {
     msgw := LGNewMessageWriter(LGBigEndian)
     a1 := 989887834
     a2 := 243
@@ -40,9 +40,14 @@ func LGTest_MessageWrite(t *testing.T) {
     for i:=0;i<5;i++ {
         b4.WriteStartTag()
 
-        b4.WriteUint(i,0)
-        b4.WriteUint(i+1,0)
-        b4.WriteUint(i+2,0)
+        //b4.WriteUint(i,0)
+        //b4.WriteUint(i+1,0)
+        //b4.WriteUint(i+2,0)
+        b4.WriteUints(
+            i,
+            i+1,
+            i+2,
+        )
         b4.WriteString(string(i+3),0)
 
         b4.WriteEndTag()
@@ -98,31 +103,31 @@ func LGTest_MessageWrite(t *testing.T) {
     if v7!= a7 {
         t.Error("item a7 ReadInt is wrong:",v7,a7)
     }
-    _ = msg.ReadUint() 
-    _ = msg.ReadUint() 
+    _ = msg.ReadUint()
+    _ = msg.ReadUint()
 
-    vv1 := msg.ReadUint() 
+    vv1 := msg.ReadUint()
     if vv1!= int(b1) {
         t.Error("item a1 ReadInt is wrong:",vv1,b1)
     }
 
-    vv2 := msg.ReadUint() 
+    vv2 := msg.ReadUint()
     if vv2!= int(b2) {
         t.Error("item a1 ReadInt is wrong:",vv2,b2)
     }
 
-    vv3 := msg.ReadString() 
+    vv3 := msg.ReadString()
     if vv3!= b3 {
         t.Error("item a1 ReadInt is wrong:",vv3,b3)
     }
 
     fmt.Println("------------------------------------------------------")
-    vv4 := msg.ReadList() 
-    
+    vv4 := msg.ReadList()
+
     if vv4.Length != 5 {
         t.Error("item list Readlist length is wrong:",vv4.Length,5)
     }
-    
+
     for i:=0;i<5;i++ {
         vv4.ReadStartTag()
         x := vv4.ReadUint()
@@ -145,6 +150,7 @@ func LGTest_MessageWrite(t *testing.T) {
     }
 
 
+    vv1 = msg.ReadUint()
     if vv1!= int(c1) {
         t.Error("item a1 ReadInt is wrong:",vv1,c1)
     }

@@ -90,12 +90,12 @@ func (gs *LGGridServer) InitFromConfig (
     }
 
     if profile > 0 {
-		LGSetMemProfileRate(1)
-		defer func() {
-			LGGC()
-			LGDumpHeap()
-			LGPrintGCSummary()
-		}()
+		//LGSetMemProfileRate(1)
+		//defer func() {
+		//    LGGC()
+		//    LGDumpHeap()
+		//    LGPrintGCSummary()
+		//}()
     }
 
     gs.Init( name,serverid,allowDirectConnection,host,maxConnections,

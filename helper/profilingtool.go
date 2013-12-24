@@ -12,6 +12,7 @@
 */
 package helper
 
+/*
 import (
         "fmt"
         "io"
@@ -241,3 +242,4 @@ func toS(d time.Duration) string {
                 }
         }
 }
+*/

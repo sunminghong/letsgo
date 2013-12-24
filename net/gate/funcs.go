@@ -54,26 +54,26 @@ func LGGetConnection(c *LGGridConnection, gateid, cid int) *LGGridConnection {
     return nil
 }
 
-func LGDisconnect(c *LGGridConnection, gateid, fromCid, cid int, prefunc func(disconnect LGIConnection)) {
+func LGDisconnect(c *LGGridConnection, gateid, fromCid, cid int, prefun func(disconnect LGIConnection)) {
     LGTrace("Disconnect is called:",gateid,fromCid,cid)
 
     dgc := LGGetConnection(c,gateid,cid)
     if dgc == nil {
         LGTrace("disconnect is lost:gate client is lost")
 
-        prefunc(nil)
+        prefun(nil)
         return
     }
 
     if fromCid == 0 {
-        prefunc(dgc)
+        prefun(dgc)
 
         time.Sleep(200 * time.Millisecond)
         dgc.Close()
         return
     }
 
-    prefunc(dgc)
+    prefun(dgc)
     //this is connection is conneted by a gate
 
     //wait one second then send a command to gate to close client player connection
