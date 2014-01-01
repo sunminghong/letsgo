@@ -1,13 +1,11 @@
 /*=============================================================================
 #     FileName: init.go
-#         Desc: client init
-#       Author: sunminghong
-#        Email: allen.fantasy@gmail.com
-#     HomePage: http://weibo.com/5d13
-#      Version: 0.0.1
-#   LastChange: 2013-06-27 12:07:21
+#       Author: sunminghong, allen.fantasy@gmail.com, http://weibo.com/5d13
+#         Team: http://1201.us
+#   LastChange: 2013-12-24 18:31:40
 #      History:
 =============================================================================*/
+
 package protos
 
 import (

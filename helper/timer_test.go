@@ -22,7 +22,8 @@ func Test_time(t *testing.T) {
 
     t3 := time.Now()
 
-    t4 := time.Date(2013,8,1,0,0,0,0,time.Local)
+    //2013-10-01 00:00:00
+    t4 := time.Date(2013,10,1,0,0,0,0,time.Local)
 
     t5 := int(t3.Sub(t4).Seconds())
     t6 := LGNetTimestamp(t3)
@@ -52,7 +53,7 @@ func Test_time(t *testing.T) {
 
     d1 := "2013-07-13"
     t10 := LGTodayUnix(t7)
-    t11,err := LGStrttime(d1,"2013-02-01")
+    t11,err := LGStrttime(d1,"2006-01-02")
     if err !=nil {
         t.Error("LGStrttime is error:",err)
     }
@@ -67,8 +68,8 @@ func Test_time(t *testing.T) {
     }
 
     t12 = LGToday()
-    if t12 != 20130815 {
-        t.Error("LGToday is error:",t12,20130815)
+    if t12 != 20140101 {
+        t.Error("LGToday is error:",t12,20140101)
     }
 
 
@@ -78,7 +79,7 @@ func Test_time(t *testing.T) {
     }
 
     t12 = LGYesterday()
-    if t12 != 20130814 {
+    if t12 != 20131231 {
         t.Error("LGToday is error:",t12,20130814)
     }
 

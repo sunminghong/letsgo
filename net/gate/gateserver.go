@@ -282,7 +282,7 @@ func (gs *LGGateServer) ConnectGrid(
     //if Pool don't find it ,then that is no success!
     c := pool.Connections.GetByName(name)
     if c == nil {
-        LGError(host + " can't connect")
+        LGWarn(host + " can't connect")
         return false
     }
 
@@ -311,7 +311,7 @@ func (gs *LGGateServer) Dispatch(code int, dp *LGDataPacket) {
 
             gridConnection.GetTransport().SendDP(dp)
 
-            //todo: 当grid超时处理是需要返回原协议失败
+            //todo: 当grid超时处理时需要返回原协议失败
         } else {
             //todo: 是否需要缓存没有处理的数据包
             LGError("分配的grid 服务器不存在:",code)

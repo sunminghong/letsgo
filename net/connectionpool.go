@@ -1,13 +1,12 @@
 /*=============================================================================
-#     FileName: clientpool.go
-#         Desc: server base 
-#       Author: sunminghong
-#        Email: allen.fantasy@gmail.com
-#     HomePage: http://weibo.com/5d13
-#      Version: 0.0.1
-#   LastChange: 2013-05-22 14:19:12
+#     FileName: connectionpool.go
+#       Author: sunminghong, allen.fantasy@gmail.com, http://weibo.com/5d13
+#         Team: http://1201.us
+#   LastChange: 2013-12-25 14:22:33
 #      History:
 =============================================================================*/
+
+
 package net
 
 import (
@@ -63,10 +62,10 @@ func (cp *LGConnectionPool) Start(name string,addr string,datagram LGIDatagram) 
 
         //mesg := "dialing"
         if err != nil {
-            //Log("CLIENT: ERROR: ", mesg)
+            LGWarn("net.Dial to %s(%s):%q",name,addr, err)
             return
         } else {
-            //Log("Ok: ", mesg)
+            LGInfo("pool dial to %s(%s) is ok. ", name,addr)
         }
         defer connection.Close()
         //Log("main(): connected ")
@@ -85,7 +84,7 @@ func (cp *LGConnectionPool) Start(name string,addr string,datagram LGIDatagram) 
         go cp.transportReader(transport, client)
 
 
-        time.Sleep(2)
+        time.Sleep(time.Second)
 
         <-transport.Quit
     //}()

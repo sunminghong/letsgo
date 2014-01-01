@@ -1,13 +1,11 @@
 /*=============================================================================
-#     FileName: idassign.go
-#         Desc: class with unix's process id alloc
-#       Author: sunminghong
-#        Email: allen.fantasy@gmail.com
-#     HomePage: http://weibo.com/5d13
-#      Version: 0.0.1
-#   LastChange: 2013-06-05 10:46:10
+#     FileName: map.go
+#       Author: sunminghong, allen.fantasy@gmail.com, http://weibo.com/5d13
+#         Team: http://1201.us
+#   LastChange: 2014-01-01 19:12:23
 #      History:
 =============================================================================*/
+
 package helper
 
 import (
@@ -74,3 +72,4 @@ func (m *LGMap) Clear() {
 
     m.bm = make(map[int]interface{})
 }
+

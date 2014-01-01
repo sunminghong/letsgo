@@ -212,7 +212,7 @@ func (s *LGServer) transportReader(transport *LGTransport, client LGIConnection)
             transport.Closed()
             transport.Conn.Close()
             s.RemoveConnection(transport.Cid)
-            LGError(err)
+            //LGError(err)
             break
         }
 
