@@ -13,7 +13,7 @@ func Test_ParseSimpleXml(t *testing.T) {
     xmlData := ParseSimpleXml(text)
 
     for xmlData,val := range xmlData {
-        fmt.Println(xmlData,string(val))
+        fmt.Println(xmlData,val,string(val))
     }
 
     if string(xmlData["dir1"]) != "YHQ" {
@@ -37,15 +37,15 @@ func Test_ParseSimpleXml(t *testing.T) {
         t.Errorf("xmlData body's value not eq '...'",xmlData["type"])
     }
 
+    s = "[INFO] <asdfasfasfasfd></asdf>sdfjasdlfjhasdfkhjasdlfkhasdlfkhaslidfhassdkfahskfhasdkfhasdfh看我忘了我看完了看完我看完我看完我看完我<asdfas>2014-01-01 14</asdfas>:50:34 _pqd: 0.6[INFO] <asdfas>2014-01-01 14</asdfas>:50:34 _pqd: 0.6"
 
-    text = []byte(`<dir1>YhQ</dir1><dir2>1201.us</dir2><dir3>local18</dir3><type>fightserver</type><body>[INFO] <asdfas>2014-01-01 14</asdfas>:50:34 _pqd: 0.6</body>`)
+    text = []byte(`<body>`+s+`</body><dir1>YhQ</dir1><dir2>1201.us</dir2><dir3>local18</dir3><type>fightserver</type>`)
 
-    s = "[INFO] <asdfas>2014-01-01 14</asdfas>:50:34 _pqd: 0.6"
 
     xmlData = ParseSimpleXml(text)
 
     for xmlData,val := range xmlData {
-        fmt.Println(xmlData,string(val))
+        fmt.Println(xmlData,val,string(val))
     }
 
     if string(xmlData["dir1"]) != "YhQ" {
@@ -64,10 +64,10 @@ func Test_ParseSimpleXml(t *testing.T) {
         t.Error("xmlData type's value not eq 'fightserver'",string(xmlData["type"]))
     }
 
+    fmt.Println("body", []byte(s))
     if string(xmlData["body"]) != s {
         t.Error("xmlData body's value not eq '...'","\nbody "+string(xmlData["body"]))
     }
-
 
     //fmt.Println(xmlData)
 }

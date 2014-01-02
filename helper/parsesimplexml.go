@@ -15,7 +15,7 @@ func ParseSimpleXml(xmlBytes []byte) map[string][]byte {
     var lastData []byte
 
     var valBuf [2048]byte
-    tokenBuf := [30]byte{}
+    tokenBuf := [50]byte{}
     flag := 0
     j := 0
 
@@ -84,14 +84,15 @@ func ParseSimpleXml(xmlBytes []byte) map[string][]byte {
                 }
 
                 //if beginToken != endToken ,then restore tokenClose to valBuf
+                oldj := j
                 j = 0
                 valBuf[j] = '<'
                 j ++
                 valBuf[j] = '/'
                 j ++
 
-                for _,bb := range tokenBuf {
-                    valBuf[j] = bb
+                for i:=0;i< oldj;i ++ {
+                    valBuf[j] = tokenBuf[i]
                     j ++
                 }
                 valBuf[j] = '>'

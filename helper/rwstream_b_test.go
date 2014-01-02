@@ -17,12 +17,12 @@ import (
     "testing"
 )
 
-func LGBenchmark_NewLGRWStream(t *testing.B) {
+func Benchmark_NewLGRWStream(t *testing.B) {
     bys := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
     for i := 0; i < t.N; i++ {
         b := LGNewRWStream(bys, LGBigEndian)
-        if b.Endian == LGBigEndian{
+        if b.Endian != LGBigEndian{
             t.Error("NewLGRWStream error:BigEndian is error", b.Endian)
         }
 
@@ -34,7 +34,7 @@ func LGBenchmark_NewLGRWStream(t *testing.B) {
     }
 }
 
-func LGBenchmark_RW(t *testing.B) {
+func Benchmark_RW(t *testing.B) {
     bytes := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
     for i := 0; i < t.N; i++ {

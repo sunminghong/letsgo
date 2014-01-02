@@ -67,10 +67,10 @@ func Test_time(t *testing.T) {
         t.Error("LGToday is error:",t12,20130713)
     }
 
-    t12 = LGToday()
-    if t12 != 20140101 {
-        t.Error("LGToday is error:",t12,20140101)
-    }
+    //t12 = LGToday()
+    //if t12 != 20140101 {
+    //    t.Error("LGToday is error:",t12,20140101)
+    //}
 
 
     t12 = LGYesterday(t7)
@@ -78,9 +78,9 @@ func Test_time(t *testing.T) {
         t.Error("LGToday is error:",t12,20130712)
     }
 
-    t12 = LGYesterday()
-    if t12 != 20131231 {
-        t.Error("LGToday is error:",t12,20130814)
-    }
+    //t12 = LGYesterday()
+    //if t12 != 20131231 {
+    //    t.Error("LGToday is error:",t12,20130814)
+    //}
 
 }
