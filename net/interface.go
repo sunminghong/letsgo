@@ -107,7 +107,7 @@ type LGIMessageWriter interface {
     WriteInts(x ...int)
 
     WriteString(x string, wind int)
-    //WriteList(list *MessageListWriter, wind int)
+    WriteList(list *LGMessageListWriter, wind int)
 
     //对数据进行封包
     ToBytes() []byte
@@ -122,7 +122,7 @@ type LGIMessageReader interface {
     ReadUint32() int
     ReadUint16() int
     ReadString() string
-    //ReadList() *MessageListReader
+    ReadList() *LGMessageListReader
 }
 
 type LGIIDAssign interface {

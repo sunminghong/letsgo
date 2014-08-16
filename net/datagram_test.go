@@ -13,6 +13,7 @@ package net
 import (
     //"encoding/binary"
     "testing"
+    "fmt"
     "bytes"
     . "github.com/sunminghong/letsgo/helper"
 )
@@ -26,7 +27,7 @@ type LGIDatagram interface {
 }
 */
 
-func LGTest_Pack(t *testing.T) {
+func Test_Pack(t *testing.T) {
     datagram := LGNewDatagram(LGBigEndian)
 
     data := []byte("1234567890")
@@ -39,6 +40,16 @@ func LGTest_Pack(t *testing.T) {
     if !bytes.Equal(_data[:],data2) {
         t.Error("pack return is equal:",data2)
     }
+
+
+    data1 := []byte{0xA5,0x06,0x00,0x02,0x00,0x09,0x02,0x07,0x00,0x00,0x00,0x73,0x65,0x6E,0x64,0x73,0x74,0x72}
+
+    dp1 := &LGDataPacket{Type:0,Data:data1}
+
+    datagram = LGNewDatagram(LGLittleEndian)
+    data3 := datagram.Pack(dp1)
+
+    fmt.Printf("datapack==%d",data3)
 
 }
 

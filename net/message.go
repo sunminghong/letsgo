@@ -156,7 +156,7 @@ func (msg *LGMessageWriter) WriteUints(xs ...int) {
 func (msg *LGMessageWriter) WriteInt(x int, wind int) {
     msg.preWrite(wind)
 
-    msg.buf.WriteInt(int(x))
+    msg.buf.WriteInt(x)
     msg.writeMeta(TY_INT)
     msg.wind++
     msg.maxInd++
@@ -166,11 +166,20 @@ func (msg *LGMessageWriter) WriteInts(xs ...int) {
     for _,x := range xs {
         msg.preWrite(0)
 
-        msg.buf.WriteInt(int(x))
+        msg.buf.WriteInt(x)
         msg.writeMeta(TY_INT)
         msg.wind++
         msg.maxInd++
     }
+}
+
+func (msg *LGMessageWriter) WriteStringU32(x string, wind int) {
+    msg.preWrite(wind)
+
+    msg.buf.WriteStringU32(x)
+    msg.writeMeta(TY_STRING)
+    msg.wind++
+    msg.maxInd++
 }
 
 func (msg *LGMessageWriter) WriteString(x string, wind int) {
@@ -315,6 +324,7 @@ func LGNewMessageReader(data []byte, endian int) *LGMessageReader {
 
     msg.init()
 
+    //fmt.Printf("readlist:% X \n", data)
     return msg
 }
 
@@ -528,10 +538,22 @@ func (msg *LGMessageReader) ReadString() string {
     return v
 }
 
+func (msg *LGMessageReader) ReadStringU32() string {
+    if msg.checkRead(TY_STRING) != true {
+        return ""
+    }
+
+    v, err := msg.buf.ReadStringU32()
+    checkConvert(err)
+    msg.wind++
+    return v
+}
+
 func (msg *LGMessageReader) ReadList() *LGMessageListReader {
     if msg.checkRead(TY_LIST) != true {
         return nil
     }
+
 
     list := LGNewMessageListReader(msg.buf)
 

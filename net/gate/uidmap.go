@@ -117,7 +117,6 @@ func (self *LGUidMap) GetUid(gateid, fromCid, cid int) (uid int) {
 
     _, _, err = self.casCache.Gets(kidstr, &v2)
 
-    fmt.Println("cache read error:",kidstr,err)
     if err != nil {
         return
     }

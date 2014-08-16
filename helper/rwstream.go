@@ -218,6 +218,12 @@ func (b *LGRWStream) WriteString(s string) int {
     return b.Write([]byte(s))
 }
 
+func (b *LGRWStream) WriteStringU32(s string) int {
+    b.WriteUint32(uint32(len(s)))
+    return b.Write([]byte(s))
+}
+
+
 func (b *LGRWStream) WriteByte(c byte) int {
     m := b.grow(1)
     b.buf[m] = c
@@ -338,6 +344,21 @@ func (b *LGRWStream) WriteInt(x int) int {
         ux = ^ux
     }
     return b.WriteUint(ux)
+}
+
+func (b *LGRWStream) ReadStringU32() (string, error) {
+    l, err := b.ReadUint32()
+    if err != nil {
+        return "", err
+    }
+
+    ll := int(l)
+    buf, n := b.Read(ll)
+    if n < ll {
+        return "", ErrIndex
+    }
+
+    return string(buf), nil
 }
 
 func (b *LGRWStream) ReadString() (string, error) {

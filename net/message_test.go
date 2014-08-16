@@ -21,7 +21,7 @@ func Test_MessageWrite(t *testing.T) {
     a1 := 989887834
     a2 := 243
     a3 := 3298374
-    a4 := -432423423
+    a4 := -23
     a5 := uint32(23)
     a6 := uint16(32234)
     a7 := "aasalfjnsaknhfaksdfashdr8o324rskjdfh8oq734tjkdfq9ytfhasdbhuewrq364tqfgeawgiruhsb njafeuaaa"
@@ -169,6 +169,20 @@ func Test_MessageWrite(t *testing.T) {
         t.Error("item a1 ReadInt is wrong:",vvv4,c4)
     }
 
+
+    msgw = LGNewMessageWriter(LGLittleEndian)
+    msgw.SetCode(1701,0)
+    msgw.WriteUint(2,0)
+    msgw.WriteStringU32("sendstr",0)
+    body := msgw.ToBytes()
+
+    fmt.Printf("binary data:% X",body)
+
+    msgr := LGNewMessageReader(body, LGLittleEndian)
+    returnFlag := msgr.ReadUint()
+    ms := msgr.ReadStringU32()
+
+    fmt.Printf("returnflag=%d,msg=%s",returnFlag,ms)
 }
 /*
 type LGMessage struct {
