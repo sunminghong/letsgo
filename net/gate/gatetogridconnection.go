@@ -59,7 +59,7 @@ func (c *LGGateToGridConnection) Register() {
 //对数据进行拆包
 func (c *LGGateToGridConnection) ProcessDPs(dps []*LGDataPacket) {
     for _, dp := range dps {
-        LGTrace("gategridclient.ProcessDPs():dp.type=%d,fromcid=%d,len(data)=%d",dp.Type,dp.FromCid,len(dp.Data))
+        LGTrace("gatetogridconnection.ProcessDPs():dp.type=%d,fromcid=%d,len(data)=%d",dp.Type,dp.FromCid,len(dp.Data))
         //LGTrace("c.clients",c.clients.All())
 
 		buf := make([]byte,len(dp.Data))

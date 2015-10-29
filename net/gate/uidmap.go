@@ -19,6 +19,7 @@ import (
 
 type iCache interface {
     Gets(key string, val interface{}) (cas uint64, flag uint16, err error)
+    Get(key string,val interface{}) (flag uint16,err error)
 
     Set(key string, val interface{}, flag uint16, timeout int64) error
 
@@ -99,12 +100,12 @@ func (self *LGUidMap) CheckUid(uid int) (gateid, fromCid, cid int, cas uint64) {
     var v2 []int
     var err error
     //if not exists in local map object ,then read from cache read
-    cas, _, err = self.casCache.Gets(getUidKey(uid), &v2)
+    _, err = self.casCache.Get(getUidKey(uid), &v2)
 
     if err != nil {
-        cas = 0
         return
     }
+    cas = 1
     gateid, fromCid, cid = v2[0], v2[1], v2[2]
     return
 }
@@ -115,9 +116,10 @@ func (self *LGUidMap) GetUid(gateid, fromCid, cid int) (uid int) {
     var v2 []int
     var err error
 
-    _, _, err = self.casCache.Gets(kidstr, &v2)
+    _, err = self.casCache.Get(kidstr, &v2)
 
     if err != nil {
+        fmt.Println("GetUid:", kidstr, checkcode, err)
         return
     }
 
@@ -149,7 +151,7 @@ func (self *LGUidMap) SaveUid(gateid, fromCid, cid, uid int) error {
     v3 := []int{gateid, fromCid, cid}
     err = self.casCache.Set(getUidKey(uid), v3, 0, 0)
     if err !=nil {
-        LGTrace("saveuid():",err)
+        LGTrace("saveuid(), uidmap:",err)
     }
 
     return err

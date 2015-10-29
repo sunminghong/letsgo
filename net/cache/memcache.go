@@ -45,6 +45,7 @@ func (self *LGMemcache) Get(key string,val interface{}) (flag uint16,err error) 
 	}
 	v, flag, err := self.c.Get(key)
 	if err != nil {
+        err = errors.New("memache read error:" + err.Error() + string(v) + "!!!")
         return
 	}
 
@@ -61,6 +62,7 @@ func (self *LGMemcache) Gets(key string,val interface{}) (cas uint64, flag uint1
 	}
 	v, flag, cas, err := self.c.Gets(key)
 	if err != nil {
+        err = errors.New("memache read error:" + err.Error() + string(v) + "!!!")
 		return
 	}
     err = self.serialize.Deserialize(v,val)

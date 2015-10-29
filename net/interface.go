@@ -31,6 +31,7 @@ const (
 //define a struct or class of rec transport connection
 type LGDataPacket struct {
     Type  byte
+    Method  int16
     Data  []byte
 
     FromCid int

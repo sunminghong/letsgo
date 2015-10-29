@@ -289,17 +289,17 @@ func (s *LGServer) broadcastHandler(broadcastChan <-chan *LGDataPacket) {
         //LGTrace("broadcastHandler: chan Waiting for input")
         dp := <-broadcastChan
 
-        fromCid := dp.FromCid
         dp0 := &LGDataPacket{
             Type: LGDATAPACKET_TYPE_GENERAL,
             FromCid: 0,
             Data: dp.Data,
         }
+        //fromCid := dp.FromCid
         for _, c := range s.Connections.All() {
-            //LGTrace("broadcastHandler: client.type",c.GetType())
-            if fromCid == c.GetTransport().Cid {
-                continue
-            }
+            LGTrace("broadcastHandler: client.type",c.GetType())
+            //if fromCid == c.GetTransport().Cid {
+                //continue
+            //}
             if c.GetType() == LGCLIENT_TYPE_GATE {
                 c.GetTransport().Outgoing <- dp
             } else {
