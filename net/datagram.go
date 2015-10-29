@@ -52,10 +52,6 @@ func (d *LGDatagram) SetEndian(endian int) {
     }
 }
 
-/*
-[4] xor [9]
-[9] xor [:] not [4]
-*/
 func (d *LGDatagram) encrypt(plan []byte){
     return
     for i,_ := range plan {
@@ -84,7 +80,7 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
 
     var dpSize int
 
-    var dataType,method,m1,m2 byte
+    var dataType,m1,m2 byte
     for {
         pos := cs.GetPos()
         //Log("pos:",pos)
@@ -97,23 +93,21 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
             }
             dpSize = c.DPSize
             dataType = c.DataType
-            method = c.Method
         } else {
             //LGTrace("ilen,pos:%d,%d",ilen,pos)
             if ilen-pos < 7 {
                 return
             }
 
-            heads,_ := cs.Read(9)
+            heads,_ := cs.Read(7)
             d.decrypt(heads)
 
-            cs.SetPos(-9)
+            cs.SetPos(-7)
             m1,_ = cs.ReadByte()
             m2,_ = cs.ReadByte()
             //LGTrace("m1,m2",m1,m2)
             if m1==mask1 && m2==mask2 {
                 dataType,_ = cs.ReadByte()
-                method,_ = cs.ReadUint16()
                 _dpSize,err := cs.ReadUint32()
                 //LGTrace("dataType,dpSize,endian",dataType,_dpSize,cs.Endian)
                 if err != nil {
@@ -133,7 +127,6 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
                 if ilen - pos < dpSize {
                     c.DPSize = dpSize
                     c.DataType = dataType
-                    c.Method = method
 
                     return
                 }
@@ -164,7 +157,7 @@ func (d *LGDatagram) Fetch(c *LGTransport) (n int, dps []*LGDataPacket) {
         c.DataType = 0
 
         iiii := ilen - cs.GetPos()
-        if iiii > 9 {
+        if iiii > 7 {
             continue
         }
 
@@ -183,37 +176,34 @@ func (d *LGDatagram) Pack(dp *LGDataPacket) []byte {
     if dp.Type & 1 == 1 {
         ilen += 4
     }
-    buf := make([]byte, ilen+9)
+    buf := make([]byte, ilen+7)
 
     buf[0] = byte(mask1)
     buf[1] = byte(mask2)
     buf[2] = byte(dp.Type)
-    d.Endianer.PutUint16(buf[3:], uint16(dp.Method))
 
-    d.Endianer.PutUint32(buf[5:], uint32(ilen-4))
+    d.Endianer.PutUint32(buf[3:], uint32(ilen-4))
 
     d.encrypt(buf)
 
     copy(buf[7:], dp.Data)
 
     if dp.Type & 1 == 1 {
-        d.Endianer.PutUint32(buf[5+ilen:], uint32(dp.FromCid))
+        d.Endianer.PutUint32(buf[3+ilen:], uint32(dp.FromCid))
     }
     return buf
 }
 
 //对数据进行封包
 func (d *LGDatagram) PackWrite(write LGWriteFunc,dp *LGDataPacket) {
-    buf := make([]byte,9)
+    buf := make([]byte,7)
 
     buf[0] = byte(mask1)
     buf[1] = byte(mask2)
     buf[2] = byte(dp.Type)
 
-    d.Endianer.PutUint16(buf[3:], uint16(dp.Method))
-
     ilen := len(dp.Data)
-    d.Endianer.PutUint32(buf[5:], uint32(ilen))
+    d.Endianer.PutUint32(buf[3:], uint32(ilen))
 
     d.encrypt(buf)
 

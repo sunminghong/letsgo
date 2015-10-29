@@ -73,14 +73,14 @@ func (msg *LGMessageWriter) init(bufsize int, endian int) {
     //msg.outBuffer = []byte{}
 }
 
-//func (msg *LGMessageWriter) SetCode(code int, ver byte) {
-    //msg.Code = code
-    //msg.Ver = ver
-//}
+func (msg *LGMessageWriter) SetCode(code int, ver byte) {
+    msg.Code = code
+    msg.Ver = ver
+}
 
-//func (msg *LGMessageWriter) GetCode() int {
-    //return msg.Code
-//}
+func (msg *LGMessageWriter) GetCode() int {
+    return msg.Code
+}
 
 func (msg *LGMessageWriter) preWrite(wind int) {
     msg.alreadyToBytes = false
